@@ -1,64 +1,64 @@
-# ドパドリル
+# Dopa Drill
 
-算数を1問解くたびに、演出と音楽がどんどん盛り上がっていく計算ドリルです。ブラウザだけで動きます。
+Dopa Drill es un cuaderno de ejercicios de cálculo en el que la puesta en escena y la música se intensifican cada vez que resuelves un problema. Funciona únicamente en el navegador.
 
-マスコットの「ドパキチ」が入力した数字を運び、正解すると祝ってくれます。問題を進めるほど画面と音が増えていき、最後はお祭りのような状態になります。まちがえても勢いは落ちず、ゲームオーバーもありません。
+La mascota "Dopakichi" transporta los números que introduces y te celebra cuando aciertas. A medida que avanzas en los problemas, la pantalla y los sonidos se multiplican, y al final es como un festival...
 
-## 特徴
+## Características
 
-- 小学1〜6年の計算58スキル（学習指導要領に基づく）。足し算・ひき算・かけ算・わり算、筆算の途中入力、小数、分数、割合など
-- 「じぶんレベル」モード：実力チェックの結果から始め、習熟に合わせて次のスキルを解放します
-- 学年別モード、練習、復習、スキルツリー画面
-- 全問正解で100点。初回正解率が80%以上なら、制限時間付きのエクストラで100点を超える得点を狙えます
-- 音楽と効果音はすべてWeb Audio APIで合成しています（音声ファイルは使っていません）
-- スマートフォンの縦画面とPCに対応。PCでは数字キーとBackspaceで入力できます
-- 設定で動きの強さを調整できます。ミュートもあります
-- 記録はすべて端末内（localStorage）に保存し、外部には送信しません
+- 58 habilidades de cálculo para 1.º a 6.º de primaria (basadas en el plan de estudios). Sumas, restas, multiplicaciones, divisiones, entradas intermedias de operaciones en columna, decimales, fracciones, porcentajes, etc.
+- Modo "Mi nivel": empieza según los resultados de un test de nivel y desbloquea la siguiente habilidad según tu progresión.
+- Modo por curso, práctica, repaso y pantalla de árbol de habilidades.
+- Si respondes todo correctamente obtienes 100 puntos. Si tu tasa de aciertos inicial es del 80% o más, puedes intentar superar los 100 puntos en una ronda extra con límite de tiempo.
+- La música y los efectos de sonido se sintetizan completamente con la Web Audio API (no se usan archivos de audio).
+- Compatible con pantalla vertical de smartphone y con PC. En PC puedes usar las teclas numéricas y Backspace para introducir números.
+- Puedes ajustar la intensidad de las animaciones en la configuración. También hay opción de silenciar.
+- Todos los registros se guardan en el dispositivo (localStorage) y no se envían a servidores externos.
 
-## 遊び方（ローカル）
+## Cómo jugar (local)
 
-ビルドは不要です。`app/` を静的に配信するだけで動きます。
+No requiere compilación. Basta con servir estáticamente `app/`.
 
 ```bash
 python3 -m http.server 8000 -d app
 ```
 
-ブラウザで `http://localhost:8000/` を開いてください。ES Modulesを使っているため、`file://` で直接開くと動きません。
+Abre `http://localhost:8000/` en tu navegador. Al usar ES Modules, no funciona abriéndolo directamente con `file://`.
 
-## テスト
+## Tests
 
-Node.js 20以上で実行します。
+Se ejecuta con Node.js 20 o superior.
 
 ```bash
 node --test tests/*.test.mjs
 ```
 
-## 構成
+## Estructura
 
-| パス | 内容 |
+| Ruta | Contenido |
 | --- | --- |
-| `app/` | ゲーム本体（依存ライブラリなしのES Modules） |
-| `docs/SPEC.md` | 仕様書 |
-| `docs/curriculum.md` | 学年別カリキュラムとスキルツリーの設計 |
-| `docs/dopakichi.svg` | ドパキチの造形の原典 |
-| `tests/` | 単体テスト |
-| `tools/build_fonts.sh` | フォントのサブセット再生成（画面の文言を追加したときに実行） |
+| `app/` | Juego principal (ES Modules sin bibliotecas externas) |
+| `docs/SPEC.md` | Especificación |
+| `docs/curriculum.md` | Currículum por curso y diseño del árbol de habilidades |
+| `docs/dopakichi.svg` | Diseño original de Dopakichi |
+| `tests/` | Tests unitarios |
+| `tools/build_fonts.sh` | Regeneración del subconjunto de fuentes (ejecutar cuando se añadan textos en pantalla) |
 
-## ライセンス
+## Licencia
 
-- ソースコード：MIT License
-- キャラクター「ドパキチ」、および「ドパドリル」の名称とロゴ：MITの対象外です。営利目的でなければ、二次創作に自由に使えます（下記）。
-- フォント（`app/fonts/`）：SIL Open Font License 1.1
+- Código fuente: MIT License
+- El personaje "Dopakichi" y el nombre/logo de "Dopa Drill" no están cubiertos por la MIT. Si no es con fines comerciales, puedes usarlos libremente para obras derivadas (ver más abajo)...
+- Fuentes (`app/fonts/`): SIL Open Font License 1.1
 
-詳細は [LICENSE](LICENSE) を参照してください。
+Para más detalles, consulta [LICENSE](LICENSE).
 
-### ドパキチ・ドパドリルの二次創作について
+### Sobre las obras derivadas de Dopakichi y Dopa Drill
 
-営利目的でなければ、連絡なしで自由に使えます。
+Si no es con fines comerciales, puedes usarlo libremente sin avisar.
 
-- できること：ファンアート、漫画、小説、アニメーション、動画、SNSへの投稿、このゲームの非営利のフォークや改造版の公開
-- プレイ動画・配信：自由です。広告収益や投げ銭のあるプラットフォームでも構いません
-- 事前の許可が必要なこと：グッズや作品の販売、有料の製品・サービス・広告での利用などの商用利用。ほかの製品やサービスの名前・マスコット・ブランドとしての利用や、公式を名乗ること
-- 禁止：公序良俗に反する使い方、キャラクターや本プロジェクトの評判を傷つける使い方
+- Lo que puedes hacer: fan art, manga, novelas, animaciones, vídeos, publicaciones en redes sociales y publicar forks o versiones modificadas del juego con fines no comerciales.
+- Vídeos de juego y streaming: permitidos. Está bien en plataformas con ingresos por publicidad o donaciones.
+- Se requiere permiso previo para: producir mercancía para la venta, utilizarlo en productos o servicios de pago, o cualquier uso comercial (incluyendo publicidad).
+- Prohibido: usos contrarios al orden público o que dañen la reputación del personaje o del proyecto.
 
-公開するときは、非公式であることが分かるようにしてください。LICENSEの英文と内容が異なる場合は、英文が優先します。
+Al publicar, indica que es no oficial. Si la versión en inglés de la LICENSE difiere, prevalece la versión en inglés.
