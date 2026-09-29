@@ -12,7 +12,7 @@ test('orders respect prerequisites', () => {
   }
 });
 
-test('mastery needs 5 of the last 6 first-try clears and unlocks children', () => {
+test('mastery needs 7 of the last 8 first-try clears and unlocks children', () => {
   const prog = emptyProgress();
   assert.equal(stateOf(prog, 'g1-add-c'), 'locked');
   let res;
@@ -37,6 +37,8 @@ test('guided answers count as attempts but not as mastery evidence', () => {
   for (let i = 0; i < 6; i++) recordResult(prog, 'g1-add-nc', true, null, { guided: i < 2 });
   assert.equal(prog.skills['g1-add-nc'].n, 6);
   assert.ok(!isMastered(prog, 'g1-add-nc')); // only 4 counted answers so far
+  for (let i = 0; i < 2; i++) recordResult(prog, 'g1-add-nc', true);
+  assert.ok(!isMastered(prog, 'g1-add-nc')); // 6 counted answers: the 7-of-8 rule needs 8 counted
   for (let i = 0; i < 2; i++) recordResult(prog, 'g1-add-nc', true);
   assert.ok(isMastered(prog, 'g1-add-nc'));
 });
@@ -89,8 +91,8 @@ test('placement walks forward on clean answers and grants ancestors', () => {
 test('level plan mixes review and frontier, problems avoid recent repeats', () => {
   const prog = emptyProgress();
   prog.placed = true;
-  for (let i = 0; i < 6; i++) recordResult(prog, 'g1-add-nc', true);
-  for (let i = 0; i < 6; i++) recordResult(prog, 'g1-compose10', true);
+  for (let i = 0; i < MASTERY.window; i++) recordResult(prog, 'g1-add-nc', true);
+  for (let i = 0; i < MASTERY.window; i++) recordResult(prog, 'g1-compose10', true);
   const plan = levelPlan(prog, 10, makeRng(1));
   assert.ok(plan.basic.some((id) => isMastered(prog, id)));
   assert.ok(plan.basic.some((id) => frontier(prog).includes(id)));
@@ -154,13 +156,13 @@ test('timed answers keep recent times, one aggregate per day and the first probl
   const day = (i) => `2026-09-${String(1 + Math.floor(i / 10)).padStart(2, '0')}`;
   for (let i = 0; i < 40; i++) {
     const p = problemFor(prog, 'g2-kuku25', rng);
-    recordResult(prog, 'g2-kuku25', i % 4 !== 0, null, { at: 1e12 + i, day: day(i), ms: 2000 + i * 10, cells: p.steps.length, misses: i % 4 === 0 ? 1 : 0, problem: p });
+    recordResult(prog, 'g2-kuku25', i % 9 !== 0, null, { at: 1e12 + i, day: day(i), ms: 2000 + i * 10, cells: p.steps.length, misses: i % 9 === 0 ? 1 : 0, problem: p });
   }
   const r = prog.skills['g2-kuku25'];
   assert.equal(r.times.length, TIMES_MAX);
   assert.equal(r.times.at(-1).t, 2390);
   assert.deepEqual(r.days.map((g) => g.n), [10, 10, 10, 10]);
-  assert.equal(r.days[0].f, 7);
+  assert.equal(r.days[0].f, 8);
   assert.equal(r.first.length, FIRST_MAX);
   assert.equal(r.first[0].t, 2000);
   assert.ok(r.first[0].p.steps.length > 0);
@@ -182,7 +184,7 @@ test('stars: 1 at mastery, then accuracy, speed, retention and mastery of speed;
   let day = 1;
   const dayKey = () => `2026-10-${String(day).padStart(2, '0')}`;
   const answer = (firstTry, ms) => recordResult(prog, id, firstTry, null, { day: dayKey(), ms, cells: 1, misses: firstTry ? 0 : 1 });
-  for (let i = 0; i < 6; i++) answer(true, slow);
+  for (let i = 0; i < MASTERY.window; i++) answer(true, slow);
   assert.equal(starsOf(prog, id), 1);
   assert.equal(nextStar(prog, id).n, 2);
   // 20 answers at 90%+: star 2 (slow answers keep star 3 away).
@@ -222,7 +224,7 @@ test('time capsule: a first problem returns after 30 days, once, for mastered sk
   const prog = emptyProgress();
   const rng = makeRng(3);
   const day0 = Date.UTC(2026, 7, 1);
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < MASTERY.window; i++) {
     const p = problemFor(prog, 'g1-add-nc', rng);
     recordResult(prog, 'g1-add-nc', true, null, { at: day0 + i * 1000, day: '2026-08-01', ms: 9000, cells: 1, misses: 0, problem: p });
   }
@@ -265,4 +267,25 @@ test('rust: one level, at most three oldest, polished by one first-try answer, r
   prog.placed = true;
   const plan = levelPlan(prog, 10, makeRng(2), now);
   assert.ok(rustyOf(prog, now).every((id) => plan.basic.slice(0, 3).includes(id)), plan.basic.join());
+});
+
+test('spaced review: overdue mastered skills fill the review slots, freshest last', async () => {
+  const { reviewQueue, dueRatio, REVIEW_DAYS } = await import('../app/js/session.js');
+  const prog = emptyProgress();
+  prog.placed = true;
+  const now = Date.UTC(2026, 9, 1);
+  const ago = (d) => now - d * 864e5;
+  // Six mastered skills, seen at different times and with different stars.
+  const seed = [['g1-compose10', 3, 0.2], ['g1-add-nc', 1, 3], ['g1-sub-nb', 5, 10], ['g1-add-c', 2, 9], ['g1-sub-b', 1, 1], ['g1-add3', 4, 20]];
+  for (const [id, stars, days] of seed) prog.skills[id] = { n: 6, hist: [1, 1, 1, 1, 1, 1], mastered: true, recent: [], stars, lastOk: ago(days) };
+  assert.equal(REVIEW_DAYS.length, 6);
+  assert.ok(dueRatio(prog, 'g1-add-nc', now) > 1); // 1★ seen 3 days ago: due (interval 2)
+  assert.ok(dueRatio(prog, 'g1-sub-nb', now) < 1); // 5★ seen 10 days ago: not yet (interval 30)
+  assert.ok(dueRatio(prog, 'g1-compose10', now) < 0.2); // seen this morning
+  const q = reviewQueue(prog, now);
+  assert.deepEqual(q.slice(0, 2).sort(), ['g1-add-c', 'g1-add-nc']); // the two most overdue
+  assert.equal(q[q.length - 1], 'g1-compose10');
+  const plan = levelPlan(prog, 10, makeRng(4), now);
+  assert.deepEqual(plan.basic.slice(0, 2).sort(), ['g1-add-c', 'g1-add-nc']);
+  assert.ok(!plan.basic.slice(0, 3).includes('g1-compose10'));
 });

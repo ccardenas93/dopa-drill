@@ -49,9 +49,9 @@ function checkAnswer(p) {
     assert.equal(p.rem, p.a % p.b, p.text);
   } else {
     const expect = p.answer.replace(/ resto /, '').replace(/ /, '').replace('.', '');
-    // Fractions are typed denominator first ("5 2/11" is a mixed number).
+    // es/en: fractions are typed numerator first (the Japanese source keeps denominator first).
     const fr = p.answer.match(/^(?:(\d+) )?(\d+)\/(\d+)$/);
-    const want = fr ? `${fr[1] || ''}${fr[3]}${fr[2]}` : expect;
+    const want = fr ? `${fr[1] || ''}${fr[2]}${fr[3]}` : expect;
     assert.equal(typed, want, `${p.skill} ${p.text} -> ${p.answer}`);
     const v = evalText(p.text);
     if (v !== null && !p.answer.includes('resto')) assert.ok(Math.abs(v - num(p.answer)) < 1e-9, `${p.skill} ${p.text} = ${p.answer}`);

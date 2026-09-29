@@ -10,7 +10,7 @@ import { Backdrop } from './bg.js';
 import * as store from './store.js';
 import { createGuide } from './guide.js';
 import { SKILLS, SKILL, LANES, DEPTH } from './skills.js';
-import { ORDER, emptyProgress, recordResult, stateOf, masteryRatio, starsOf, nextStar, STAR_MAX, pickCapsule, useCapsule, rustyOf, gradePlan, levelPlan, reviewPlan, problemFor, frontier, isUnlocked, relockTargets, relockSkill, TREE_LAYOUT } from './session.js';
+import { ORDER, emptyProgress, recordResult, stateOf, masteryRatio, starsOf, nextStar, STAR_MAX, pickCapsule, useCapsule, rustyOf, gradePlan, levelPlan, reviewPlan, problemFor, frontier, nextSkill, isUnlocked, relockTargets, relockSkill, TREE_LAYOUT } from './session.js';
 import * as growth from './growth.js';
 import { needsLesson, markLesson, isGuided, diagnose } from './lessons.js';
 import { Governor } from './perf.js';
@@ -240,7 +240,7 @@ const MODE_LABEL = {
 // kind: 'level' | 'grade' | 'review' | 'practice' | 'drill'
 function makePlan(kind, arg) {
   const prog = progress();
-  if (kind === 'grade') return gradePlan(arg, S.N, S.rng);
+  if (kind === 'grade') return gradePlan(arg, S.N, S.rng, prog);
   if (kind === 'review') { const items = prog.review.slice(-Math.min(S.N, 10)); return reviewPlan(items); }
   if (kind === 'practice') return { mode: 'practice', skill: arg, basic: Array.from({ length: S.N }, () => arg), extra: () => { const kids = SKILLS.filter((x) => x.req.includes(arg) && isUnlocked(prog, x.id)); return kids.length ? kids[Math.floor(S.rng() * kids.length)].id : arg; } };
   if (kind === 'demo') {
@@ -258,6 +258,7 @@ function makePlan(kind, arg) {
 function nextProblem(i) {
   const plan = S.plan;
   if (plan.mode === 'review') return structuredClone(plan.items[i].problem);
+  if (plan.items && plan.items[i]) { const it = plan.items[i]; const p = structuredClone(it.problem); p.reviewSig = it.sig; return p; }
   if (plan.legacy) return generate(plan.basic[i], S.rng, i === 0 ? { kind: 'add', a: 27, b: 35 } : null);
   const skill = params.get('skill') || (plan.placement ? plan.pick() : plan.basic[i]);
   return sessionProblem(skill);
@@ -446,18 +447,19 @@ async function runLesson(skill, E) {
 }
 
 // ---------------------------------------------------------------- flow
-function startGame(kind = 'level', arg, { lesson = null } = {}) {
+function startGame(kind = 'level', arg, { lesson = null, count = null } = {}) {
   audio.unlock();
   S.run += 1;
   S.forceLesson = lesson; S.lessonsShown = 0; S.lesson = null; S.guided = false;
   if (S.bonusOpen) { $('#bonus').hidden = true; S.bonusOpen = false; }
-  S.N = Number($('.pick [aria-checked="true"]').dataset.count);
+  S.N = count || Number($('.pick [aria-checked="true"]').dataset.count);
   S.rng = makeRng(Number(params.get('seed') || Math.floor(Math.random() * 1e9)));
   S.sessionSigs = new Set();
   S.kind = kind; S.kindArg = arg;
   S.plan = makePlan(kind, arg);
   applyLook(playLook());
   if (S.plan.mode === 'review') S.N = S.plan.items.length;
+  if (S.plan.placement) S.N = S.plan.basic.length;
   S.problems = [];
   S.wrongList = []; S.newUnlocks = []; S.newMastered = []; S.newStars = {}; S.sessionTimes = {}; S.capsuleNews = null; S.polished = [];
   planCapsule();
@@ -513,7 +515,8 @@ async function setupProblem() {
     S.startT += now() - t0; // the example does not eat the set's clock
     S.problem = p;
   }
-  S.guided = !extra && !!p.skill && !S.demo && S.plan.mode !== 'review' && !S.plan.placement && !p.capsule && isGuided(progress(), p.skill);
+  const pendingLesson = !extra && !lessonSkill && !!p.skill && !S.demo && S.plan.mode !== 'review' && !S.plan.placement && !p.capsule && !params.has('skill') && needsLesson(progress(), p.skill);
+  S.guided = (!extra && !!p.skill && !S.demo && S.plan.mode !== 'review' && !S.plan.placement && !p.capsule && isGuided(progress(), p.skill)) || pendingLesson;
   card.classList.toggle('guided', S.guided);
   $('#qtitle').textContent = p.title;
   $('#qno').textContent = extra ? t('play.ex', { n: S.extra.solved + 1 }) : S.guided ? `${t('play.qno', { n: S.qi + 1 })} · ${t('lesson.guided')}` : t('play.qno', { n: S.qi + 1 });
@@ -718,20 +721,34 @@ function giveHelp(st) {
     $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">${t('play.hint', { text: st.help.text })}</span>`;
     audio.play('blip', audio.now(), { m: 81, v: 0.08 });
   }
+  if (n >= 3 && !S.demo) revealDigit(st);
+}
+
+// After three slips on one digit the answer is shown and typed for the child
+// (the problem is already "not first try", so it comes back as review later).
+function revealDigit(st) {
+  const line = lessonLine(st);
+  const run = S.run; const step = S.step;
+  setTimeout(() => {
+    if (S.screen !== 'play' || run !== S.run || S.step !== step || S.problem.steps[S.step] !== st || !S.ready) return;
+    $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">${t('play.revealed', { d: st.digit })}${line ? ` · ${line}` : ''}</span>`;
+    press(st.digit);
+  }, 1200);
 }
 
 // Mastery bookkeeping, review list, and unlock announcements.
 function noteProblem(p, firstTry) {
   if (S.demo) return;
   const prog = progress();
-  if (!firstTry && S.plan.mode !== 'review') {
+  const isReview = S.plan.mode === 'review' || !!p.reviewSig;
+  if (!firstTry && !isReview && !S.plan.placement) {
     S.wrongList.push(p);
     const sig = signature(p);
     if (!prog.review.some((it) => it.sig === sig)) prog.review.push({ sig, skill: p.skill || null, problem: stripProblem(p), at: Date.now() });
     if (prog.review.length > REVIEW_MAX) prog.review.splice(0, prog.review.length - REVIEW_MAX);
   }
-  if (S.plan.mode === 'review') {
-    const sig = signature(p);
+  if (isReview) {
+    const sig = p.reviewSig || signature(p);
     if (firstTry) prog.review = prog.review.filter((it) => it.sig !== sig);
     else S.wrongList.push(p);
   }
@@ -747,7 +764,11 @@ function noteProblem(p, firstTry) {
     e.n += 1; e.ms += timing.ms; e.c += timing.cells; e.f += firstTry ? 1 : 0;
   }
   if (p.skill && !params.has('skill')) {
-    const res = recordResult(prog, p.skill, firstTry, signature(p), { ...(recording() ? timing : {}), guided: S.guided && S.mode !== 'extra' });
+    // Mastery evidence comes only from ordinary basic problems: not from the
+    // timed extra, the placement walk, verbatim reviews, guided tries or a
+    // locked-skill preview in a grade set.
+    const evidence = S.mode !== 'extra' && !S.plan.placement && !isReview && !S.guided && !(S.plan.noEvidence && S.plan.noEvidence.has(p.skill));
+    const res = recordResult(prog, p.skill, firstTry, signature(p), { ...(recording() ? timing : {}), guided: !evidence });
     if (res.mastered) S.newMastered.push(p.skill);
     if (res.stars >= 2) S.newStars[p.skill] = res.stars;
     if (res.polished && recording()) { S.polished.push(p.skill); const st = stats(); st.polished = (st.polished || 0) + 1; polishFx(); }
@@ -1307,6 +1328,7 @@ function showResult() {
   $('#go-again').hidden = ok;
   renderSkillNews($('#r-skills'));
   renderGrowth($('#r-growth'));
+  renderToday($('#r-today'));
   renderQuestMini($('#r-quests'));
   if (checkTrophies().length) { const run = S.run; setTimeout(() => { if (run === S.run && S.screen === 'result') openTrophies(); }, 2300); }
   $('#go-tree').hidden = !(S.newUnlocks.length || S.newMastered.length || Object.keys(S.newStars).length || S.plan.placement);
@@ -1523,6 +1545,21 @@ function polishFx() {
 }
 
 // "のびたよ！": this play compared with earlier days, improvements only (id038).
+// "Hoy practicaste": what this set trained, skill by skill, with the mastery
+// bar as it stands now, and what comes next.
+function renderToday(el) {
+  const prog = progress();
+  const rows = Object.entries(S.sessionTimes || {}).filter(([id]) => SKILL[id]).sort((a, b) => b[1].n - a[1].n).slice(0, 4);
+  if (!rows.length || S.demo) { el.innerHTML = ''; el.hidden = true; return; }
+  el.hidden = false;
+  const line = ([id, e]) => {
+    const k = masteryRatio(prog, id);
+    return `<li><span class="td-name">${SKILL[id].name}</span><span class="td-n">${t('result.todayLine', { f: e.f, n: e.n })}</span><i class="td-bar"><i style="width:${Math.round(k * 100)}%"></i></i></li>`;
+  };
+  const next = S.plan.mode === 'level' && prog.placed ? SKILL[nextSkill(prog)] : null;
+  el.innerHTML = `<h3>${t('result.today')}</h3><ul>${rows.map(line).join('')}</ul>${next ? `<p class="td-next">${t('result.todayNext', { name: next.name })}</p>` : ''}`;
+}
+
 function renderGrowth(el) {
   el.innerHTML = '';
   if (!recording() || S.plan.placement) return;
@@ -1579,7 +1616,13 @@ function refreshTitle() {
   const n = prog.review.length;
   $('#start-review').hidden = !n;
   $('#review-count').textContent = n;
-  $('#level-sub').textContent = prog.placed ? t('title.nextSkill', { name: SKILL[frontier(prog)[0] || ORDER[ORDER.length - 1]].name }) : t('title.startSub');
+  $('#level-sub').textContent = prog.placed ? t('title.nextSkill', { name: SKILL[nextSkill(prog)].name }) : t('title.startSub');
+  // A streak at risk gets a one-tap short set.
+  const run = store.streak();
+  const playedToday = store.playedDays().has(store.dayKey());
+  const save = $('#save-streak');
+  save.hidden = !(prog.placed && run >= 1 && !playedToday);
+  if (!save.hidden) save.innerHTML = t('title.saveStreak', { n: run });
   const done = SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length;
   $('#tree-badge').textContent = `${done}/${SKILLS.length}`;
   renderQuests();
@@ -2178,7 +2221,8 @@ function checkLoginBonus() {
   // The hammer comes first: using it keeps the login card's run going too.
   const offer = store.hammerOffer();
   if (offer) { scheduleTitleReward(() => openHammer(offer)); return; }
-  claimBonus();
+  // The sticker is for playing, not for opening the app: it comes after the first set of the day.
+  if (store.playedDays().has(store.dayKey())) claimBonus();
 }
 function claimBonus() {
   const res = S.pendingLoginBonus || store.claimLogin();
@@ -2647,7 +2691,24 @@ $$('.pick button').forEach((b) => b.addEventListener('click', () => {
   audio.play('blip', audio.now(), { m: 76 + Number(b.dataset.count) / 2, v: 0.12 });
   if (!S.reduced) hero.hop(20 + Number(b.dataset.count) * 2 * S.motion, 320, { audio });
 }));
-$('#start').addEventListener('click', () => startGame('level'));
+$('#start').addEventListener('click', () => { if (progress().placed || S.demo) startGame('level'); else openGradeAsk(); });
+$('#save-streak').addEventListener('click', () => startGame('level', undefined, { count: 6 }));
+// First "Mi nivel": ask the grade so the placement walk starts nearby.
+function openGradeAsk() {
+  audio.unlock();
+  audio.play('blip', audio.now(), { m: 79, v: 0.1 });
+  S.gradeAskOpen = true;
+  $('#grade-ask').hidden = false;
+  requestAnimationFrame(layoutActors);
+}
+function closeGradeAsk(grade) {
+  S.gradeAskOpen = false;
+  $('#grade-ask').hidden = true;
+  if (grade) { progress().gradeHint = grade; store.save(); startGame('level'); }
+  else requestAnimationFrame(layoutActors);
+}
+$$('#grade-ask .grades button').forEach((b) => b.addEventListener('click', () => closeGradeAsk(Number(b.dataset.ga))));
+$('#grade-ask').addEventListener('click', (e) => { if (e.target.id === 'grade-ask') closeGradeAsk(null); });
 $('#quest-list').addEventListener('click', (e) => { const li = e.target.closest('li.go'); if (li && SKILL[li.dataset.skill]) { audio.unlock(); audio.play('blip', audio.now(), { m: 84, v: 0.12 }); startGame('practice', li.dataset.skill); } });
 $('#cal-prev').addEventListener('click', () => moveMonth(-1));
 $('#cal-next').addEventListener('click', () => moveMonth(1));
@@ -2734,6 +2795,7 @@ addEventListener('keydown', (e) => {
   if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   if (S.demo) { e.preventDefault(); stopDemo(); return; }
   if (S.privacyOpen) { if (e.key === 'Escape') closePrivacy(); return; }
+  if (S.gradeAskOpen) { if (e.key === 'Escape') closeGradeAsk(null); else if (/^[1-6]$/.test(e.key)) closeGradeAsk(Number(e.key)); return; }
   if (S.settingsOpen) { if (e.key === 'Escape') closeSettings(); return; }
   if (S.confirm) { if (e.key === 'Escape') closeConfirm(); return; }
   if (S.screen === 'tree' && e.key === 'Delete' && document.activeElement && document.activeElement.classList.contains('node')) { askRelock(document.activeElement.dataset.id); e.preventDefault(); return; }
@@ -2867,5 +2929,5 @@ document.fonts.ready.then(layoutActors);
 layoutActors();
 // Android back button (MainActivity): anything open over the screen gets
 // Escape first; only a bare title screen lets the app close.
-window.__dopa.backTarget = () => (S.guideOpen || S.demo || S.privacyOpen || S.settingsOpen || S.confirm || S.bonusOpen || S.hammerOpen || S.trophyOpen || S.skillInfo || S.scene || !$('#day-log').hidden ? 'overlay' : String(S.screen));
+window.__dopa.backTarget = () => (S.guideOpen || S.demo || S.privacyOpen || S.gradeAskOpen || S.settingsOpen || S.confirm || S.bonusOpen || S.hammerOpen || S.trophyOpen || S.skillInfo || S.scene || !$('#day-log').hidden ? 'overlay' : String(S.screen));
 Object.assign(window.__dopa, { gov, startDemo, hanamaru, applyLook, fx, fxBack, bg, hero, actors, crowd, press, startGame, startExtra, fmtDopa, store, progress, stats, quests, trophyState, checkTrophies });

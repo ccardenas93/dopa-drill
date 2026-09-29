@@ -312,8 +312,8 @@ function buildH(tokens, meta) {
           cells.push({ id: cid, r: row, c: c + w - str.length + i, text: ch, kind: 'input', cls });
           steps.push({ cell: cid, digit: ch, label, after: [], help: meta.help ? { ids: [], text: meta.help } : null });
         });
-        put(dsx, r + 1, t('p.step.denominator'), 'frac-d');
-        put(ns, r, t('p.step.numerator'), 'frac-n');
+        if (isJapanese()) { put(dsx, r + 1, t('p.step.denominator'), 'frac-d'); put(ns, r, t('p.step.numerator'), 'frac-n'); }
+        else { put(ns, r, t('p.step.numerator'), 'frac-n'); put(dsx, r + 1, t('p.step.denominator'), 'frac-d'); }
       }
       c += w;
     }
@@ -331,7 +331,7 @@ const reduce = (n, d) => { const g = gcd(n, d); return [n / g, d / g]; };
 // Fraction answer token, as a mixed number when requested.
 function fracAns(n, d, mixed) {
   [n, d] = reduce(n, d);
-  if (mixed && n > d) return { fa: [n % d, d, Math.floor(n / d)], text: t('p.text.mixed', { w: Math.floor(n / d), n: n % d, d }) };
+  if (mixed && isJapanese() && n > d) return { fa: [n % d, d, Math.floor(n / d)], text: t('p.text.mixed', { w: Math.floor(n / d), n: n % d, d }) };
   return { fa: [n, d], text: `${n}/${d}` };
 }
 const fracTok = (n, d, whole) => ({ f: [n, d, whole] });
@@ -390,6 +390,34 @@ const GEN = {
   kuku(rng, { dans }) {
     const a = pickOf(rng, dans); const b = R(rng)(1, 9);
     return buildH([{ n: a }, { op: ops().times }, { n: b }, { op: ops().eq }, { ans: a * b }], { title: t('p.title.mul'), text: `${a} × ${b}`, answer: String(a * b), help: table(a, a * (b - 1)) });
+  },
+  pow10(rng) {
+    const r = R(rng);
+    const k = pickOf(rng, [10, 100]);
+    if (rng() < 0.5) {
+      const a = r(2, 99); if (a % 10 === 0) return GEN.pow10(rng);
+      return buildH([{ n: a }, { op: ops().times }, { n: k }, { op: ops().eq }, { ans: a * k }], { title: t('p.title.pow10'), text: `${a} × ${k}`, answer: String(a * k), help: t('p.help.pow10mul', { z: k === 10 ? 1 : 2 }) });
+    }
+    const q = r(2, 99); if (q % 10 === 0) return GEN.pow10(rng);
+    return buildH([{ n: q * k }, { op: ops().div }, { n: k }, { op: ops().eq }, { ans: q }], { title: t('p.title.pow10'), text: `${q * k} ÷ ${k}`, answer: String(q), help: t('p.help.pow10div', { z: k === 10 ? 1 : 2 }) });
+  },
+  multiples(rng) {
+    const r = R(rng);
+    if (rng() < 0.6) {
+      // The first multiple of a from a given number: "múltiplo de 7 ≥ 50 = 56".
+      const a = r(3, 9); const lo = r(12, 90); const m = Math.ceil(lo / a) * a;
+      if (m === lo) return GEN.multiples(rng);
+      const toks = isJapanese()
+        ? [{ n: a }, wordToken('multipleOf'), { br: true }, { n: lo }, wordToken('atLeast'), { op: ops().eq }, { ans: m }]
+        : [wordToken('multipleOf'), { br: true }, { n: a }, { op: '≥' }, { n: lo }, { op: ops().eq }, { ans: m }];
+      return buildH(toks, { title: t('p.title.multiples'), text: t('p.text.multipleFrom', { a, lo }), answer: String(m), answerText: t('p.text.multipleFrom', { a, lo }) + ` = ${m}`, help: t('p.help.multiple', { a, q: m / a, m }) });
+    }
+    // How many divisors: "divisores de 24 = 8".
+    const n = r(4, 50);
+    const divs = []; for (let i = 1; i <= n; i++) if (n % i === 0) divs.push(i);
+    if (divs.length > 9 || divs.length < 3) return GEN.multiples(rng);
+    const toks = isJapanese() ? [{ n }, wordToken('divisorsOf'), { br: true }, { op: ops().eq }, { ans: divs.length }] : [wordToken('divisorsOf'), { br: true }, { n }, { op: ops().eq }, { ans: divs.length }];
+    return buildH(toks, { title: t('p.title.multiples'), text: t('p.text.divisorsOf', { n }), answer: String(divs.length), answerText: t('p.text.divisorsOf', { n }) + ` = ${divs.length}`, help: t('p.help.divisors', { list: divs.join(', ') }) });
   },
   mulTens(rng) {
     const a = R(rng)(1, 9) * 10; const b = R(rng)(2, 9);
@@ -500,8 +528,10 @@ const GEN = {
   decDivDec(rng) {
     const r = R(rng);
     const d = r(2, 9); const q = r(2, 9);
+    if ((d * q) % 10 === 0) return GEN.decDivDec(rng);
     if (rng() < 0.5) { const D = d * q; return buildH([{ n: decStr(D, 1) }, { op: ops().div }, { n: decStr(d, 1) }, { op: ops().eq }, { ans: q }], { title: t('p.title.divDec'), text: `${decStr(D, 1)} ÷ ${decStr(d, 1)}`, answer: String(q), help: t('p.help.decDivSame', { a: D, b: d }) }); }
     const d2 = r(11, 29); const D2 = d2 * q;
+    if (D2 % 10 === 0) return GEN.decDivDec(rng);
     return buildH([{ n: decStr(D2, 1) }, { op: ops().div }, { n: decStr(d2, 1) }, { op: ops().eq }, { ans: q }], { title: t('p.title.divDec'), text: `${decStr(D2, 1)} ÷ ${decStr(d2, 1)}`, answer: String(q), help: t('p.help.decDivSame', { a: D2, b: d2 }) });
   },
   gcdlcm(rng, { kind }) {
@@ -570,7 +600,8 @@ const GEN = {
     const [x, y] = reduce(a, b); const k = r(2, 9);
     const hideLeft = rng() < 0.5;
     const toks = hideLeft ? [{ n: x }, { op: ops().colon }, { n: y }, { op: ops().eq }, { ans: x * k }, { op: ops().colon }, { n: y * k }] : [{ n: x }, { op: ops().colon }, { n: y }, { op: ops().eq }, { n: x * k }, { op: ops().colon }, { ans: y * k }];
-    return buildH(toks, { title: t('p.title.ratio'), text: `${x}:${y}`, answer: String(hideLeft ? x * k : y * k), help: t('p.help.ratio', { k }) });
+    const text = hideLeft ? `${x}:${y} = ?:${y * k}` : `${x}:${y} = ${x * k}:?`;
+    return buildH(toks, { title: t('p.title.ratio'), text, answer: String(hideLeft ? x * k : y * k), answerText: `${x}:${y} = ${x * k}:${y * k}`, help: t('p.help.ratio', { k }) });
   },
   letter(rng) {
     const r = R(rng);
@@ -579,8 +610,8 @@ const GEN = {
     let toks; let help;
     if (form === 0) { toks = [{ n: 'x' }, { op: ops().times }, { n: a }, { op: ops().eq }, { n: x * a }]; help = `${x * a} ${ops().div} ${a}`; }
     else if (form === 1) { toks = [{ n: 'x' }, { op: ops().plus }, { n: a * 3 }, { op: ops().eq }, { n: x + a * 3 }]; help = `${x + a * 3} ${ops().minus} ${a * 3}`; }
-    else { toks = [{ n: 'x' }, { op: ops().minus }, { n: a }, { op: ops().eq }, { n: x }]; help = `${x} ${ops().plus} ${a}`; return buildH([...toks, { br: true }, { n: 'x' }, { op: ops().eq }, { ans: x + a }], { title: t('p.title.letter'), text: toks.map((tk) => tk.n ?? tk.op ?? tk.w).join(''), answer: String(x + a), help }); }
-    return buildH([...toks, { br: true }, { n: 'x' }, { op: ops().eq }, { ans: x }], { title: t('p.title.letter'), text: toks.map((tk) => tk.n ?? tk.op ?? tk.w).join(''), answer: String(x), help });
+    else { toks = [{ n: 'x' }, { op: ops().minus }, { n: a }, { op: ops().eq }, { n: x }]; help = `${x} ${ops().plus} ${a}`; return buildH([...toks, { br: true }, { n: 'x' }, { op: ops().eq }, { ans: x + a }], { title: t('p.title.letter'), text: toks.map((tk) => tk.n ?? tk.op ?? tk.w).join(''), answer: String(x + a), answerText: `x = ${x + a}`, help }); }
+    return buildH([...toks, { br: true }, { n: 'x' }, { op: ops().eq }, { ans: x }], { title: t('p.title.letter'), text: toks.map((tk) => tk.n ?? tk.op ?? tk.w).join(''), answer: String(x), answerText: `x = ${x}`, help });
   },
   frac(rng, { op, same, maxOne, mixed }) {
     const r = R(rng);
@@ -591,6 +622,12 @@ const GEN = {
       }
       if (op === 'addsub' && same) {
         const d = r(3, 12); const add = rng() < 0.55;
+        if (mixed && !isJapanese()) {
+          // Fracciones mayores que 1: two proper fractions whose sum passes one, kept over the same denominator.
+          const n1 = r(1, d - 1); const n2 = r(1, d - 1); const res = n1 + n2;
+          if (res <= d || gcd(res, d) !== 1) continue;
+          return buildH([fracTok(n1, d), { op: ops().plus }, fracTok(n2, d), { op: ops().eq }, { fa: [res, d] }], { title: t('p.title.fracAddSub'), text: `${n1}/${d} + ${n2}/${d}`, answer: `${res}/${d}`, help: t('p.help.fracSame', { d }) });
+        }
         if (mixed) {
           const w1 = r(1, 4); const w2 = r(0, 3); const n1 = r(1, d - 1); const n2 = r(1, d - 1);
           const A = w1 * d + n1; const B = w2 * d + n2;
@@ -598,7 +635,7 @@ const GEN = {
           if (gcd(res % d, d) !== 1 && res % d) continue;
           const t1 = fracTok(n1, d, w1); const t2 = fracTok(n2, d, w2 || undefined);
           const fa = { fa: [res % d, d, Math.floor(res / d) || undefined] };
-          const text = `${t('p.text.mixed', { w: w1, n: n1, d })} ${add ? '+' : '−'} ${t('p.text.mixed', { w: w2, n: n2, d })}`;
+          const text = `${t('p.text.mixed', { w: w1, n: n1, d })} ${add ? '+' : '−'} ${w2 ? t('p.text.mixed', { w: w2, n: n2, d }) : `${n2}/${d}`}`;
           return buildH([t1, { op: add ? ops().plus : ops().minus }, t2, { op: ops().eq }, fa], { title: t('p.title.fracAddSub'), text, answer: res >= d ? t('p.text.mixed', { w: Math.floor(res / d), n: res % d, d }) : `${res}/${d}`, help: t('p.help.fracSameDen', { d }) });
         }
         const n1 = r(1, d - 1); const n2 = r(1, d - 1);
@@ -625,7 +662,7 @@ const GEN = {
       }
       if (op === 'mul' || op === 'div') {
         const d1 = r(2, 9); const n1 = r(1, 9); const d2 = r(2, 9); const n2 = r(1, 9);
-        if (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1 || n1 === d1 || n2 === d2) continue;
+        if (gcd(n1, d1) !== 1 || gcd(n2, d2) !== 1 || n1 >= d1 || n2 >= d2) continue;
         const [rn, rd] = op === 'mul' ? reduce(n1 * n2, d1 * d2) : reduce(n1 * d2, d1 * n2);
         if (rd === 1 || rn > 99 || rd > 99) continue;
         const a = fracAns(rn, rd, true);

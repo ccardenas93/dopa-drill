@@ -1,4 +1,7 @@
 // Skill tree for grades 1-6 (calculation only). See docs/curriculum.md.
+// Grades follow the Spanish / Latin American primary sequence (tables 2·5·10
+// first, the higher tables and long division by one digit in 3.º, 3×2-digit
+// multiplication in 4.º); ids keep their original prefix for saved data.
 // Each skill: id, name (shown on screen), grade, lane (tree column),
 // req (all must be mastered to unlock), gen (generator + params, problems.js).
 
@@ -11,8 +14,9 @@ export const LANES = ['たし・ひき', 'かけ・わり', '小数・分数', '
 const LANE_KEYS = ['lane.addsub', 'lane.muldiv', 'lane.decfrac', 'lane.other'];
 export const laneLabel = (i) => t(LANE_KEYS[i] || 'lane.other');
 
-// Mastery / unlock rule (provisional): 5 first-try clears in the last 6 attempts.
-export const MASTERY = { window: 6, need: 5 };
+// Mastery / unlock rule: 7 first-try clears in the last 8 counted attempts
+// (guided tries, extras, reviews and placement do not count).
+export const MASTERY = { window: 8, need: 7 };
 
 const RAW_SKILLS = [
   // ---------------------------------------------------------------- grade 1
@@ -32,13 +36,14 @@ const RAW_SKILLS = [
   { id: 'g2-vsub2-b', name: 'くりさがりのひっさん', grade: 2, lane: 0, req: ['g2-vsub2-nb', 'g1-sub-b'], gen: ['vsub', { da: 2, db: [1, 2], borrow: 'some' }] },
   { id: 'g2-vadd3s', name: '百をこえるたしざん', grade: 2, lane: 0, req: ['g2-vadd2-c'], gen: ['vadd', { da: 2, db: 2, carry: 'many', maxDigits: 3 }] },
   { id: 'g2-vsub3s', name: '百からのひきざん', grade: 2, lane: 0, req: ['g2-vsub2-b', 'g2-vadd3s'], gen: ['vsub', { da: 3, db: 2, borrow: 'some', aMax: 199 }] },
-  { id: 'g2-kuku25', name: '九九 5と2のだん', grade: 2, lane: 1, req: ['g1-add-c'], gen: ['kuku', { dans: [5, 2] }] },
+  { id: 'g2-kuku25', name: '九九 2・5・10のだん', grade: 2, lane: 1, req: ['g1-add-c'], gen: ['kuku', { dans: [2, 5, 10] }] },
   { id: 'g2-kuku34', name: '九九 3と4のだん', grade: 2, lane: 1, req: ['g2-kuku25'], gen: ['kuku', { dans: [3, 4] }] },
-  { id: 'g2-kuku67', name: '九九 6と7のだん', grade: 2, lane: 1, req: ['g2-kuku34'], gen: ['kuku', { dans: [6, 7] }] },
-  { id: 'g2-kuku891', name: '九九 8・9・1のだん', grade: 2, lane: 1, req: ['g2-kuku67'], gen: ['kuku', { dans: [8, 9, 1] }] },
-  { id: 'g2-kuku-mix', name: '九九 まぜこぜ', grade: 2, lane: 1, req: ['g2-kuku891'], gen: ['kuku', { dans: [1, 2, 3, 4, 5, 6, 7, 8, 9] }] },
-  { id: 'g2-mul-tens', name: '何十×1けた', grade: 2, lane: 1, req: ['g2-kuku-mix'], gen: ['mulTens', {}] },
-  { id: 'g2-frac-of', name: '1/2と1/4', grade: 2, lane: 2, req: ['g2-kuku25'], gen: ['fracOf', { dens: [2, 4] }] },
+  { id: 'g2-kuku67', name: '九九 6と7のだん', grade: 3, lane: 1, req: ['g2-kuku34'], gen: ['kuku', { dans: [6, 7] }] },
+  { id: 'g2-kuku891', name: '九九 8・9・1のだん', grade: 3, lane: 1, req: ['g2-kuku67'], gen: ['kuku', { dans: [8, 9, 1] }] },
+  { id: 'g2-kuku-mix', name: '九九 まぜこぜ', grade: 3, lane: 1, req: ['g2-kuku891'], gen: ['kuku', { dans: [1, 2, 3, 4, 5, 6, 7, 8, 9] }] },
+  { id: 'g2-mul-tens', name: '何十×1けた', grade: 3, lane: 1, req: ['g2-kuku-mix'], gen: ['mulTens', {}] },
+  { id: 'g3-pow10', name: '10倍・100倍と 1/10・1/100', grade: 3, lane: 1, req: ['g2-mul-tens'], gen: ['pow10', {}] },
+  { id: 'g2-frac-of', name: '1/2と1/4', grade: 2, lane: 2, req: ['g2-kuku25', 'g2-kuku34'], gen: ['fracOf', { dens: [2, 4] }] },
 
   // ---------------------------------------------------------------- grade 3
   { id: 'g3-vadd3', name: '3けたのたしざん', grade: 3, lane: 0, req: ['g2-vadd3s'], gen: ['vadd', { da: 3, db: 3, carry: 'some', maxDigits: 3 }] },
@@ -50,15 +55,15 @@ const RAW_SKILLS = [
   { id: 'g3-div-tens', name: '何十÷1けた', grade: 3, lane: 1, req: ['g3-div-basic'], gen: ['divTens', {}] },
   { id: 'g3-vmul-2x1', name: '2けた×1けた ひっさん', grade: 3, lane: 1, req: ['g2-mul-tens'], gen: ['vmul', { da: 2, db: 1 }] },
   { id: 'g3-vmul-3x1', name: '3けた×1けた', grade: 3, lane: 1, req: ['g3-vmul-2x1'], gen: ['vmul', { da: 3, db: 1 }] },
-  { id: 'g3-vmul-2x2', name: '2けた×2けた', grade: 3, lane: 1, req: ['g3-vmul-2x1'], gen: ['vmul', { da: 2, db: 2 }] },
-  { id: 'g3-vmul-3x2', name: '3けた×2けた', grade: 3, lane: 1, req: ['g3-vmul-2x2', 'g3-vmul-3x1'], gen: ['vmul', { da: 3, db: 2 }] },
+  { id: 'g3-vmul-2x2', name: '2けた×2けた', grade: 3, lane: 1, req: ['g3-vmul-2x1', 'g2-vadd3s'], gen: ['vmul', { da: 2, db: 2 }] },
+  { id: 'g3-vmul-3x2', name: '3けた×2けた', grade: 4, lane: 1, req: ['g3-vmul-2x2', 'g3-vmul-3x1'], gen: ['vmul', { da: 3, db: 2 }] },
   { id: 'g3-dec-add1', name: '小数のたしざん', grade: 3, lane: 2, req: ['g2-vadd2-c'], gen: ['vdec', { op: 'add', places: 1 }] },
   { id: 'g3-dec-sub1', name: '小数のひきざん', grade: 3, lane: 2, req: ['g3-dec-add1', 'g2-vsub2-b'], gen: ['vdec', { op: 'sub', places: 1 }] },
   { id: 'g3-frac-same', name: '分数のたしひき', grade: 3, lane: 2, req: ['g2-frac-of'], gen: ['frac', { op: 'addsub', same: true, maxOne: true }] },
 
   // ---------------------------------------------------------------- grade 4
-  { id: 'g4-vdiv-2d1', name: '2けた÷1けた ひっさん', grade: 4, lane: 1, req: ['g3-div-rem', 'g3-div-tens'], gen: ['vdiv', { dd: 2, ds: 1 }] },
-  { id: 'g4-vdiv-3d1', name: '3けた÷1けた', grade: 4, lane: 1, req: ['g4-vdiv-2d1'], gen: ['vdiv', { dd: 3, ds: 1 }] },
+  { id: 'g4-vdiv-2d1', name: '2けた÷1けた ひっさん', grade: 3, lane: 1, req: ['g3-div-rem', 'g3-div-tens', 'g2-vsub2-b'], gen: ['vdiv', { dd: 2, ds: 1 }] },
+  { id: 'g4-vdiv-3d1', name: '3けた÷1けた', grade: 3, lane: 1, req: ['g4-vdiv-2d1'], gen: ['vdiv', { dd: 3, ds: 1 }] },
   { id: 'g4-vdiv-2d2', name: '2けた÷2けた', grade: 4, lane: 1, req: ['g4-vdiv-2d1', 'g3-vmul-2x1'], gen: ['vdiv', { dd: 2, ds: 2 }] },
   { id: 'g4-vdiv-3d2', name: '3けた÷2けた', grade: 4, lane: 1, req: ['g4-vdiv-2d2', 'g4-vdiv-3d1'], gen: ['vdiv', { dd: 3, ds: 2 }] },
   { id: 'g4-order', name: 'けいさんのきまり', grade: 4, lane: 3, req: ['g2-kuku-mix', 'g2-vsub2-b'], gen: ['order', {}] },
@@ -71,7 +76,8 @@ const RAW_SKILLS = [
   // ---------------------------------------------------------------- grade 5
   { id: 'g5-dec-mul', name: '小数×小数', grade: 5, lane: 2, req: ['g4-dec-mul'], gen: ['vmul', { da: 2, db: 2, pa: 1, pb: 1 }] },
   { id: 'g5-dec-div', name: '小数÷小数', grade: 5, lane: 2, req: ['g4-dec-div', 'g5-dec-mul'], gen: ['decDivDec', {}] },
-  { id: 'g5-gcd', name: '最大公約数', grade: 5, lane: 3, req: ['g3-div-basic'], gen: ['gcdlcm', { kind: 'gcd' }] },
+  { id: 'g5-multiples', name: '倍数と約数', grade: 5, lane: 3, req: ['g3-div-rem'], gen: ['multiples', {}] },
+  { id: 'g5-gcd', name: '最大公約数', grade: 5, lane: 3, req: ['g5-multiples'], gen: ['gcdlcm', { kind: 'gcd' }] },
   { id: 'g5-lcm', name: '最小公倍数', grade: 5, lane: 3, req: ['g5-gcd'], gen: ['gcdlcm', { kind: 'lcm' }] },
   { id: 'g5-frac-reduce', name: '約分', grade: 5, lane: 2, req: ['g5-gcd', 'g4-frac-mixed'], gen: ['frac', { op: 'reduce' }] },
   { id: 'g5-frac-diff', name: '分母がちがう分数', grade: 5, lane: 2, req: ['g5-frac-reduce', 'g5-lcm'], gen: ['frac', { op: 'addsub', same: false }] },
@@ -83,7 +89,7 @@ const RAW_SKILLS = [
   { id: 'g6-frac-div', name: '分数÷分数', grade: 6, lane: 2, req: ['g6-frac-mul'], gen: ['frac', { op: 'div' }] },
   { id: 'g6-frac-dec', name: '小数と分数のけいさん', grade: 6, lane: 2, req: ['g6-frac-div', 'g5-dec-div'], gen: ['frac', { op: 'decimal' }] },
   { id: 'g6-ratio', name: '等しい比', grade: 6, lane: 3, req: ['g5-lcm'], gen: ['ratio', {}] },
-  { id: 'g6-letter', name: 'xをもとめる', grade: 6, lane: 3, req: ['g4-order'], gen: ['letter', {}] },
+  { id: 'g6-letter', name: 'xをもとめる', grade: 6, lane: 3, req: ['g4-order', 'g3-div-basic'], gen: ['letter', {}] },
 ];
 
 // `name` is a live getter so the whole tree follows the current language.

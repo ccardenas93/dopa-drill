@@ -10,10 +10,11 @@ export const GUIDED_N = 2;
 
 const recOf = (prog, id) => prog.skills[id] || (prog.skills[id] = { n: 0, hist: [], mastered: false, recent: [] });
 
-/** A skill gets its example the first time it is ever played. */
+/** A skill keeps its example until it has been shown (or the skill is mastered),
+ * even if the child already met it in an extra stage or a grade set. */
 export function needsLesson(prog, id) {
   const r = prog.skills[id];
-  return !!id && !(r && (r.n || r.lesson || r.mastered));
+  return !!id && !(r && (r.lesson || r.mastered));
 }
 
 export function markLesson(prog, id, at = Date.now()) {

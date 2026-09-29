@@ -125,7 +125,7 @@ export function bestStreak() {
 // The first item: the "no count" hammer. One hammer turns one missed day into
 // a no-count day. Provisional: at most 3 held, only for the last 7 days, one
 // given at the start; more come from completing the daily quests (id035).
-export const HAMMER = { max: 3, reach: 7, first: 1 };
+export const HAMMER = { max: 5, reach: 7, first: 1 };
 export function items() {
   const st = load();
   if (!st.items) st.items = { hammer: HAMMER.first, got: HAMMER.first, used: 0, asked: null, log: [] };

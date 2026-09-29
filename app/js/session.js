@@ -99,6 +99,15 @@ export function recordResult(prog, id, firstTry, sig, info = {}) {
   if (info.ms != null && info.day) noteTiming(r, firstTry, info, at);
   const wasMastered = r.mastered;
   if (!r.mastered && r.hist.length >= MASTERY.window && r.hist.reduce((a, b) => a + b, 0) >= MASTERY.need) { r.mastered = true; r.masteredAt = at; }
+  // Spaced review clock (SM-2-lite): a clean review stretches the interval
+  // one step, a slip resets it to one day. Guided/extra/review answers are
+  // practice, not evidence, so they leave the clock alone.
+  if (r.mastered && !info.guided) {
+    const rv = r.rev || (r.rev = { at, iv: 1 });
+    const i = REVIEW_STEPS.indexOf(rv.iv);
+    rv.iv = firstTry ? REVIEW_STEPS[Math.min(REVIEW_STEPS.length - 1, i < 0 ? 0 : i + 1)] : REVIEW_STEPS[0];
+    rv.at = at;
+  }
   const stars = updateStars(r, SKILL[id].grade, info.day || null);
   const unlocked = SKILLS.filter((s) => !before.has(s.id) && isUnlocked(prog, s.id)).map((s) => s.id);
   return { unlocked, mastered: !wasMastered && r.mastered, stars, polished: wasRusty && firstTry };
@@ -232,8 +241,14 @@ export function masteryRatio(prog, id) {
 // A plan answers: which skill for basic problem i, and for extra problem k.
 // "adaptive" plans also react to answers (placement walk).
 
-export function gradePlan(grade, N, rng) {
-  const list = skillsOfGrade(grade).sort((a, b) => DEPTH[a.id] - DEPTH[b.id]).map((s) => s.id);
+export function gradePlan(grade, N, rng, prog = null) {
+  const all = skillsOfGrade(grade).sort((a, b) => DEPTH[a.id] - DEPTH[b.id]).map((s) => s.id);
+  // Once placed, a grade set drills what the tree has opened; locked skills of
+  // that grade appear only as previews (no mastery evidence) when fewer than
+  // three are open, so nothing is "mastered" on top of a locked prerequisite.
+  const open = prog && prog.placed ? all.filter((id) => isUnlocked(prog, id) || isMastered(prog, id)) : all;
+  const list = open.length >= 3 ? open : all;
+  const noEvidence = new Set(prog && prog.placed ? list.filter((id) => !isUnlocked(prog, id) && !isMastered(prog, id)) : []);
   const next = skillsOfGrade(Math.min(6, grade + 1)).sort((a, b) => DEPTH[a.id] - DEPTH[b.id]).map((s) => s.id);
   const basic = Array.from({ length: N }, (_, i) => {
     // Walk from easy to hard across the grade with a little jitter.
@@ -243,7 +258,7 @@ export function gradePlan(grade, N, rng) {
   });
   const hard = list.slice(Math.floor(list.length * 0.55));
   return {
-    mode: 'grade', grade, basic,
+    mode: 'grade', grade, basic, noEvidence,
     extra: (k) => (k < 6 || grade === 6 ? hard[k % hard.length] : next[(k - 6) % Math.max(1, Math.min(next.length, 4))]),
   };
 }
@@ -251,41 +266,97 @@ export function gradePlan(grade, N, rng) {
 // Frontier = unlocked but not mastered; "warm" = mastered (light review).
 export function frontier(prog) { return ORDER.filter((id) => isUnlocked(prog, id) && !isMastered(prog, id)); }
 
+// ---------------------------------------------------------------- spaced review
+// A mastered skill comes back on a forgetting-curve schedule: the interval
+// grows with its stars (1★ every 2 days … 5★ every 30) and restarts at every
+// first-try answer. The review slots of a level play take the most overdue
+// skills first, so nothing is forgotten silently and nothing fresh is re-asked
+// the same day.
+export const REVIEW_STEPS = [1, 3, 7, 14, 30]; // days between reviews, per skill
+export const REVIEW_DAYS = [0, 2, 4, 8, 16, 30]; // fallback by stars for records without a clock
+const lastSeen = (r) => r.lastOk || r.masteredAt || r.grantedAt || 0;
+export function dueRatio(prog, id, now = Date.now()) {
+  const r = prog.skills[id];
+  if (!r || !r.mastered) return 0;
+  const at = r.rev ? r.rev.at : lastSeen(r);
+  const iv = r.rev ? r.rev.iv : REVIEW_DAYS[Math.min(STAR_MAX, Math.max(1, starsOf(prog, id)))];
+  return ((now - at) / 864e5) / iv;
+}
+// Most overdue first; ties go to the harder skill so a fresh placement does
+// not turn every review slot into grade-1 sums.
+export function reviewQueue(prog, now = Date.now()) {
+  return ORDER.map((id, i) => ({ id, i, due: isMastered(prog, id) ? dueRatio(prog, id, now) : -1 }))
+    .filter((x) => x.due >= 0)
+    .sort((a, b) => b.due - a.due || SKILL[b.id].grade - SKILL[a.id].grade || b.i - a.i)
+    .map((x) => x.id);
+}
+
 export const NEW_BLOCK = 4;
+
+// What "Siguiente" should point at: the deepest skill already in progress,
+// else the frontier skill closest to the child's grade (a leftover grade-2
+// branch is not the next step for a child who just proved grade 4).
+export function nextSkill(prog) {
+  const front = frontier(prog);
+  if (!front.length) return ORDER[ORDER.length - 1];
+  const learning = front.filter((id) => prog.skills[id] && prog.skills[id].n);
+  if (learning.length) return learning[learning.length - 1];
+  const top = Math.max(prog.gradeHint || 1, ...ORDER.filter((id) => isMastered(prog, id)).map((id) => SKILL[id].grade), 1);
+  const near = front.filter((id) => SKILL[id].grade <= top);
+  return near.length ? near[near.length - 1] : front[0];
+}
 
 export function levelPlan(prog, N, rng, now = Date.now()) {
   if (!prog.placed) return placementPlan(prog, N);
   const front = frontier(prog);
   const warm = ORDER.filter((id) => isMastered(prog, id));
-  // Rusty skills (id040) take the review slots first; the share does not change.
+  // Rusty skills (id040) take the review slots first; then whatever the
+  // spaced-review schedule says is due; the share does not change.
   const rusty = rustyOf(prog, now);
-  // Recent mastered skills first, then the frontier (least practised first).
-  const warmPick = warm.slice(-6);
-  const nWarm = Math.min(warmPick.length, Math.max(1, Math.round(N * 0.3)));
+  const queue = reviewQueue(prog, now).filter((id) => !rusty.includes(id));
+  const due = queue.filter((id) => dueRatio(prog, id, now) >= 1);
+  // Nothing answered in the last few hours is re-asked unless it is due.
+  const settled = queue.filter((id) => dueRatio(prog, id, now) >= 0.25);
+  const warmPick = (settled.length ? settled : queue).slice(0, 6);
+  const share = due.length + rusty.length > 6 ? 0.5 : 0.3;
+  let nWarm = Math.min(rusty.length + warmPick.length, Math.max(1, Math.round(N * share)));
   // Work in progress stays small: up to 3 skills being learned, plus one
   // brand-new skill only while fewer than 3 are open. The new skill comes as a
   // short block (lesson, then guided tries) before mixing with the others.
   const learning = front.filter((id) => prog.skills[id] && prog.skills[id].n).slice(0, 3);
   const fresh = learning.length < 3 ? front.filter((id) => !(prog.skills[id] && prog.skills[id].n)).slice(0, 1) : [];
+  // With nothing due, one light review is enough: the set belongs to learning.
+  if (!due.length && !rusty.length && (learning.length || fresh.length)) nWarm = Math.min(nWarm, 1);
   const basic = [];
-  for (let i = 0; i < nWarm; i++) basic.push(i < rusty.length ? rusty[i] : warmPick[Math.floor(rng() * warmPick.length)]);
+  for (let i = 0; i < nWarm; i++) basic.push(i < rusty.length ? rusty[i] : due[i - rusty.length] || warmPick[Math.floor(rng() * warmPick.length)] || warm[Math.floor(rng() * warm.length)]);
   const rest = N - nWarm;
   const block = fresh.length ? Math.min(rest, learning.length ? NEW_BLOCK : rest) : 0;
   for (let i = 0; i < block; i++) basic.push(fresh[0]);
   for (let i = 0; i < rest - block; i++) basic.push(learning.length ? learning[i % learning.length] : warm[Math.floor(rng() * warm.length)]);
-  const hardest = front.length ? front.slice(-3) : warm.slice(-3);
-  return { mode: 'level', basic, extra: (k) => hardest[k % hardest.length] };
+  // The extra stage never springs an untaught skill: it drills what is being
+  // learned, else the strongest mastered skills.
+  const hardest = learning.length ? learning.slice(-3) : warm.length ? warm.slice(-3) : front.slice(-3);
+  // Mistakes come back at the tail of the set (oldest first, verbatim the
+  // first time); the answers are practice, not mastery evidence.
+  const items = {};
+  if (N >= 6) (prog.review || []).slice(0, 2).forEach((it, i) => { const k = N - 2 + i; if (it.skill) { basic[k] = it.skill; items[k] = it; } });
+  return { mode: 'level', basic, items, extra: (k) => hardest[k % hardest.length] };
 }
 
 // First session: walk along PLACEMENT, jumping ahead after clean answers and
 // easing back after slips. Two clean answers in a row on the same skill grant
 // it and its ancestors (one lucky answer is not enough), so a skill may be
 // asked before it is unlocked (skipping ahead).
-export function placementPlan(prog, N) {
-  const walk = { p: 0, jump: 6, lastOk: -1, confirm: false };
+export const PLACEMENT_N = 12;
+export function placementPlan(prog, N, startGrade = prog.gradeHint || 1) {
+  // Start one grade below what the child says, with short jumps; a first-grader
+  // starts at the very beginning. Twelve problems are enough to converge.
+  const g = Math.max(1, Math.min(6, Number(startGrade) || 1));
+  const start = g <= 1 ? 0 : Math.max(0, PLACEMENT.findIndex((id) => SKILL[id].grade === g - 1));
+  const walk = { p: start, jump: g <= 1 ? 6 : 4, lastOk: start - 1, confirm: false };
   return {
     mode: 'level', placement: true, walk,
-    basic: Array.from({ length: N }, () => null),
+    basic: Array.from({ length: Math.max(N, PLACEMENT_N) }, () => null),
     pick() { return PLACEMENT[Math.min(PLACEMENT.length - 1, walk.p)]; },
     answer(firstTry) {
       if (firstTry && !walk.confirm) { walk.confirm = true; return; }

@@ -36,6 +36,7 @@
       <div class="modes" id="modes">
         <button type="button" id="start" class="big-btn level-btn"><span data-i18n="title.start">じぶんレベル</span><small id="level-sub" data-i18n="title.startSub">はじめは じつりょくチェック</small></button>
         <button type="button" id="start-review" class="sub-btn review-btn review-main" hidden><span data-i18n="title.review">ふくしゅう</span> <b id="review-count">0</b></button>
+        <button type="button" id="save-streak" class="sub-btn streak-btn" hidden></button>
         <div class="grades" role="group" aria-label="学年べつ" data-i18n-aria="title.gradesAria">
           <button type="button" data-grade="1"><span>1</span><small data-i18n="title.gradeOrd.1">ねんせい</small></button><button type="button" data-grade="2"><span>2</span><small data-i18n="title.gradeOrd.2">ねんせい</small></button><button type="button" data-grade="3"><span>3</span><small data-i18n="title.gradeOrd.3">ねんせい</small></button>
           <button type="button" data-grade="4"><span>4</span><small data-i18n="title.gradeOrd.4">ねんせい</small></button><button type="button" data-grade="5"><span>5</span><small data-i18n="title.gradeOrd.5">ねんせい</small></button><button type="button" data-grade="6"><span>6</span><small data-i18n="title.gradeOrd.6">ねんせい</small></button>
@@ -147,6 +148,7 @@
           <div><dt data-i18n="result.time">タイム</dt><dd id="r-time">1:23</dd></div>
         </dl>
         <p class="dopa-final"><small data-i18n="result.dopa">ドパ</small><b id="r-dopa">0</b></p>
+        <div class="today-box" id="r-today" hidden></div>
         <div class="growth-box" id="r-growth"></div>
         <p class="unlock" id="r-unlock"></p>
         <div class="skill-news" id="r-skills"></div>
@@ -245,6 +247,17 @@
       <p class="privacy-p" data-i18n="privacy.p3">Puedes borrar todos los datos con «Restablecer todo» en Ajustes.</p>
       <a class="sub-btn privacy-link" id="privacy-link" href="https://ccardenas93.github.io/dopa-drill/privacy.html" target="_blank" rel="noopener" data-i18n="privacy.link">Leer la política completa</a>
       <button type="button" class="big-btn" id="privacy-close" data-i18n="common.close">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="grade-ask" role="dialog" aria-modal="true" aria-labelledby="ga-title" hidden>
+    <div class="modal-card">
+      <h2 id="ga-title" class="chip" data-i18n="placement.askTitle">¿En qué curso estás?</h2>
+      <p class="set-note ga-note" data-i18n="placement.askNote">La prueba de nivel empieza cerca de lo que ya sabes y avanza sola</p>
+      <div class="grades ga-grades" role="group" aria-label="Curso">
+        <button type="button" data-ga="1"><span>1</span><small data-i18n="title.gradeOrd.1">º</small></button><button type="button" data-ga="2"><span>2</span><small data-i18n="title.gradeOrd.2">º</small></button><button type="button" data-ga="3"><span>3</span><small data-i18n="title.gradeOrd.3">º</small></button>
+        <button type="button" data-ga="4"><span>4</span><small data-i18n="title.gradeOrd.4">º</small></button><button type="button" data-ga="5"><span>5</span><small data-i18n="title.gradeOrd.5">º</small></button><button type="button" data-ga="6"><span>6</span><small data-i18n="title.gradeOrd.6">º</small></button>
+      </div>
     </div>
   </div>
 

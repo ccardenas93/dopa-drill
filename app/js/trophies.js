@@ -76,10 +76,10 @@ const SERIES_DEFS = [
     desc: (v) => (v >= 60 ? one('trophy.minutes.descHours', v / 60) : many('trophy.minutes.descMins', v)) },
 
   // ---- スキル / Habilidades: unlock, collect stars, master, then whole grades and lanes.
-  counted('unlocked', 'スキル', 'trophy.unlocked.title', 'unlocked', [3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 58]),
-  counted('starsTotal', 'スキル', 'trophy.starsTotal.title', 'starsTotal', [5, 10, 25, 50, 75, 100, 150, 200, 250, 290]),
-  counted('mastered', 'スキル', 'trophy.mastered.title', 'mastered', [1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 58], { plural: true }),
-  { key: 'star5', cat: 'スキル', titleKey: 'trophy.star5.title', metric: 'star5', steps: [1, 3, 5, 10, 20, 30, 58], name: (v) => many('trophy.star5.name', v), desc: (v) => one('trophy.star5.desc', v) },
+  counted('unlocked', 'スキル', 'trophy.unlocked.title', 'unlocked', [3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60]),
+  counted('starsTotal', 'スキル', 'trophy.starsTotal.title', 'starsTotal', [5, 10, 25, 50, 75, 100, 150, 200, 250, 300]),
+  counted('mastered', 'スキル', 'trophy.mastered.title', 'mastered', [1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60], { plural: true }),
+  { key: 'star5', cat: 'スキル', titleKey: 'trophy.star5.title', metric: 'star5', steps: [1, 3, 5, 10, 20, 30, 60], name: (v) => many('trophy.star5.name', v), desc: (v) => one('trophy.star5.desc', v) },
   { key: 'gradeStar3', cat: 'スキル', titleKey: 'trophy.gradeStar3.title', items: [1, 2, 3, 4, 5, 6].map((g) => ({ id: `gradeStar3-${g}`, metric: `gradeStar3${g}`, need: 1, name: () => t('trophy.gradeStar3.name', { g }), desc: () => t('trophy.gradeStar3.desc', { g }) })) },
   { key: 'gradeDone', cat: 'スキル', titleKey: 'trophy.gradeDone.title', items: [1, 2, 3, 4, 5, 6].map((g) => ({ id: `gradeDone-${g}`, metric: `gradeDone${g}`, need: 1, name: () => t('trophy.gradeDone.name', { g }), desc: () => t('trophy.gradeDone.desc', { g }) })) },
   { key: 'laneDone', cat: 'スキル', titleKey: 'trophy.laneDone.title', items: LANES.map((l, i) => ({ id: `laneDone-${i}`, metric: `laneDone${i}`, need: 1, name: () => t('trophy.laneDone.name', { lane: laneLabel(i) }), desc: () => t('trophy.laneDone.desc', { lane: laneLabel(i) }) })) },
