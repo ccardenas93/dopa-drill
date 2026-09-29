@@ -122,6 +122,19 @@ en `store/play/`):
 | Etiquetas | matemáticas, cálculo mental, primaria, niños | – |
 | Correo de contacto | obligatorio y visible en la ficha | – |
 
+### 4.3b Vídeo promocional
+
+`videos/dopa-drill-promo/` es un proyecto HyperFrames (guion `SCRIPT.md`,
+plan `STORYBOARD.md`, frames en `compositions/frames/`). Renderiza con
+`npm run render` dentro de esa carpeta → `renders/video.mp4` (1080×1920, ~36 s,
+narración en español con voz local Kokoro, música y efectos reales del juego,
+subtítulos quemados) y `bash tools/derive-landscape.sh` → `renders/video-16x9.mp4`
+para YouTube. Play Console solo acepta un **enlace de YouTube** en la ficha:
+sube la versión 16:9 (o la vertical como Short) a YouTube y pega la URL en
+«Vídeo promocional». La grabación de partida se regenera con
+`node tools/record_demo.mjs` desde la raíz del repo (necesita `npm run serve`
+o cualquier servidor estático en el puerto que le pases).
+
 ### 4.4 Versiones: en qué pista subir
 
 1. **Prueba interna** (hasta 100 testers por correo): subir el AAB hoy, instalar

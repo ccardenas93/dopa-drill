@@ -7,3 +7,13 @@ android/keystore.properties
 android/keystore/
 *.jks
 *.keystore
+# HyperFrames promo project: regenerable/heavy artifacts (see docs/PLAY_STORE.md §4.3b)
+videos/*/assets/gameplay-demo.mp4
+videos/*/assets/*.webm
+videos/*/renders/work-*/
+videos/*/renders/.video.hf-transaction-*/
+videos/*/snapshots/
+videos/*/.hyperframes/frame-packets/
+videos/*/audio_engine_meta.json
+videos/*/audio_meta.neutral.json
+.media/

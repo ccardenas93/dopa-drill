@@ -20,7 +20,7 @@ pantallas editando la lista de `tools/store_assets.mjs`.
 
 Los textos de la ficha (nombre, descripción breve y completa, en español e
 inglés) están en `docs/PLAY_STORE.md`, sección 6. El vídeo promocional (enlace
-de YouTube en la ficha) se produce desde `promo/` (ver `promo/README.md`).
+de YouTube en la ficha) se produce desde `videos/dopa-drill-promo/` (HyperFrames; ver `docs/PLAY_STORE.md`).
 
 Fuentes de los gráficos:
 
