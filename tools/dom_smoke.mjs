@@ -141,7 +141,7 @@ if (target !== 'ja') {
   click($(`.lang-pick [data-lang="${other}"]`));
   await sleep(60);
   checkTitle(other);
-  if (window.localStorage.getItem('dopa-drill:lang') !== other) failures.push('language choice was not saved');
+  if (window.localStorage.getItem('capifiesta:lang') !== other) failures.push('language choice was not saved');
   console.log(`[settings ${other}] ${scan(`settings ${other}`).slice(0, 200)}`);
   click($('#close-settings'));
   await sleep(80);

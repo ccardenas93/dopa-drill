@@ -1,9 +1,9 @@
 {
-  "name": "dopa-drill",
+  "name": "capifiesta",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Dopa Drill: cuaderno de cálculo con celebración. Web + iOS + Android con un solo código.",
+  "description": "CapiFiesta: cálculo mental con fiesta y un capibara. Web + iOS + Android con un solo código.",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "i18n": "node tools/check_i18n.mjs",

@@ -4,8 +4,8 @@ Guarda la imagen de referencia como `docs/mascot/referencia.png` y ejecuta desde
 la raíz del repo:
 
 ```bash
-codex exec -m gpt-6-astra -C "$PWD" -s workspace-write --skip-git-repo-check \
-  -i docs/mascot/referencia.png "$(sed -n '/^---$/,$p' docs/MASCOT_PROMPT_V2.md | tail -n +2)"
+sed -n '/^---$/,$p' docs/MASCOT_PROMPT_V2.md | tail -n +2 \
+  | codex exec -m gpt-6-astra -C "$PWD" -s workspace-write --skip-git-repo-check -i docs/mascot/referencia.png -
 ```
 
 (O pega en Astra todo lo que hay debajo de la línea, junto con la imagen.)

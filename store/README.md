@@ -24,6 +24,6 @@ de YouTube en la ficha) se produce desde `videos/dopa-drill-promo/` (HyperFrames
 
 Fuentes de los gráficos:
 
-- `icon.html`: cara de Dopakichi (`app/icon.svg`) sobre el azul de la marca.
-- `feature.html`: logo, eslogan y Dopakichi de cuerpo entero; `?lang=en`.
+- `icon.html`: cara de Capi (`app/icon.svg`) sobre el azul de la marca.
+- `feature.html`: logo, eslogan y Capi de cuerpo entero; `?lang=en`.
 - `logo.html`: solo el logo, fondo transparente; `?lang=ja` para el original.

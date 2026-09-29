@@ -108,7 +108,7 @@ body.reduced .logo *, body.reduced .logo-burst { animation: none !important; }
 .logo.latin { --fs: clamp(50px, 15.5vw, 74px); }
 .logo.latin .logo-top { gap: 0; letter-spacing: -.03em; }
 .logo.latin .logo-burst { top: calc(var(--fs) * 0.5); width: calc(var(--fs) * 3.7); height: calc(var(--fs) * 3.7); }
-.logo.latin .logo-ribbon { font-size: calc(var(--fs) * 0.5); gap: .06em; padding: .12em 1em .2em; }
+.logo.latin .logo-ribbon { font-size: calc(var(--fs) * 0.44); gap: .05em; padding: .14em 1em .22em; }
 .logo.latin .logo-bits b { font-size: calc(var(--fs) * 0.44); }
 .logo-top i:nth-child(3) { --r: -5deg; --dy: 3px; animation-delay: -.4s; }
 .logo-top i:nth-child(4) { --r: 8deg; --dy: -4px; animation-delay: -1.2s; }
@@ -116,6 +116,7 @@ body.reduced .logo *, body.reduced .logo-burst { animation: none !important; }
 .logo-top i:nth-child(4)::after { color: var(--violet); }
 .logo-ribbon i:nth-child(5) { animation-delay: -.75s; }
 .logo-ribbon i:nth-child(6) { animation-delay: -1s; }
+.logo-ribbon i:nth-child(7) { animation-delay: -1.25s; }
 .settings-btn { display: grid; place-items: center; position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 14px; width: 48px; height: 48px; padding: 4px; background: #fff; box-shadow: 0 4px 0 var(--ink); z-index: 3; }
 .settings-btn svg { display: block; width: 100%; height: 100%; transition: transform .4s; }
 #open-settings:active svg { transform: rotate(90deg); }

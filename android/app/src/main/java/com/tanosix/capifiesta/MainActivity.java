@@ -1,4 +1,4 @@
-package com.tanosix.dopa_drill;
+package com.tanosix.capifiesta;
 
 import android.os.Bundle;
 import android.webkit.WebView;

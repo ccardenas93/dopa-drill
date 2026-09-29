@@ -16,7 +16,7 @@ test('defaults when storage is empty, corrupted, or throwing', () => {
   store.reset();
   assert.equal(store.load(memory()).settings.count, 10);
   store.reset();
-  assert.deepEqual(store.load(memory({ 'dopa-drill:v1': '{broken' })).history, []);
+  assert.deepEqual(store.load(memory({ 'capifiesta:v1': '{broken' })).history, []);
   store.reset();
   const bad = { getItem() { throw new Error('blocked'); }, setItem() { throw new Error('blocked'); } };
   assert.equal(store.load(bad).settings.sound, true);
@@ -46,10 +46,10 @@ test('records group by day with best score and streak', () => {
   delete globalThis.localStorage;
 });
 
-test('reset removes every dopa-drill-prefixed key and preserves unrelated keys', () => {
-  const mem = memory({ other: 'keep', 'dopa-drill:v1': '{}', 'dopa-drill:v2': '{}', 'dopa-drill': 'old', 'dopa-drill-future': 'future', 'other-dopa-drill': 'keep too' });
+test('reset removes every capifiesta-prefixed key and preserves unrelated keys', () => {
+  const mem = memory({ other: 'keep', 'capifiesta:v1': '{}', 'capifiesta:v2': '{}', 'capifiesta': 'old', 'capifiesta-future': 'future', 'other-capifiesta': 'keep too' });
   store.reset(mem);
-  assert.deepEqual([...mem._m], [['other', 'keep'], ['other-dopa-drill', 'keep too']]);
+  assert.deepEqual([...mem._m], [['other', 'keep'], ['other-capifiesta', 'keep too']]);
 });
 
 test('reset clears cached settings and progress as well as persisted data', () => {
@@ -68,7 +68,7 @@ test('reset clears cached settings and progress as well as persisted data', () =
 
 test('reset never throws on storage errors and still clears the cache', () => {
   const blocked = () => { throw new Error('blocked'); };
-  for (const storage of [null, { get length() { return blocked(); } }, { length: 1, key: blocked }, { length: 1, key: () => 'dopa-drill:v1', removeItem: blocked }]) {
+  for (const storage of [null, { get length() { return blocked(); } }, { length: 1, key: blocked }, { length: 1, key: () => 'capifiesta:v1', removeItem: blocked }]) {
     store.load(memory()).history.push({ score: 100 });
     assert.doesNotThrow(() => store.reset(storage));
     assert.deepEqual(store.load(memory()), store.defaultState());
@@ -85,13 +85,13 @@ test('reset never throws on storage errors and still clears the cache', () => {
 });
 
 test('reset uses the browser storage by default and continues after a failed removal', () => {
-  const mem = memory({ 'dopa-drill:v1': '{}', 'dopa-drill:blocked': '{}', unrelated: 'keep' });
+  const mem = memory({ 'capifiesta:v1': '{}', 'capifiesta:blocked': '{}', unrelated: 'keep' });
   const remove = mem.removeItem;
-  mem.removeItem = (key) => { if (key === 'dopa-drill:blocked') throw new Error('blocked'); remove(key); };
+  mem.removeItem = (key) => { if (key === 'capifiesta:blocked') throw new Error('blocked'); remove(key); };
   globalThis.localStorage = mem;
   try {
     assert.doesNotThrow(() => store.reset());
-    assert.equal(mem.getItem('dopa-drill:v1'), null);
+    assert.equal(mem.getItem('capifiesta:v1'), null);
     assert.equal(mem.getItem('unrelated'), 'keep');
   } finally { delete globalThis.localStorage; }
 });
@@ -167,7 +167,7 @@ test('no-count hammer bridges missed days for streaks and the login card (id034)
 test('guideSeen defaults to false for fresh, legacy, corrupt and invalid saves', () => {
   for (const raw of [null, '{broken', JSON.stringify({ version: 1 }), ...[false, 'true', 1, null].map((guideSeen) => JSON.stringify({ version: 1, guideSeen }))]) {
     store.reset(null);
-    store.load(memory(raw ? { 'dopa-drill:v1': raw } : {}));
+    store.load(memory(raw ? { 'capifiesta:v1': raw } : {}));
     assert.equal(store.hasSeenGuide(), false);
   }
 });

@@ -1,6 +1,6 @@
 {
-  "appId": "com.tanosix.dopa_drill",
-  "appName": "Dopa Drill",
+  "appId": "com.tanosix.capifiesta",
+  "appName": "CapiFiesta",
   "webDir": "app",
   "loggingBehavior": "debug",
   "ios": {

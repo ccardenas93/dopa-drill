@@ -10,10 +10,10 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace "com.tanosix.dopa_drill"
+    namespace "com.tanosix.capifiesta"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.tanosix.dopa_drill"
+        applicationId "com.tanosix.capifiesta"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // Bump versionCode on every upload to Play; versionName is what users see.

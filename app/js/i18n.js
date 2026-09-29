@@ -9,7 +9,7 @@ import { EN } from './i18n.en.js';
 export const LOCALES = ['ja', 'es', 'en'];
 /** Languages offered in the interface (Japanese stays hidden). */
 export const PUBLIC_LOCALES = ['es', 'en'];
-const STORAGE_KEY = 'dopa-drill:lang';
+const STORAGE_KEY = 'capifiesta:lang';
 
 let locale = 'es';
 const listeners = new Set();
@@ -17,10 +17,10 @@ const listeners = new Set();
 // [key, ja, es]; keeping both languages side by side makes drift obvious.
 const TABLE = [
   // ------------------------------------------------------------- app / common
-  ['app.title', 'ドパドリル', 'Dopa Drill'],
+  ['app.title', 'カピフィエスタ', 'CapiFiesta'],
   // The title-screen logo is drawn letter by letter (index.html / main.js renderLogo).
-  ['app.logoTop', 'ドパ', 'DOPA'],
-  ['app.logoBottom', 'ドリル', 'DRILL'],
+  ['app.logoTop', 'カピ', 'CAPI'],
+  ['app.logoBottom', 'フィエスタ', 'FIESTA'],
   ['app.description', '算数を解くたびに、演出と音がどんどんインフレするドリル。', 'Un entrenamiento de cálculo donde la música y los efectos suben de nivel con cada acierto.'],
   ['app.langName', '日本語', 'Español'],
   ['app.notScript', 'このゲームの操作にはJavaScriptが必要です。', 'Este juego necesita JavaScript para funcionar.'],
@@ -97,12 +97,12 @@ const TABLE = [
   ['play.ok', '正解', 'Correctas'],
   ['play.ng', 'おしい', 'Casi'],
   ['play.combo', 'コンボ', 'Combo'],
-  ['play.dopa', 'ドパ', 'Dopa'],
+  ['play.dopa', 'コンフェティ', 'Confeti'],
   ['play.comboEnd', '{n}コンボ おわり', 'Combo {n} terminado'],
   ['play.comboPop', '{n}コンボ！', '¡Combo {n}!'],
   ['play.comboShort', '{n}コンボ', 'Combo {n}'],
-  ['play.dopaMultMax', 'ドパ×{x} MAX', 'Dopa ×{x} MAX'],
-  ['play.dopaMult', 'ドパ×{x}', 'Dopa ×{x}'],
+  ['play.dopaMultMax', 'コンフェティ×{x} MAX', 'Confeti ×{x} MAX'],
+  ['play.dopaMult', 'コンフェティ×{x}', 'Confeti ×{x}'],
   ['play.points', '+{n}点', '+{n} pts'],
   ['play.stampCorrect', 'せいかい', '¡BIEN!'],
   ['play.stamp100', '100点', '100 pts'],
@@ -120,7 +120,7 @@ const TABLE = [
   ['result.ng', 'おしい', 'Casi'],
   ['result.rate', '初回正解率', 'Aciertos a la primera'],
   ['result.time', 'タイム', 'Tiempo'],
-  ['result.dopa', 'ドパ', 'Dopa'],
+  ['result.dopa', 'コンフェティ', 'Confeti'],
   ['result.extraOk', 'エクストラ正解', 'Aciertos en el Extra'],
   ['result.extraNg', 'エクストラのおしい', 'Casi en el Extra'],
   ['result.basicNg', '基本のおしい', 'Casi en el Básico'],
@@ -313,7 +313,7 @@ const TABLE = [
   ['trophy.cat.extra', 'エクストラ', 'Extra'],
   ['trophy.cat.combo', 'コンボ', 'Combo'],
   ['trophy.cat.accuracy', 'せいかく', 'Precisión'],
-  ['trophy.cat.dopa', 'ドパ', 'Dopa'],
+  ['trophy.cat.dopa', 'コンフェティ', 'Confeti'],
   ['trophy.cat.review', 'ふくしゅう', 'Repaso'],
   ['trophy.cat.grade', 'がくねん', 'Grados'],
   ['trophy.cat.collection', 'コレクション', 'Colección'],
@@ -395,9 +395,9 @@ const TABLE = [
   ['trophy.firstTry.title', '初回正解', 'Aciertos a la primera'],
   ['trophy.firstTry.name', '初回正解 {n}もん', '{n} a la primera'],
   ['trophy.firstTry.desc', 'いっかいで 正解した もんだいが {n}もん', 'Acierta {n} problemas a la primera'],
-  ['trophy.dopa.title', 'ドパ', 'Dopa'],
-  ['trophy.dopa.name', '{u}ドパ', 'Dopa {u}'],
-  ['trophy.dopa.desc', '1回の プレイで ドパ {u}を こえる', 'Supera {u} de Dopa en una partida'],
+  ['trophy.dopa.title', 'コンフェティ', 'Confeti'],
+  ['trophy.dopa.name', '{u}コンフェティ', 'Confeti {u}'],
+  ['trophy.dopa.desc', '1回の プレイで コンフェティ {u}を こえる', 'Supera {u} de Confeti en una partida'],
   ['trophy.review.title', 'ふくしゅう', 'Repaso'],
   ['trophy.review.name', 'ふくしゅう {n}もん', '{n} de repaso'],
   ['trophy.review.desc.one', 'まちがえた もんだいを 1もん やりなおす', 'Repite 1 problema fallado'],

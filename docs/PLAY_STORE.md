@@ -1,30 +1,18 @@
-# Publicar Dopa Drill en Google Play
+# Publicar CapiFiesta en Google Play
 
 Guía paso a paso para la primera publicación. Todo lo técnico ya está en el
 repo (AAB firmado, anuncios, política de privacidad, SDK 36); lo que queda son
 cuentas, formularios y una decisión legal que hay que tomar antes de subir nada.
 
-## 0. Antes de nada: la licencia del personaje
+## 0. Licencia: resuelto con el rebrand
 
 Este repositorio es un fork de [grmchn/dopa-drill](https://github.com/grmchn/dopa-drill)
-(autor: gear_machine). El código es MIT y se puede usar comercialmente, pero
-`LICENSE` deja **fuera** del MIT al personaje **Dopakichi**, al **nombre
-«Dopa Drill»** y al **logo**, y dice literalmente que sin permiso previo no se
-permite:
-
-> commercial use, such as selling goods, artworks or products featuring the
-> Characters, or using them in paid products, services or advertising
-
-Una app con anuncios (o con compras) es un uso comercial. Hay dos caminos:
-
-| Opción | Qué hacer | Cuándo se puede publicar |
-| --- | --- | --- |
-| **A. Permiso** | Escribir a gear_machine (`grmchn4ml@gmail.com`, o un issue en su repo) pidiendo licencia comercial para usar Dopakichi, el nombre y el logo en la versión de Play Store con anuncios. Guardar la respuesta por escrito. | En cuanto conteste que sí. |
-| **B. Rebrand** | Cambiar nombre, logo y mascota por unos propios (el código MIT se queda, con el aviso de copyright). Puntos a tocar: `app/js/dopakichi.js`, `app/icon.svg`, `app/js/i18n*.js` (`app.title`, `app.logoTop/Bottom`), iconos Android, `capacitor.config.json` (`appName`), `strings.xml`. | Hoy mismo. |
-
-Subir la app tal cual, con anuncios y sin permiso, expone a una reclamación
-de retirada (Play tiene formulario de infracción de copyright) y a perder la
-cuenta de desarrollador. Este documento asume que se elige A o B.
+(autor: gear_machine). Su `LICENSE` deja fuera del MIT al personaje Dopakichi, al
+nombre «Dopa Drill» y al logo, y prohíbe su uso comercial (anuncios incluidos).
+El 29/09/2026 se reemplazaron los tres: la mascota es **Capi** (capibara,
+`docs/mascot/`), el nombre y el logo son **CapiFiesta** y el id de paquete
+`com.tanosix.capifiesta`. En la app no queda material excluido; el código
+sigue siendo MIT con el aviso de copyright original.
 
 ## 1. Cuentas necesarias
 
@@ -38,12 +26,12 @@ cuenta de desarrollador. Este documento asume que se elige A o B.
 ## 2. AdMob: crear la app y las unidades de anuncio
 
 1. AdMob → *Apps* → *Añadir app* → Android → «¿Está publicada en Play?» **No**
-   todavía (se vincula después) → nombre «Dopa Drill».
+   todavía (se vincula después) → nombre «CapiFiesta».
 2. Copiar el **ID de aplicación** (`ca-app-pub-XXXX~YYYY`) y pegarlo en
    `android/app/src/main/res/values/strings.xml` (`admob_app_id`).
 3. Crear dos **unidades de anuncio**:
-   - Banner → «Dopa Drill · banner» → copiar el ID a `IDS.android.banner` en `app/js/ads.js`.
-   - Intersticial → «Dopa Drill · intersticial» → `IDS.android.interstitial`.
+   - Banner → «CapiFiesta · banner» → copiar el ID a `IDS.android.banner` en `app/js/ads.js`.
+   - Intersticial → «CapiFiesta · intersticial» → `IDS.android.interstitial`.
    - (Opcional, para más adelante) Recompensado → `IDS.android.rewarded`.
 4. En `app/js/ads.js` poner `export const TESTING = false;`.
 5. AdMob → la app → *Configuración de la app* → marcar la app como
@@ -73,13 +61,13 @@ Ya está hecho en el repo:
 
 ## 4. Play Console: crear la app
 
-*Crear app*: nombre **Dopa Drill**, idioma predeterminado **Español
+*Crear app*: nombre **CapiFiesta**, idioma predeterminado **Español
 (Latinoamérica) – es-419** (o es-ES), tipo **App**, **Gratis** (no se puede
 cambiar a de pago después). Aceptar las declaraciones.
 
 ### 4.1 Panel «Configura tu app» (todas obligatorias)
 
-| Sección | Respuesta para Dopa Drill |
+| Sección | Respuesta para CapiFiesta |
 | --- | --- |
 | **Política de privacidad** | `https://ccardenas93.github.io/dopa-drill/privacy.html` (el archivo ya está en el repo de la web; hay que hacer push para que exista). |
 | **Acceso a la app** | «Todas las funciones están disponibles sin acceso especial» (no hay login). |
@@ -183,14 +171,14 @@ no se pueden cerrar, o «pulsa aquí para ganar» que se confunda con el juego.
 
 ### Español (es-419)
 
-**Nombre (30):** Dopa Drill: cálculo mental
+**Nombre (30):** CapiFiesta: cálculo mental
 
 **Descripción breve (80):** Suma, resta, multiplica y divide con fiesta. Matemáticas de 1.º a 6.º.
 
 **Descripción completa:**
 
-Dopa Drill convierte el cálculo mental en una fiesta. Cada acierto sube la
-música, llena la pantalla de confeti y hace bailar a Dopakichi, la mascota que
+CapiFiesta convierte el cálculo mental en una fiesta. Cada acierto sube la
+música, llena la pantalla de confeti y hace bailar a Capi, la mascota que
 lleva tus números. Equivocarse no resta ni termina la partida: el ritmo sigue.
 
 • 58 habilidades de 1.º a 6.º de primaria: sumas y restas con llevadas,
@@ -211,14 +199,14 @@ mente ágil. Contiene anuncios no personalizados aptos para todos los públicos.
 
 ### English (en-US)
 
-**Name:** Dopa Drill: mental math
+**Name:** CapiFiesta: mental math
 
 **Short description:** Add, subtract, multiply and divide with a party. Math for grades 1–6.
 
 **Full description:**
 
-Dopa Drill turns mental math into a party. Every right answer turns the music
-up, fills the screen with confetti and makes Dopakichi, the mascot who carries
+CapiFiesta turns mental math into a party. Every right answer turns the music
+up, fills the screen with confetti and makes Capi, the mascot who carries
 your digits, dance. A wrong answer never ends the round: the beat goes on.
 
 • 58 skills from grade 1 to grade 6: carrying and borrowing, times tables,
@@ -237,7 +225,7 @@ Contains non-personalized, family-safe ads.
 
 ## 7. Checklist del día de subida
 
-- [ ] Decidido A (permiso por escrito) o B (rebrand) del apartado 0.
+- [x] Rebrand completado (Capi + CapiFiesta); nada del material de gear_machine queda en la app.
 - [ ] Push de `ccardenas93.github.io` para que exista la URL de la política.
 - [ ] Correo de contacto revisado en `docs/privacy.html` (aparece público).
 - [ ] IDs reales de AdMob en `strings.xml` y `ads.js`, `TESTING = false`.

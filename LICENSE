@@ -24,32 +24,15 @@ SOFTWARE.
 
 Exceptions to the MIT License
 
-1. Character and logo (non-commercial fan works permitted)
+1. Mascot, name and logo
 
-   The MIT License above does NOT apply to the mascot character "Dopakichi"
-   (ドパキチ) or to the "Dopa Drill" (ドパドリル) name and logo, including their
-   designs, shapes and likenesses as drawn in app/js/dopakichi.js,
-   docs/dopakichi.svg, app/icon.svg and the logo in app/index.html
-   (the "Characters"). Copyright (c) 2026 gear_machine.
-
-   You may, without asking, use the Characters for non-commercial purposes,
-   including fan art, fan fiction, illustrations, animations, videos, social
-   media posts, and non-commercial forks or modified versions of this game.
-
-   The following are not permitted without prior permission:
-   - commercial use, such as selling goods, artworks or products featuring
-     the Characters, or using them in paid products, services or advertising;
-   - using the Characters as the name, mascot or branding of another product
-     or service, or presenting your work as official;
-   - uses that are offensive, defamatory, or that harm the reputation of the
-     Characters or of this project.
-
-   Gameplay videos and live streams of this game are permitted, including on
-   platforms where the creator receives advertising or tipping revenue.
-
-   When a fan work or fork is published, please make clear that it is
-   unofficial. A Japanese summary of these terms is in README.md; if the two
-   differ, this English text prevails.
+   The original project's mascot "Dopakichi" (ドパキチ), the "Dopa Drill"
+   (ドパドリル) name and its logo are Copyright (c) 2026 gear_machine and are
+   NOT included in this fork: on 2026-09-29 they were replaced by the capybara
+   mascot "Capi" and the "CapiFiesta" name and logo (docs/mascot/,
+   app/js/mascot.js, app/icon.svg, the logo markup in app/index.html and
+   store/), which are Copyright (c) 2026 ccardenas93, all rights reserved.
+   They are not covered by the MIT License above; the game code is.
 
 2. Fonts
 

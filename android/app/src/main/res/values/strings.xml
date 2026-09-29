@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Dopa Drill</string>
-    <string name="title_activity_main">Dopa Drill</string>
-    <string name="package_name">com.tanosix.dopa_drill</string>
-    <string name="custom_url_scheme">com.tanosix.dopa_drill</string>
+    <string name="app_name">CapiFiesta</string>
+    <string name="title_activity_main">CapiFiesta</string>
+    <string name="package_name">com.tanosix.capifiesta</string>
+    <string name="custom_url_scheme">com.tanosix.capifiesta</string>
     <!-- AdMob application ID. This is Google's public TEST app id: replace it
          with the real one (AdMob console → Apps → App settings) before the
          release build, and set TESTING = false in app/js/ads.js. -->

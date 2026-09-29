@@ -26,7 +26,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
         } catch {
-            NSLog("Dopa Drill: no se pudo configurar la sesión de audio: \(error)")
+            NSLog("CapiFiesta: no se pudo configurar la sesión de audio: \(error)")
         }
     }
 

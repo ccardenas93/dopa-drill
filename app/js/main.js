@@ -2787,8 +2787,8 @@ addEventListener('resize', () => requestAnimationFrame(() => {
 // La aplicación se publica en español e inglés (selector en Ajustes).
 // `?lang=ja` se mantiene para trabajar sobre el idioma de origen del
 // proyecto y no se ofrece en la UI.
-// The title logo is one letter per <i>: "DOPA" / "DRILL" in Spanish and
-// English, the original "ドパ" / "ドリル" with ?lang=ja. Latin letters get the
+// The title logo is one letter per <i>: "CAPI" / "FIESTA" in Spanish and
+// English, "カピ" / "フィエスタ" with ?lang=ja. Latin letters get the
 // `latin` class (a smaller size: four letters on top instead of two).
 function renderLogo() {
   const top = t('app.logoTop');

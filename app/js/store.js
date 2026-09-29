@@ -1,7 +1,7 @@
 // Local-only persistence (localStorage). Nothing is sent to a server.
 // Every read tolerates missing, blocked, or corrupted storage.
 
-const KEY = 'dopa-drill:v1';
+const KEY = 'capifiesta:v1';
 const VERSION = 1;
 
 export function defaultState() {
@@ -209,7 +209,7 @@ export function reset(storage = backend()) {
   try {
     for (let i = storage.length - 1; i >= 0; i--) {
       const key = storage.key(i);
-      if (key?.startsWith('dopa-drill')) {
+      if (key?.startsWith('capifiesta')) {
         try { storage.removeItem(key); } catch { /* Keep trying the remaining keys. */ }
       }
     }

@@ -1,4 +1,4 @@
-# Dopa Drill
+# CapiFiesta
 
 [日本語](README.md) · **Español**
 
@@ -37,7 +37,7 @@ música (ver «Diferencias conocidas» en [SPECS.md](SPECS.md)).
 
 ## Versión web (referencia)
 
-El personaje «Dopakichi» recoge con sus manos los números que escribes y celebra cada respuesta correcta. Cuanto más avanzas, más crecen la pantalla y el sonido hasta acabar como una fiesta. Equivocarse no baja el ritmo y nunca hay «game over».
+El personaje «Capi» recoge con sus manos los números que escribes y celebra cada respuesta correcta. Cuanto más avanzas, más crecen la pantalla y el sonido hasta acabar como una fiesta. Equivocarse no baja el ritmo y nunca hay «game over».
 
 ## Características
 
@@ -82,7 +82,7 @@ node tools/check_i18n.mjs
 | `app/js/i18n.js` | Textos en japonés y español y el cambio de idioma (el inglés está en `app/js/i18n.en.js`) |
 | `docs/SPEC.md` | Especificación (en japonés) |
 | `docs/curriculum.md` | Currículo por grado y diseño del árbol de habilidades |
-| `docs/dopakichi.svg` | Dibujo original de Dopakichi |
+| `docs/dopakichi.svg` | Dibujo original de Capi |
 | `tests/` | Pruebas unitarias |
 | `tools/build_fonts.sh` | Regenera los subconjuntos de fuentes (hay que ejecutarlo al añadir textos nuevos) |
 | `tools/check_i18n.mjs` | Comprobación de la traducción |
@@ -102,19 +102,9 @@ node tools/check_i18n.mjs
 
 ## Licencia
 
-- Código fuente: licencia MIT
-- El personaje «Dopakichi» y el nombre y el logotipo de «Dopa Drill»: no están cubiertos por la MIT. Puedes usarlos libremente en obras de fans mientras no sea con fines comerciales (ver abajo).
+- Código fuente: licencia MIT (incluye el código original de gear_machine).
+- La mascota «Capi», el nombre y el logotipo de «CapiFiesta» (`docs/mascot/`, `app/js/mascot.js`, `app/icon.svg`, el logo de `app/index.html`): © 2026 ccardenas93, todos los derechos reservados; no están cubiertos por la MIT.
+- La mascota original «Dopakichi» y el nombre y logotipo «Dopa Drill» de gear_machine **no forman parte** de este fork: se retiraron el 29 de septiembre de 2026.
 - Fuentes (`app/fonts/`): SIL Open Font License 1.1
 
 Consulta [LICENSE](LICENSE) para más detalles.
-
-### Sobre las obras de fans de Dopakichi y Dopa Drill
-
-Si no es con fines comerciales, puedes usarlos sin avisar.
-
-- Se permite: dibujos, cómics, relatos, animaciones, vídeos, publicaciones en redes sociales y versiones o modificaciones no comerciales de este juego
-- Vídeos y transmisiones: libres, incluso en plataformas con ingresos publicitarios o donaciones
-- Requiere permiso previo: vender productos u obras, o usarlos en productos, servicios o publicidad de pago; usarlos como nombre, mascota o marca de otro producto o servicio; presentarse como oficial
-- Prohibido: usos contrarios a las buenas costumbres o que dañen la reputación del personaje o del proyecto
-
-Al publicar, deja claro que no es oficial. Si el texto en inglés de LICENSE y esta traducción difieren, prevalece el inglés.

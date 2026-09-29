@@ -1,9 +1,9 @@
-# Dopa Drill en iOS y Android
+# CapiFiesta en iOS y Android
 
 La app móvil **es la misma aplicación web** dentro de un contenedor nativo
 (Capacitor). No hay una segunda versión del juego: se toca `app/` una vez y sale
 en la web, en iOS y en Android, con toda la funcionalidad intacta (audio
-sintetizado con Web Audio, fondo WebGL, partículas, el SVG de Dopakichi, las
+sintetizado con Web Audio, fondo WebGL, partículas, el SVG de Capi, las
 fuentes locales y el guardado en `localStorage`).
 
 ```
@@ -49,10 +49,10 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 1. **Sesión de audio en iOS** (`ios/App/App/AppDelegate.swift`): se declara
    `AVAudioSession` como `.playback` para que el juego suene aunque el iPhone
    esté en silencio, y se desactiva el rebote del `WKWebView`.
-2. **Botón atrás de Android** (`android/app/src/main/java/com/tanosix/dopa_drill/MainActivity.java`):
+2. **Botón atrás de Android** (`android/app/src/main/java/com/tanosix/capifiesta/MainActivity.java`):
    dentro de una partida envía `Escape` (el juego ya pregunta «¿Volver al
    título?»), y en el título cierra la app.
-3. **Iconos**: generados a partir del Dopakichi de `app/icon.svg`, con el azul
+3. **Iconos**: generados a partir del Capi de `app/icon.svg`, con el azul
    de la marca de fondo; el icono adaptativo de Android usa ese azul y el
    primer plano con la zona segura del 66 %.
 
@@ -109,7 +109,7 @@ en `ios/App/App/Info.plist` (`GADApplicationIdentifier`), unidades en `IDS` de
   apps nuevas desde el 31/08/2026). Está en `android/variables.gradle`.
 
 La pantalla de arranque usa `res/drawable/splash.xml` (azul de la marca con
-Dopakichi) y, en Android 12+, el icono adaptativo sobre el mismo azul
+Capi) y, en Android 12+, el icono adaptativo sobre el mismo azul
 (`styles.xml`, `AppTheme.NoActionBarLaunch`).
 
 ## Recursos de la ficha de Play
@@ -127,8 +127,8 @@ teléfono 1080×1920 (título, partida, árbol, trofeos), en español e inglés.
   *Signing & Capabilities* y archivar (Product → Archive). Hace falta cuenta de
   desarrollador de Apple.
 
-Los identificadores ya están puestos: `com.tanosix.dopa_drill`, nombre visible
-«Dopa Drill», versión 1.0.0.
+Los identificadores ya están puestos: `com.tanosix.capifiesta`, nombre visible
+«CapiFiesta», versión 1.0.0.
 
 ## Trabajar en el juego
 
