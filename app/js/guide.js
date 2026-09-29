@@ -1,11 +1,18 @@
 // Title tour: captions belong to the interface, never to the mascot.
-const INTRO = { title: 'あそびかた', text: 'もんだいは 3つの\nえらびかたが あるよ' };
-const LEVEL = { target: '#start', title: 'じぶんレベル', text: 'いまの きみに あった もんだい。\nはじめは じつりょくチェック' };
-const GRADES = { target: '.grades', title: '1ねんせい〜6ねんせい', text: 'がくねんの もんだいを\nまとめて れんしゅう' };
-const TREE = { target: '#open-tree', title: 'スキルツリー', text: 'やりたい もんだいを\n1つ えらんで れんしゅう' };
-const TROPHY = { target: '#open-trophy', title: 'トロフィー', text: 'あそぶと もらえるよ。\nつづけて あそぶと ふえていく' };
-const COLLECTION = { target: '#open-collect', title: 'コレクション', text: 'トロフィーの ごほうびで ふえる\nはいけい・おんがく・きせかえなどを\nえらべるよ' };
-const LAST = { target: '#start', title: 'まよったら じぶんレベル！', text: 'この せつめいは\n？ で また みられるよ', recommend: true };
+import { t } from './i18n.js';
+
+// Built at open time so the tour follows the current language.
+const buildPages = (help) => [
+  { title: t('guide.introTitle'), text: t('guide.introText') },
+  { target: '#start', title: t('guide.levelTitle'), text: t('guide.levelText') },
+  { target: '.grades', title: t('guide.gradesTitle'), text: t('guide.gradesText') },
+  { target: '#open-tree', title: t('guide.treeTitle'), text: t('guide.treeText') },
+  ...(help ? [
+    { target: '#open-trophy', title: t('guide.trophyTitle'), text: t('guide.trophyText') },
+    { target: '#open-collect', title: t('guide.collectTitle'), text: t('guide.collectText') },
+  ] : []),
+  { target: '#start', title: t('guide.lastTitle'), text: t('guide.lastText'), recommend: true },
+];
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // Use measured body + arm bounds. Hard constraints always outrank label coverage.
@@ -200,23 +207,26 @@ export function createGuide({ hero, reduced, onClose }) {
     const page = pages[index];
     overlay.dataset.page = String(index + 1);
     overlay.dataset.total = String(pages.length);
+    $('#guide-skip').textContent = t('guide.skip');
+    $('#guide-recommend').textContent = t('guide.recommend');
     $('#guide-heading').textContent = page.title;
     $('#guide-text').textContent = page.text;
     overlay.classList.toggle('guide-last', !!page.recommend);
     if (page.recommend) {
-      $('#guide-text').replaceChildren(document.createTextNode('この せつめいは\n'));
+      $('#guide-text').replaceChildren(document.createTextNode(t('guide.lastTextBefore')));
       const icon = document.createElement('span');
       icon.id = 'guide-help-icon';
       icon.className = 'icon-btn guide-help-icon';
       icon.setAttribute('role', 'img');
-      icon.setAttribute('aria-label', 'あそびかた');
+      icon.setAttribute('aria-label', t('guide.aria'));
       icon.append(document.querySelector('#open-guide svg').cloneNode(true));
-      $('#guide-text').append(icon, document.createTextNode(' で また みられるよ'));
+      $('#guide-text').append(icon, document.createTextNode(t('guide.lastTextAfter')));
     }
     $('#guide-dots').innerHTML = pages.map((_, i) => `<i${i === index ? ' class="current"' : ''} aria-hidden="true"></i>`).join('');
-    $('#guide-dots').setAttribute('aria-label', `${pages.length}つのうち ${index + 1}つめ`);
+    $('#guide-dots').setAttribute('aria-label', t('guide.dots', { total: pages.length, n: index + 1 }));
     $('#guide-back').disabled = index === 0;
-    $('#guide-next').textContent = index === pages.length - 1 ? 'はじめる！' : 'つぎへ';
+    $('#guide-back').textContent = t('common.back');
+    $('#guide-next').textContent = index === pages.length - 1 ? t('guide.start') : t('guide.next');
     layout(true);
     $('#guide-next').focus({ preventScroll: true });
   }
@@ -238,7 +248,7 @@ export function createGuide({ hero, reduced, onClose }) {
   function open({ help = false } = {}) {
     if (active) return;
     saved = { focus: document.activeElement, scroll: title.scrollTop, inert: app.inert, bodyParent: hero.root.parentNode, armsParent: hero.armsFront.parentNode };
-    pages = [INTRO, LEVEL, GRADES, TREE, ...(help ? [TROPHY, COLLECTION] : []), LAST];
+    pages = buildPages(help);
     index = 0; active = true;
     overlay.hidden = false;
     document.body.classList.add('guide-open');
@@ -281,5 +291,7 @@ export function createGuide({ hero, reduced, onClose }) {
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(() => layout(true));
   });
-  return { open, close, keydown, get active() { return active; } };
+  // Re-render in place when the language changes while the tour is open.
+  function refresh() { if (active) render(); }
+  return { open, close, keydown, refresh, get active() { return active; } };
 }

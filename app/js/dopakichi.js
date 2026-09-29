@@ -104,6 +104,15 @@ const STYLE = `.dk-l,.dk-f,.dk-t{stroke:${INK};stroke-linecap:round;stroke-linej
 
 let uid = 0;
 
+// Writes an SVG attribute only when it changed: most of the rig holds still
+// between frames, and every write invalidates style/paint in the WebView.
+function setA(el, name, v) {
+  const c = el.__a || (el.__a = {});
+  if (c[name] === v) return;
+  c[name] = v;
+  el.setAttribute(name, v);
+}
+
 export class Dopakichi {
   constructor(layer, { scale = 0.7, palette = 'pink', front } = {}) {
     this.layer = layer;
@@ -255,41 +264,42 @@ export class Dopakichi {
     const shakeX = this.shake ? Math.sin(t / 22) * this.shake : 0;
     const bx = this.x + shakeX; const by = this.y - this.lift;
     const rot = this.rot + this.lean.value;
-    this.root.setAttribute('opacity', this.opacity);
+    setA(this.root, 'opacity', this.opacity);
     // Arms live in a separate front layer, so hide them together with the body.
     this.root.style.display = this.visible ? '' : 'none';
     this.armsFront.style.display = this.visible ? '' : 'none';
-    this.armsFront.setAttribute('opacity', this.opacity);
-    this.bodyG.setAttribute('transform', `translate(${bx} ${by - pc}) rotate(${rot}) translate(0 ${pc}) scale(${S * sx} ${S * sy})`);
+    if (!this.visible) return;
+    setA(this.armsFront, 'opacity', this.opacity);
+    setA(this.bodyG, 'transform', `translate(${bx} ${by - pc}) rotate(${rot}) translate(0 ${pc}) scale(${S * sx} ${S * sy})`);
     const gy = this.ground ?? this.y;
     const hk = clamp(1 - (gy - by) / 400, 0.2, 1);
-    this.shadow.setAttribute('transform', `translate(${bx} ${gy + 2}) scale(${S * hk * sx} ${S * hk})`);
-    this.headG.setAttribute('transform', `rotate(${this.tilt.value} 0 ${G.neckY})`);
+    setA(this.shadow, 'transform', `translate(${bx} ${gy + 2}) scale(${S * hk * sx} ${S * hk})`);
+    setA(this.headG, 'transform', `rotate(${this.tilt.value} 0 ${G.neckY})`);
     this.earGs.forEach(({ g, s }) => {
       const a = (s < 0 ? -this.earL.value : this.earR.value);
-      g.setAttribute('transform', `rotate(${a} ${s * G.ear.pivot} ${G.ear.cy})`);
+      setA(g, 'transform', `rotate(${a} ${s * G.ear.pivot} ${G.ear.cy})`);
     });
     const lx = this.look.x * 1.6; const ly = this.look.y * 1.4;
     this.eyeGs.forEach((g, i) => {
       const s = i ? 1 : -1;
-      g.setAttribute('transform', `translate(${s * G.eye.x + lx} ${G.eye.y + ly}) scale(1 ${blink})`);
+      setA(g, 'transform', `translate(${s * G.eye.x + lx} ${G.eye.y + ly}) scale(1 ${blink})`);
     });
     // Irises roll inside the white ring toward the look target.
-    this.irises.forEach((ir) => { if (ir) ir.setAttribute('transform', `translate(${this.look.x * 2.2} ${this.look.y * 2})`); });
+    this.irises.forEach((ir) => { if (ir) setA(ir, 'transform', `translate(${this.look.x * 2.2} ${this.look.y * 2})`); });
     this.brows.forEach((b, i) => {
       const s = i ? 1 : -1;
-      b.setAttribute('transform', `translate(${s * G.brow.x + lx} ${G.brow.y + ly - this.browLift.value * 4}) rotate(${-s * this.browTilt.value})`);
+      setA(b, 'transform', `translate(${s * G.brow.x + lx} ${G.brow.y + ly - this.browLift.value * 4}) rotate(${-s * this.browTilt.value})`);
     });
-    this.mouthG.setAttribute('transform', `translate(${lx * 0.6} ${G.mouthY + ly * 0.5})`);
+    setA(this.mouthG, 'transform', `translate(${lx * 0.6} ${G.mouthY + ly * 0.5})`);
     this.cheeks.forEach((c, i) => {
       const k = 1 + this.cheekPuff * 0.7;
-      c.setAttribute('rx', G.cheek.rx * k); c.setAttribute('ry', G.cheek.ry * k);
-      c.setAttribute('cx', (i ? 1 : -1) * (G.cheek.x + this.cheekPuff * 3) + lx * 0.4);
+      setA(c, 'rx', G.cheek.rx * k); setA(c, 'ry', G.cheek.ry * k);
+      setA(c, 'cx', (i ? 1 : -1) * (G.cheek.x + this.cheekPuff * 3) + lx * 0.4);
     });
     this.feet.forEach((f, i) => {
       const s = i ? 1 : -1;
       const kick = this.lift > 4 ? Math.sin(t / 60 + i * 2) * 4 : 0;
-      f.setAttribute('transform', `translate(0 ${kick}) rotate(${this.lift > 4 ? s * 14 : 0} ${s * G.footPivot.x} ${G.footPivot.y})`);
+      setA(f, 'transform', `translate(0 ${kick}) rotate(${this.lift > 4 ? s * 14 : 0} ${s * G.footPivot.x} ${G.footPivot.y})`);
     });
 
     // arms
@@ -311,14 +321,14 @@ export class Dopakichi {
       const c = { x: (sh.x + h.x) / 2 + nx * bend, y: (sh.y + h.y) / 2 + ny * bend + droop };
       const d = `M${sh.x} ${sh.y} Q${c.x} ${c.y} ${h.x} ${h.y}`;
       const w = Math.max(3, G.arm * S * Math.min(1, Math.sqrt(40 * S / len)));
-      a.out.setAttribute('d', d); a.out.setAttribute('stroke-width', w + 2 * lpx);
-      a.inn.setAttribute('d', d); a.inn.setAttribute('stroke-width', w);
-      a.hand.setAttribute('cx', h.x); a.hand.setAttribute('cy', h.y);
-      a.hand.setAttribute('r', G.hand * S); a.hand.setAttribute('stroke-width', lpx);
+      setA(a.out, 'd', d); setA(a.out, 'stroke-width', w + 2 * lpx);
+      setA(a.inn, 'd', d); setA(a.inn, 'stroke-width', w);
+      setA(a.hand, 'cx', h.x); setA(a.hand, 'cy', h.y);
+      setA(a.hand, 'r', G.hand * S); setA(a.hand, 'stroke-width', lpx);
       if (h.carry != null) {
         a.digit.textContent = h.carry;
-        a.digit.setAttribute('x', h.x); a.digit.setAttribute('y', h.y - 20 * S - 10);
-        a.digit.setAttribute('font-size', Math.max(26, 40 * S));
+        setA(a.digit, 'x', h.x); setA(a.digit, 'y', h.y - 20 * S - 10);
+        setA(a.digit, 'font-size', Math.max(26, 40 * S));
         a.digit.style.display = '';
       } else a.digit.style.display = 'none';
     });

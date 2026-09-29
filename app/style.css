@@ -103,6 +103,19 @@ button:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
 @keyframes logo-wave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes logo-float { 0%, 100% { margin-top: 0; } 50% { margin-top: -8px; } }
 body.reduced .logo *, body.reduced .logo-burst { animation: none !important; }
+/* Latin logo ("DOPA" over a "DRILL" ribbon): four letters on top instead of
+   two, so the size drops a notch and the burst grows to sit behind them. */
+.logo.latin { --fs: clamp(50px, 15.5vw, 74px); }
+.logo.latin .logo-top { gap: 0; letter-spacing: -.03em; }
+.logo.latin .logo-burst { top: calc(var(--fs) * 0.5); width: calc(var(--fs) * 3.7); height: calc(var(--fs) * 3.7); }
+.logo.latin .logo-ribbon { font-size: calc(var(--fs) * 0.5); gap: .06em; padding: .12em 1em .2em; }
+.logo.latin .logo-bits b { font-size: calc(var(--fs) * 0.44); }
+.logo-top i:nth-child(3) { --r: -5deg; --dy: 3px; animation-delay: -.4s; }
+.logo-top i:nth-child(4) { --r: 8deg; --dy: -4px; animation-delay: -1.2s; }
+.logo-top i:nth-child(3)::after { color: var(--mint); }
+.logo-top i:nth-child(4)::after { color: var(--violet); }
+.logo-ribbon i:nth-child(5) { animation-delay: -.75s; }
+.logo-ribbon i:nth-child(6) { animation-delay: -1s; }
 .settings-btn { display: grid; place-items: center; position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 14px; width: 48px; height: 48px; padding: 4px; background: #fff; box-shadow: 0 4px 0 var(--ink); z-index: 3; }
 .settings-btn svg { display: block; width: 100%; height: 100%; transition: transform .4s; }
 #open-settings:active svg { transform: rotate(90deg); }
@@ -735,3 +748,59 @@ body.guide-open .logo *, body.guide-open .logo-burst { animation: none !importan
 .guide-help-fallback::after { content: ''; position: absolute; inset: -5px; border: 2px solid var(--yellow); border-radius: 14px; animation: guide-help-pulse 1.4s ease-in-out infinite; }
 @keyframes guide-help-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 body.reduced #guide-help-ring, body.reduced .guide-help-fallback::after { animation: none; }
+
+/* Phones: keep the beat-driven effects that are cheap (transforms) and drop the
+   ones that repaint a blurred area every frame in the Android WebView. */
+@media (pointer: coarse) {
+  .spot { filter: none; mix-blend-mode: normal; }
+  body.lv8 .pad button { box-shadow: 0 5px 0 var(--ink), 0 0 0 3px rgba(255, 210, 63, calc(var(--kick) * .9)); }
+  body.lv9 .card { box-shadow: 0 7px 0 var(--ink), 0 0 0 5px var(--pink), 0 0 0 10px rgba(255, 210, 63, calc(.4 + var(--kick) * .6)); }
+}
+
+/* ------------------------------------------------------------ language picker (settings) */
+/* ------------------------------------------------------------ ads
+   The native banner (ads.js) overlays the bottom of the WebView; --ad-h is
+   its height, so every scrolling screen keeps that much room free. */
+:root { --ad-h: 0px; }
+#screen-title { padding-bottom: calc(24px + env(safe-area-inset-bottom) + var(--ad-h)); }
+.tree-scroll, .tr-scroll, .co-scroll { padding-bottom: calc(40px + env(safe-area-inset-bottom) + var(--ad-h)); }
+#screen-result, #screen-final { padding-bottom: calc(20px + var(--ad-h)); }
+.modal { padding-bottom: calc(16px + var(--ad-h)); }
+.toast { bottom: calc(18px + env(safe-area-inset-bottom) + var(--ad-h)); }
+
+/* ------------------------------------------------------------ about / privacy */
+.about-btn { align-self: center; min-width: 230px; font-weight: 900; }
+.privacy-card .privacy-p { margin: 0; font-size: 14px; line-height: 1.45; }
+.privacy-link { display: flex; align-items: center; justify-content: center; align-self: center; min-width: 230px; font-weight: 900; text-decoration: none; background: #e3ebff; }
+
+.lang-pick { display: flex; gap: 10px; justify-content: center; }
+.lang-pick button {
+  flex: 1; max-width: 150px; height: 50px; border: 3px solid var(--ink); border-radius: 16px; background: #fff;
+  font-weight: 900; font-size: 18px; box-shadow: 0 5px 0 var(--ink); transition: transform .08s;
+}
+.lang-pick button[aria-checked="true"] { background: var(--yellow); transform: translateY(-3px) rotate(-2deg); }
+.lang-pick button:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--ink); }
+
+/* Lessons (lessons.js): the worked example and the guided tries wear a
+   dashed frame so it is clear they are practice, not the scored problem. */
+.card.lesson { outline: 4px dashed var(--blue); outline-offset: 5px; }
+.card.guided { outline: 3px dashed var(--yellow); outline-offset: 5px; }
+#skill-info .confirm-actions { flex-wrap: wrap; }
+#skill-info .confirm-actions .sub-btn { min-width: 0; flex: 1 1 30%; padding: 0 8px; }
+
+/* Quality tiers (perf.js). Layers that move every frame get their own
+   compositor layer; animations that repaint every frame (background-position,
+   blurred box-shadows) are swapped for cheap equivalents on lite/low. */
+#flash { will-change: opacity; }
+.stage, .hud { will-change: translate; }
+body.perf-lite .marquee,
+body.perf-lite.lv6 .dopa { animation: none; }
+body.perf-lite .pad button { --bounce: 0; }
+body.perf-lite .spot { filter: none; mix-blend-mode: normal; }
+body.perf-lite.reach .cell.input.active { animation: none; box-shadow: 0 0 0 6px var(--pink); }
+body.perf-lite.lv8 .pad button { box-shadow: 0 5px 0 var(--ink); }
+body.perf-lite.lv9 .card { box-shadow: 0 7px 0 var(--ink), 0 0 0 5px var(--pink), 0 0 0 10px var(--yellow); }
+body.perf-low .spot { display: none; }
+body.perf-low .cell.input.active,
+body.perf-low .cell.hint-glow,
+body.perf-low .pip.now { animation: none; }

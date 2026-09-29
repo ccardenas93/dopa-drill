@@ -24,6 +24,43 @@ test('mastery needs 5 of the last 6 first-try clears and unlocks children', () =
   assert.ok(!isMastered(prog, 'g1-compose10')); // only 4 of 6
 });
 
+test('placement: a single lucky answer grants nothing', () => {
+  const prog = emptyProgress();
+  const plan = placementPlan(prog, 10);
+  plan.pick(); plan.answer(true);
+  plan.pick(); plan.answer(false);
+  assert.equal(SKILLS.filter((x) => isMastered(prog, x.id)).length, 0);
+});
+
+test('guided answers count as attempts but not as mastery evidence', () => {
+  const prog = emptyProgress();
+  for (let i = 0; i < 6; i++) recordResult(prog, 'g1-add-nc', true, null, { guided: i < 2 });
+  assert.equal(prog.skills['g1-add-nc'].n, 6);
+  assert.ok(!isMastered(prog, 'g1-add-nc')); // only 4 counted answers so far
+  for (let i = 0; i < 2; i++) recordResult(prog, 'g1-add-nc', true);
+  assert.ok(isMastered(prog, 'g1-add-nc'));
+});
+
+test('level plan opens at most one new skill, as a block, and keeps 3 in progress', async () => {
+  const { levelPlan, frontier, NEW_BLOCK } = await import('../app/js/session.js');
+  const prog = emptyProgress();
+  prog.placed = true;
+  const plan = levelPlan(prog, 10, makeRng(1));
+  const fresh = new Set(plan.basic);
+  assert.equal(fresh.size, 1); // nothing learned yet: one new skill for the whole set
+  // Three skills in progress: no new skill joins.
+  const front = frontier(prog);
+  for (const id of front.slice(0, 3)) recordResult(prog, id, false);
+  const busy = levelPlan(prog, 10, makeRng(2));
+  assert.ok(busy.basic.every((id) => front.slice(0, 3).includes(id)));
+  // One in progress: the new skill comes as a block of NEW_BLOCK.
+  const prog2 = emptyProgress(); prog2.placed = true;
+  recordResult(prog2, front[0], false);
+  const mixed = levelPlan(prog2, 10, makeRng(3));
+  const nNew = mixed.basic.filter((id) => id !== front[0]).length;
+  assert.equal(nNew, NEW_BLOCK);
+});
+
 test('grade plans stay inside the grade for basic problems', () => {
   const rng = makeRng(4);
   for (let g = 1; g <= 6; g++) {
@@ -37,9 +74,11 @@ test('placement walks forward on clean answers and grants ancestors', () => {
   const prog = emptyProgress();
   const plan = placementPlan(prog, 10);
   const asked = [];
-  for (let i = 0; i < 8; i++) { const id = plan.pick(); asked.push(id); plan.answer(true); }
+  for (let i = 0; i < 10; i++) { const id = plan.pick(); asked.push(id); plan.answer(true); }
+  // Each skill is asked twice: one clean answer alone does not grant it.
+  for (let i = 0; i < 10; i += 2) assert.equal(asked[i], asked[i + 1]);
   const mastered = SKILLS.filter((x) => isMastered(prog, x.id)).length;
-  assert.ok(mastered >= 20, `mastered ${mastered} after 8 clean answers (at ${asked[7]})`);
+  assert.ok(mastered >= 20, `mastered ${mastered} after 10 clean answers (at ${asked[9]})`);
   for (const r of SKILL[asked[6]].req) assert.ok(isMastered(prog, r));
   // A slip eases back.
   const p0 = plan.walk.p;
@@ -158,7 +197,7 @@ test('stars: 1 at mastery, then accuracy, speed, retention and mastery of speed;
   // Star 4 needs a gap of a week, then three clean answers.
   for (let i = 0; i < 3; i++) answer(true, ok);
   assert.equal(starsOf(prog, id), 3);
-  assert.match(nextStar(prog, id, '2026-10-03').now, /あと 5日/);
+  assert.match(nextStar(prog, id, '2026-10-03').now, /Espera 5 días/);
   day = 9;
   for (let i = 0; i < 3; i++) answer(true, ok);
   assert.equal(starsOf(prog, id), 4);

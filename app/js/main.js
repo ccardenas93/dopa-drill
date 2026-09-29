@@ -1,6 +1,6 @@
 // Game flow, input, scoring, and the "director" that turns every event into
 // escalating visuals and sound.
-import { startClock, onFrame, wait, tween, clamp, lerp, rand, pick, chance, centerOf, params,
+import { startClock, onFrame, wait, tween, clamp, lerp, rand, pick, chance, centerOf, params, view,
   easeOutBack, easeOutCubic, easeInCubic, easeInOutCubic, easeOutQuint } from './core.js';
 import { makeRng, generate, makeProblem, signature, BASIC_SETS, EXTRA_TIERS } from './problems.js';
 import { AudioEngine } from './audio.js';
@@ -12,10 +12,20 @@ import { createGuide } from './guide.js';
 import { SKILLS, SKILL, LANES, DEPTH } from './skills.js';
 import { ORDER, emptyProgress, recordResult, stateOf, masteryRatio, starsOf, nextStar, STAR_MAX, pickCapsule, useCapsule, rustyOf, gradePlan, levelPlan, reviewPlan, problemFor, frontier, isUnlocked, relockTargets, relockSkill, TREE_LAYOUT } from './session.js';
 import * as growth from './growth.js';
+import { needsLesson, markLesson, isGuided, diagnose } from './lessons.js';
+import { Governor } from './perf.js';
 import * as qs from './quests.js';
 import * as tr from './trophies.js';
 import * as ul from './unlocks.js';
 import { BASIC_SCORE, extraPoints, basicDopaL, extraProblemGain, addDopa, comboMult, comboMaxed, comboWindowMs, comboMilestone, fmtDopa, unitOf, unitLabel } from './scoring.js';
+import { t, nf, setLocale, getLocale, applyStatic, initialLocale, onLocaleChange, isJapanese } from './i18n.js';
+import { laneLabel } from './skills.js';
+import { isSmallUnit } from './scoring.js';
+import { catLabel } from './trophies.js';
+import * as ads from './ads.js';
+
+// Shown in Settings; keep in step with package.json / android versionName.
+const APP_VERSION = '1.0.0';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -26,6 +36,14 @@ const audio = new AudioEngine({ capture });
 const fx = new FX($('#fx'), 300);
 const fxBack = new FX($('#fx-back'), 520);
 const bg = new Backdrop($('#bg'), $('#rays-fallback'));
+// Quality governor (perf.js): steps the show down when frames run long.
+const gov = new Governor(params.has('tier') ? Number(params.get('tier')) : undefined);
+gov.onChange((q, tier) => {
+  bg.quality = q.bgScale;
+  fx.setQuality(q); fxBack.setQuality(q);
+  document.body.classList.toggle('perf-lite', tier <= 1);
+  document.body.classList.toggle('perf-low', tier === 0);
+});
 const backLayer = $('#actors-back');
 const frontLayer = $('#actors-front');
 const hero = new Dopakichi(backLayer, { scale: 0.72, front: frontLayer });
@@ -36,6 +54,16 @@ const sheet = $('#sheet');
 const card = $('#card');
 const stage = $('#stage');
 const padButtons = Object.fromEntries($$('#pad button').map((b) => [b.dataset.key, b]));
+// --kick (the beat) is only read by the card and the keypad; setting it there
+// instead of on <body> keeps each beat from restyling the whole page.
+const kickEls = [card, $('#pad')];
+
+// The stage box, cached: reading layout inside the frame loop forces a style
+// recalculation every frame (CSS animations dirty it just before rAF). It is
+// refreshed when the stage resizes and whenever the actors are laid out.
+let stageBox = null;
+const refreshStage = () => { stageBox = stage.getBoundingClientRect(); };
+if (globalThis.ResizeObserver) new ResizeObserver(refreshStage).observe(stage);
 
 const S = {
   screen: 'title', N: 10, rng: null, qi: 0, problems: [], problem: null, step: 0,
@@ -69,6 +97,7 @@ function setLevelClasses(L) {
 
 function showScreen(name) {
   S.screen = name;
+  ads.onScreen(name); // banner only outside the game (no-op on the web)
   $$('.screen').forEach((s) => s.classList.toggle('is-active', s.id === `screen-${name}`));
   const el = $(`#screen-${name}`);
   if (!S.reduced) tween(260, (k) => { el.style.opacity = k; el.style.transform = `translateY(${(1 - k) * 18}px)`; }).then(() => { el.style.transform = ''; });
@@ -76,6 +105,7 @@ function showScreen(name) {
 }
 
 function layoutActors() {
+  refreshStage();
   // A scripted scene (the hammer) moves the hero itself.
   if (S.scene || S.guideOpen) return;
   // Cancel any running body action so it does not drag the hero back to old coordinates.
@@ -162,8 +192,8 @@ function questRows(list) {
   }).join('');
 }
 function questRewardText(q) {
-  if (q.rewarded) return '<b class="qdone">コンプリート！</b>';
-  return `ぜんぶで <i class="qham">${HAMMER_SVG}</i>+1`;
+  if (q.rewarded) return t('quest.done');
+  return t('quest.reward', { hammer: HAMMER_SVG });
 }
 function renderQuests() {
   const q = quests();
@@ -177,7 +207,8 @@ function renderQuestMini(el) {
   const q = quests();
   const got = S.questReward;
   S.questReward = null;
-  el.innerHTML = `<p class="qm-head">きょうの クエスト <span>${questRewardText(q)}</span></p><ol class="quest-list">${questRows(q.list)}</ol>${got ? `<p class="qm-got">${got.hammer ? `<i class="qham">${HAMMER_SVG}</i>ノーカンハンマーを 1本 もらったよ！` : 'ハンマーは もう いっぱい！ おいわいだけ するよ'}</p>` : ''}`;
+  const gotText = got ? (got.hammer ? t('quest.hammerGot', { hammer: HAMMER_SVG }) : t('quest.hammerFull')) : '';
+  el.innerHTML = `<p class="qm-head">${t('quest.head', { reward: questRewardText(q) })}</p><ol class="quest-list">${questRows(q.list)}</ol>${got ? `<p class="qm-got">${gotText}</p>` : ''}`;
   if (got && !S.reduced) setTimeout(() => { const c = centerOf(el); fx.burst(c.x, c.y, { count: 50, kinds: ['star', 'confetti', 'coin'], speed: 600, up: 180 }); audio.unit(0.7); popEl(el, 0.12, 400); }, 900);
 }
 // A small banner at the top of the screen; it never covers the problem or the keypad.
@@ -185,7 +216,7 @@ function questPop(q) {
   audio.play('coin', audio.now(), { v: 0.12, m: 88 });
   const el = document.createElement('div');
   el.className = `quest-pop${q ? '' : ' all'}`;
-  el.innerHTML = q ? `<b>クエスト クリア！</b><span>${qs.questText(q)}</span>` : '<b>クエスト コンプリート！</b>';
+  el.innerHTML = q ? `<b>${t('quest.clear')}</b><span>${qs.questText(q)}</span>` : `<b>${t('quest.complete')}</b>`;
   $('#cutins').appendChild(el);
   const y = Math.max(8, $('#app').getBoundingClientRect().top + 6);
   el.style.top = `${y}px`;
@@ -198,7 +229,13 @@ function questPop(q) {
   })();
 }
 const REVIEW_MAX = 40;
-const MODE_LABEL = { level: 'じぶんレベル', grade: (g) => `${g}ねんせい`, review: 'ふくしゅう', practice: 'れんしゅう', drill: 'ドリル' };
+const MODE_LABEL = {
+  level: () => t('result.modeLevel'),
+  grade: (g) => t('result.modeGrade', { g }),
+  review: () => t('result.modeReview'),
+  practice: () => t('result.modePracticeShort'),
+  drill: () => t('result.modeDrillShort'),
+};
 
 // kind: 'level' | 'grade' | 'review' | 'practice' | 'drill'
 function makePlan(kind, arg) {
@@ -273,7 +310,7 @@ function renderSheet(p) {
     d.className = `cell ${c.kind}${c.small ? ' small' : ''}${c.cls ? ` ${c.cls}` : ''}`;
     d.style.gridRow = c.rs ? `${c.r + 1} / span ${c.rs}` : `${c.r + 1}`;
     d.style.gridColumn = c.cs ? `${c.c + 1} / span ${c.cs}` : `${c.c + 1}`;
-    if (c.kind === 'input') { d.textContent = ''; d.setAttribute('aria-label', '入力欄'); }
+    if (c.kind === 'input') { d.textContent = ''; d.setAttribute('aria-label', t('play.inputAria')); }
     else if (c.kind === 'auto' || c.kind === 'carry') { d.textContent = c.text; d.classList.add('hidden'); }
     else d.textContent = c.text;
     if (c.text === '.' && c.kind === 'auto') d.classList.add('dot');
@@ -296,7 +333,8 @@ function fitSheet(p) {
   sheet.style.setProperty('--ch', `${ch.toFixed(1)}px`);
 }
 
-function activate(k) {
+// Visual part of a step (shared by play and the lesson walkthrough).
+function paintStep(k) {
   const p = S.problem;
   $$('.cell.active').forEach((c) => c.classList.remove('active', 'has'));
   const st = p.steps[k];
@@ -312,17 +350,106 @@ function activate(k) {
       if (!S.reduced) tween(360, (e) => { mk.style.transform = `translateY(${(1 - e) * -14}px) scale(${0.4 + 0.6 * e})`; mk.style.opacity = e; }, easeOutBack);
     }
   }
-  S.stepMisses = 0;
-  armCombo(k === 0);
   $$('.cell.hint-glow').forEach((c) => c.classList.remove('hint-glow'));
   $('#step-label').innerHTML = `<b>${st.label}</b>${st.hint ? `　${st.hint}` : ''}`;
+  return st;
+}
+
+function activate(k) {
+  const p = S.problem;
+  const st = paintStep(k);
+  if (!st) return;
+  S.stepMisses = 0;
+  S.lookPt = centerOf(S.cells[st.cell]);
+  armCombo(k === 0);
+  // Guided tries show the method on every step (lessons.js).
+  if (S.guided) showMethod(st, false);
   if (k === p.steps.length - 1 && k > 0 && S.E >= 0.45 && !S.reach) startReach();
 }
 
+// Highlight the digits a step works with and spell out its sub-calculation.
+function showMethod(st, point = true) {
+  if (!st.help) return;
+  const els = st.help.ids.map((id) => S.cells[id]).filter((el) => el && !el.classList.contains('hidden'));
+  els.forEach((el) => el.classList.add('hint-glow'));
+  if (point && els[0] && !S.reduced) hero.point(centerOf(els[0]));
+  if (st.help.text) $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">${st.help.text}</span>`;
+}
+
+// ---------------------------------------------------------------- lessons
+// The first time a skill shows up, Dopakichi solves one example step by step
+// (any key speeds it up), then the next tries are guided. At most two
+// examples per set so a grade set full of new skills stays playable.
+const LESSONS_PER_SET = 2;
+function lessonFor(p) {
+  if (!p || !p.skill || S.demo || S.mode === 'extra' || p.capsule) return null;
+  if (S.plan.mode === 'review' || S.plan.placement || S.plan.legacy || params.has('skill')) return null;
+  if (S.forceLesson === p.skill) return p.skill;
+  return S.lessonsShown < LESSONS_PER_SET && needsLesson(progress(), p.skill) ? p.skill : null;
+}
+
+function lessonLine(st) {
+  const d = st.diag;
+  if (!d) return '';
+  if (d.kind === 'add' && d.sum >= 10) return t('lesson.carry', { sum: d.sum, ones: d.sum % 10 });
+  if (d.kind === 'sub' && d.borrowed) return t('lesson.borrow', { a: d.top - 10, b: d.bottom, top: d.top });
+  if (d.kind === 'divq') return t('lesson.divq', { cur: d.cur, d: d.d, q: Math.floor(d.cur / d.d) });
+  return '';
+}
+
+async function runLesson(skill, E) {
+  const run = S.run;
+  const live = () => S.screen === 'play' && run === S.run;
+  S.lesson = { skip: false };
+  S.lessonsShown += 1;
+  const ex = makeProblem(skill, S.rng, S.sessionSigs);
+  S.sessionSigs.add(signature(ex));
+  S.problem = ex;
+  card.classList.add('lesson');
+  $('#qtitle').textContent = t('lesson.new', { name: SKILL[skill].name });
+  $('#qno').textContent = '';
+  renderSheet(ex);
+  $('#step-label').innerHTML = `<span class="help-text">${t('lesson.skip')}</span>`;
+  cutin(t('lesson.watch'), Math.max(0.3, E));
+  await cardEnter(E);
+  const pause = (ms) => wait(S.lesson.skip || S.reduced ? Math.min(ms, 80) : ms);
+  await pause(1100);
+  for (let k = 0; k < ex.steps.length && live(); k++) {
+    const st = paintStep(k);
+    showMethod(st);
+    // Narrate the move that makes this skill new (carrying, borrowing).
+    const say = lessonLine(st);
+    if (say) $('#step-label').insertAdjacentHTML('beforeend', `<span class="help-text">${say}</span>`);
+    await pause(say ? 2600 : 1900);
+    if (!live()) break;
+    const cell = S.cells[st.cell];
+    cell.classList.remove('active');
+    cell.classList.add('ok');
+    cell.textContent = st.digit;
+    popEl(cell, 0.5);
+    audio.place();
+    reveal(st.after || [], cell);
+    await pause(600);
+  }
+  if (live()) {
+    $$('.cell.hint-glow').forEach((c) => c.classList.remove('hint-glow'));
+    $('#step-label').innerHTML = `<b>${ex.answerText}</b>`;
+    hanamaru(0.3);
+    await pause(1500);
+  }
+  markLesson(progress(), skill);
+  store.save();
+  card.classList.remove('lesson');
+  S.lesson = null;
+  if (S.forceLesson === skill) S.forceLesson = null;
+  if (live()) cutin(t('lesson.yourTurn'), Math.max(0.3, E));
+}
+
 // ---------------------------------------------------------------- flow
-function startGame(kind = 'level', arg) {
+function startGame(kind = 'level', arg, { lesson = null } = {}) {
   audio.unlock();
   S.run += 1;
+  S.forceLesson = lesson; S.lessonsShown = 0; S.lesson = null; S.guided = false;
   if (S.bonusOpen) { $('#bonus').hidden = true; S.bonusOpen = false; }
   S.N = Number($('.pick [aria-checked="true"]').dataset.count);
   S.rng = makeRng(Number(params.get('seed') || Math.floor(Math.random() * 1e9)));
@@ -339,7 +466,7 @@ function startGame(kind = 'level', arg) {
   S.dopa = { L: 0, shown: 0, unit: '' };
   S.extra = { score: 0, solved: 0, misses: 0, end: 0, over: false };
   S.targetMs = Math.ceil((S.N * 18) / 10) * 10 * 1000;
-  $('#clock-label').textContent = `目標 ${fmtTime(S.targetMs)}`;
+  $('#clock-label').textContent = t('play.clockTarget', { time: fmtTime(S.targetMs) });
   $('.clock').classList.remove('over', 'extra', 'hurry');
   $('#ok-total').textContent = `/${S.N}`;
   const pips = $('#pips');
@@ -376,10 +503,20 @@ async function setupProblem() {
     S.problem = S.problems[S.qi] || (S.problems[S.qi] = nextProblem(S.qi));
   }
   const p = S.problem;
-  S.step = 0; S.wrongInQ = false; S.shownWrong = null;
+  S.step = 0; S.wrongInQ = false; S.shownWrong = null; S.lookPt = null;
   $$('.pip').forEach((pp, i) => pp.classList.toggle('now', !extra && i === S.qi));
+  const lessonSkill = lessonFor(p);
+  if (lessonSkill) {
+    const run0 = S.run; const t0 = now();
+    await runLesson(lessonSkill, E);
+    if (S.screen !== 'play' || run0 !== S.run) return;
+    S.startT += now() - t0; // the example does not eat the set's clock
+    S.problem = p;
+  }
+  S.guided = !extra && !!p.skill && !S.demo && S.plan.mode !== 'review' && !S.plan.placement && !p.capsule && isGuided(progress(), p.skill);
+  card.classList.toggle('guided', S.guided);
   $('#qtitle').textContent = p.title;
-  $('#qno').textContent = extra ? `EX ${S.extra.solved + 1}` : `第${S.qi + 1}問`;
+  $('#qno').textContent = extra ? t('play.ex', { n: S.extra.solved + 1 }) : S.guided ? `${t('play.qno', { n: S.qi + 1 })} · ${t('lesson.guided')}` : t('play.qno', { n: S.qi + 1 });
   renderSheet(p);
   $('#step-label').innerHTML = '&nbsp;';
   const last = !extra && S.qi === S.N - 1;
@@ -390,7 +527,7 @@ async function setupProblem() {
     await capsuleIntro(p.capsule);
     if (S.screen !== 'play' || run !== S.run) return;
     const st = store.load(); st.capsule = { ...(st.capsule || {}), lastDay: store.dayKey() }; store.save();
-  } else if (E > 0.22 || extra) cutin(extra ? `EX ${S.extra.solved + 1}` : last ? 'ラスト1問' : `第${S.qi + 1}問`, E);
+  } else if (E > 0.22 || extra) cutin(extra ? t('play.ex', { n: S.extra.solved + 1 }) : last ? t('play.last') : t('play.qno', { n: S.qi + 1 }), E);
   await cardEnter(E);
   if (S.screen !== 'play' || run !== S.run) return;
   S.ready = true;
@@ -426,6 +563,7 @@ function pressVisual(btn) {
 function press(key, btn = padButtons[key]) {
   if (S.screen !== 'play' || S.confirm) return;
   pressVisual(btn);
+  if (S.lesson) { S.lesson.skip = true; return; }
   if (key === 'Backspace') { erase(); return; }
   if (!S.ready) return;
   const p = S.problem;
@@ -566,14 +704,18 @@ function onWrong(cell, st) {
 // Repeated slips on the same digit: 2nd highlights the digits to look at
 // and Dopakichi points there; 3rd also spells out the sub-calculation.
 function giveHelp(st) {
-  if (!st || !st.help || S.problem.steps[S.step] !== st) return;
+  if (!st || S.problem.steps[S.step] !== st) return;
+  // Say what probably went wrong when the digit fits a known slip.
+  const dg = diagnose(st, S.shownWrong);
+  if (dg) $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">${t(dg.key, dg.vars)}</span>`;
+  if (!st.help) return;
   const n = S.stepMisses;
   if (n < 2) return;
   const els = st.help.ids.map((id) => S.cells[id]).filter((el) => el && !el.classList.contains('hidden'));
   els.forEach((el) => el.classList.add('hint-glow'));
   if (els[0] && !S.reduced) setTimeout(() => hero.point(centerOf(els[0])), 900);
-  if (n >= 3) {
-    $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">ヒント　${st.help.text}</span>`;
+  if (n >= 3 && !dg) {
+    $('#step-label').innerHTML = `<b>${st.label}</b><span class="help-text">${t('play.hint', { text: st.help.text })}</span>`;
     audio.play('blip', audio.now(), { m: 81, v: 0.08 });
   }
 }
@@ -605,7 +747,7 @@ function noteProblem(p, firstTry) {
     e.n += 1; e.ms += timing.ms; e.c += timing.cells; e.f += firstTry ? 1 : 0;
   }
   if (p.skill && !params.has('skill')) {
-    const res = recordResult(prog, p.skill, firstTry, signature(p), recording() ? timing : {});
+    const res = recordResult(prog, p.skill, firstTry, signature(p), { ...(recording() ? timing : {}), guided: S.guided && S.mode !== 'extra' });
     if (res.mastered) S.newMastered.push(p.skill);
     if (res.stars >= 2) S.newStars[p.skill] = res.stars;
     if (res.polished && recording()) { S.polished.push(p.skill); const st = stats(); st.polished = (st.polished || 0) + 1; polishFx(); }
@@ -620,7 +762,7 @@ function announceUnlock(id) {
   setTimeout(() => {
     audio.unit(Math.min(1, S.E + 0.3));
     if (S.reduced) return;
-    cutin(`かいほう！ ${name}`, Math.max(0.6, S.E));
+    cutin(t('cutin.unlock', { name }), Math.max(0.6, S.E));
     const r = stage.getBoundingClientRect();
     fx.burst(r.left + r.width / 2, r.top + r.height * 0.4, { count: 40, kinds: ['star', 'confetti', 'coin'], speed: 700, up: 200 });
   }, 700);
@@ -742,7 +884,7 @@ function hanamaru(E, el = $('#stamp'), style = ul.variant(S.look && S.look.mark)
 // Correct marks other than the hanamaru. Stroked parts ("sp") are drawn in,
 // filled parts ("fl") pop in after; all grow with E and turn rainbow near the top.
 const MARKS = {
-  stamp: (c) => `<circle class="sp" r="56" fill="none" stroke="${c}" stroke-width="8"/><circle class="sp" r="45" fill="none" stroke="${c}" stroke-width="2.8"/><text class="fl" y="9" text-anchor="middle" font-family="Dela Gothic One, sans-serif" font-size="24" fill="${c}" transform="rotate(-12)">せいかい</text><path class="fl" d="M-30 -30 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z M30 26 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z" fill="${c}"/>`,
+  stamp: (c) => `<circle class="sp" r="56" fill="none" stroke="${c}" stroke-width="8"/><circle class="sp" r="45" fill="none" stroke="${c}" stroke-width="2.8"/><text class="fl" y="9" text-anchor="middle" font-family="Dela Gothic One, sans-serif" font-size="24" fill="${c}" transform="rotate(-12)">${t('play.stampCorrect')}</text><path class="fl" d="M-30 -30 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z M30 26 l3 6 6 1 -4.5 4 1 6.5 -5.5 -3 -5.5 3 1 -6.5 -4.5 -4 6 -1z" fill="${c}"/>`,
   crown: (c) => `<path class="sp" d="M-50 30 L-58 -28 L-26 -2 L0 -46 L26 -2 L58 -28 L50 30 Z" fill="none" stroke="${c}" stroke-width="7" stroke-linejoin="round"/><path class="fl" d="M-50 30 L-58 -28 L-26 -2 L0 -46 L26 -2 L58 -28 L50 30 Z" fill="#ffd23f" opacity=".85"/><path class="sp" d="M-48 44 L48 44" stroke="${c}" stroke-width="7" stroke-linecap="round"/><circle class="fl" cx="0" cy="-46" r="7" fill="#ff4f6d"/><circle class="fl" cx="-58" cy="-28" r="6" fill="#3b6bff"/><circle class="fl" cx="58" cy="-28" r="6" fill="#3fdcb0"/><circle class="fl" cx="0" cy="12" r="9" fill="#ff7ab6"/>`,
   ring: (c) => `${Array.from({ length: 12 }, (_, i) => { const a = (i / 12) * Math.PI * 2; return `<path class="sp" d="M${(Math.cos(a) * 20).toFixed(1)} ${(Math.sin(a) * 20).toFixed(1)} L${(Math.cos(a) * 52).toFixed(1)} ${(Math.sin(a) * 52).toFixed(1)}" stroke="${['#ff4f6d', '#ffb000', '#3fdcb0', '#3b6bff'][i % 4]}" stroke-width="7" stroke-linecap="round"/>`; }).join('')}${Array.from({ length: 12 }, (_, i) => { const a = ((i + 0.5) / 12) * Math.PI * 2; return `<circle class="fl" cx="${(Math.cos(a) * 60).toFixed(1)}" cy="${(Math.sin(a) * 60).toFixed(1)}" r="5" fill="${c}"/>`; }).join('')}<circle class="fl" r="12" fill="#ffd23f"/>`,
   medal: (c) => `<path class="fl" d="M-30 -66 L-8 -18 L8 -18 L-14 -66Z" fill="#3b6bff"/><path class="fl" d="M30 -66 L8 -18 L-8 -18 L14 -66Z" fill="#ff4f6d"/><circle class="sp" cy="18" r="40" fill="none" stroke="${c}" stroke-width="8"/><circle class="fl" cy="18" r="34" fill="#ffd23f"/><path class="sp" d="M0 -6 L7 9 L23 10 L11 21 L15 37 L0 28 L-15 37 L-11 21 L-23 10 L-7 9Z" fill="none" stroke="${c}" stroke-width="5" stroke-linejoin="round"/>`,
@@ -867,7 +1009,7 @@ function addCombo() {
   audio.unit(Math.min(1, 0.3 + S.combo / 100));
   if (S.reduced) return;
   const c = centerOf(box);
-  fx.text(c.x, c.y + 26, `${S.combo}コンボ！`, { color: '#ffd23f', size: 26 + Math.min(20, S.combo / 5), vy: -90, life: 1 });
+  fx.text(c.x, c.y + 26, t('play.comboPop', { n: S.combo }), { color: '#ffd23f', size: 26 + Math.min(20, S.combo / 5), vy: -90, life: 1 });
   fx.burst(c.x, c.y, { count: 16 + Math.min(40, S.combo / 2), kinds: ['star', 'spark', 'confetti'], speed: 380, up: 80 });
   fx.ring(c.x, c.y, { color: '#ff7ab6', radius: 50 + Math.min(80, S.combo), width: 6 });
 }
@@ -880,7 +1022,7 @@ function breakCombo(timeout = false) {
   audio.play('blip', audio.now(), { m: 60, v: 0.07 });
   if (S.reduced) return;
   const c = centerOf(box);
-  fx.text(c.x, c.y + 20, timeout ? `${had}コンボ おわり` : `${had}コンボ`, { color: '#b9bbd9', size: 15, vy: 40, life: 0.8 });
+  fx.text(c.x, c.y + 20, timeout ? t('play.comboEnd', { n: had }) : t('play.comboShort', { n: had }), { color: '#b9bbd9', size: 15, vy: 40, life: 0.8 });
 }
 function showCombo() {
   const box = $('#combo-box');
@@ -889,7 +1031,7 @@ function showCombo() {
   if (!on) return;
   $('#combo').textContent = S.combo;
   const max = comboMaxed(S.combo);
-  $('#combo-mult').textContent = max ? 'ドパ×2 MAX' : `ドパ×${comboMult(S.combo).toFixed(2)}`;
+  $('#combo-mult').textContent = max ? t('play.dopaMultMax', { x: 2 }) : t('play.dopaMult', { x: comboMult(S.combo).toFixed(2) });
   box.classList.toggle('hot', max);
 }
 function tickCombo(t) {
@@ -909,7 +1051,7 @@ function pointsPop(points) {
   const r = card.getBoundingClientRect();
   const x = r.left + r.width / 2; const y = r.top + 26;
   if (S.reduced) return;
-  fx.text(x, y, `+${points.toLocaleString('ja-JP')}点`, { color: '#ffd23f', size: 30 + Math.min(26, Math.log2(points / 10) * 4), vy: -160, life: 1.1 });
+  fx.text(x, y, t('play.points', { n: nf(points) }), { color: '#ffd23f', size: 30 + Math.min(26, Math.log2(points / 10) * 4), vy: -160, life: 1.1 });
 }
 
 function unitSlam(unit, L) {
@@ -920,7 +1062,7 @@ function unitSlam(unit, L) {
   const r = stage.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'unit-slam';
-  const big = E > 0.45 && unit !== '百';
+  const big = E > 0.45 && !isSmallUnit(unit);
   const size = big ? 64 + 40 * Math.min(1, E) : 30;
   el.style.fontSize = `${size}px`;
   el.textContent = unitLabel(unit);
@@ -946,9 +1088,9 @@ function unitSlam(unit, L) {
 }
 
 async function parade(E, big) {
-  if (actors.length > 10 || S.motion < 0.5) return;
+  if (actors.length > gov.q.actorsMax || S.motion < 0.5 || !gov.q.parade) return;
   const r = stage.getBoundingClientRect();
-  const n = Math.round(3 + 4 * Math.min(1, E) + (big ? 2 : 0));
+  const n = Math.round((3 + 4 * Math.min(1, E) + (big ? 2 : 0)) * gov.q.parade);
   const dir = chance(0.5) ? 1 : -1;
   for (let i = 0; i < n; i++) {
     const cl = crowdLook(i);
@@ -979,6 +1121,7 @@ function ensureCrowd(E) {
   if (E >= 0.68) want.push({ i: 1, side: 1, s: 0.46 });
   if (E >= 0.88) want.push({ i: 2, side: -1.9, s: 0.36 }, { i: 3, side: 1.9, s: 0.36 });
   if (S.reduced || S.motion < 0.5) want.length = 0;
+  if (want.length > gov.q.crowd) want.length = gov.q.crowd;
   while (crowd.length > want.length) { const m = crowd.pop(); m.destroy(); actors.splice(actors.indexOf(m), 1); }
   for (let i = crowd.length; i < want.length; i++) {
     const w = want[i];
@@ -1035,7 +1178,7 @@ const FINALES = {
     giant.hands.forEach((h) => { h.raise = 1; });
     const y0 = giant.y; const y1 = H + 10;
     await tween(700, (k) => { giant.y = lerp(y0, y1, k); giant.ground = giant.y; }, easeOutBack);
-    bigStamp('100点');
+    bigStamp(t('play.stamp100'));
     S.shake = 16;
     for (let i = 0; i < 3; i++) { giant.earL.kick(700); giant.earR.kick(700); await tween(260, (k) => { giant.lift = Math.sin(k * Math.PI) * 60; giant.rot = Math.sin(k * Math.PI * 2) * 6; }); giant.lift = 0; giant.rot = 0; giant.sq.value = 0.85; }
     parade(1, true);
@@ -1049,7 +1192,7 @@ const FINALES = {
   async fireworks(W, H) {
     S.flash = 0.8;
     for (let i = 0; i < 5; i++) { fxBack.fireworks(W, H, 5 + i, 0.05, 0.5); if (i % 2 === 0) fx.fireworks(W, H, 2, 0.08, 0.35); audio.play('crash', audio.now(), { v: 0.18 }); S.shake = Math.max(S.shake, 6); await wait(260); }
-    bigStamp('100点');
+    bigStamp(t('play.stamp100'));
     S.shake = 16; S.flash = 1;
     const cx = W / 2; const cy = H * 0.3;
     for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; fx.burst(cx + Math.cos(a) * 120, cy + Math.sin(a) * 120, { count: 6, kinds: ['mini', 'star'], speed: 260, up: 60 }); }
@@ -1075,7 +1218,7 @@ const FINALES = {
       if (Math.random() < 0.6) fx.burst(x - 70, y + 10, { count: 4, kinds: ['star', 'spark', 'confetti'], speed: 180, up: -40 });
     }, easeInOutCubic);
     rk.remove(); dropActor(rider);
-    bigStamp('100点');
+    bigStamp(t('play.stamp100'));
     S.shake = 16;
     fxBack.fireworks(W, H, 8, 0.06, 0.4);
     parade(1, true);
@@ -1094,7 +1237,7 @@ const FINALES = {
       actors.push(m); band.push(m);
     }
     const banner = document.createElement('div');
-    banner.className = 'finale-banner'; banner.textContent = '100てん！';
+    banner.className = 'finale-banner'; banner.textContent = t('play.stamp100ten');
     $('#cutins').appendChild(banner);
     audio.gong();
     const span = W + 80 + n * 70 + 80;
@@ -1104,7 +1247,7 @@ const FINALES = {
       banner.style.transform = `translate(${lead.x - 90}px, ${y - 220 * lead.S - 30}px)`;
       if (Math.random() < 0.3) fx.burst(lead.x, y - 100, { count: 5, kinds: ['confetti', 'star'], speed: 300, up: 150 });
     }, (k) => k);
-    bigStamp('100点');
+    bigStamp(t('play.stamp100'));
     S.shake = 14;
     band.forEach(dropActor); banner.remove();
     fxBack.fireworks(W, H, 6, 0.06, 0.35);
@@ -1132,24 +1275,31 @@ function bigStamp(text) {
 function showResult() {
   const rate = S.firstTry / S.N;
   $('#r-score').textContent = String(BASIC_SCORE);
-  $('#r-ok').innerHTML = `${S.solved}<small>問</small>`;
-  $('#r-ng').innerHTML = `${S.misses}<small>回</small>`;
+  $('#r-ok').innerHTML = `${S.solved}<small>${t('unit.q')}</small>`;
+  $('#r-ng').innerHTML = `${S.misses}<small>${t('unit.t')}</small>`;
   $('#r-rate').textContent = `${Math.round(rate * 100)}%`;
-  const t = S.endT - S.startT;
-  $('#r-time').textContent = fmtTime(t);
+  const dur = S.endT - S.startT;
+  $('#r-time').textContent = fmtTime(dur);
   $('#r-dopa').textContent = fmtDopa(S.dopa.L);
   const review = S.plan.mode === 'review';
   const ok = rate >= 0.8 && !review;
   if (S.plan.placement && !S.demo) { progress().placed = true; store.save(); }
-  S.record = S.demo ? null : store.addRecord({ mode: S.plan.mode, grade: S.plan.grade, skill: S.plan.skill, count: S.N, score: BASIC_SCORE, ok: S.solved, ng: S.misses, firstRate: rate, timeMs: Math.round(t), dopaL: S.dopa.L });
-  if (recording()) { growth.notePlay(stats(), { mode: S.plan.mode, day: store.dayKey(), timeMs: Math.round(t), dopaL: S.dopa.L, firstRate: rate }); store.save(); }
+  S.record = S.demo ? null : store.addRecord({ mode: S.plan.mode, grade: S.plan.grade, skill: S.plan.skill, count: S.N, score: BASIC_SCORE, ok: S.solved, ng: S.misses, firstRate: rate, timeMs: Math.round(dur), dopaL: S.dopa.L });
+  if (recording()) {
+    // grade and weekday feed the "Juega en Nº" series and the Sunday secret.
+    growth.notePlay(stats(), { mode: S.plan.mode, grade: S.plan.grade, day: store.dayKey(), timeMs: Math.round(dur), dopaL: S.dopa.L, firstRate: rate, weekday: new Date().getDay() });
+    // Secret trophy: a 14-problem set without a single "casi".
+    if (S.N >= 14 && S.misses === 0 && !review) growth.setFlag(stats(), 'perfect14');
+    store.save();
+  }
+  ads.noteRound();
   questNote({ type: 'play', mode: S.plan.mode });
-  $('#result-title').textContent = review ? 'ふくしゅう クリア' : `${modeName(S.plan)} クリア`;
+  $('#result-title').textContent = review ? t('result.clearReview') : t('result.clear', { mode: modeName(S.plan) });
   const un = $('#r-unlock');
-  un.textContent = review ? '' : ok ? 'エクストラ解放' : '初回正解率80%以上でエクストラ';
+  un.textContent = review ? '' : ok ? t('result.extraYes') : t('result.extraNo');
   un.classList.toggle('yes', ok);
   $('#go-extra').hidden = !ok;
-  $('#go-extra small').textContent = `${Math.round(EXTRA_MS / 1000)}秒`;
+  $('#go-extra small').textContent = t('result.seconds', { n: Math.round(EXTRA_MS / 1000) });
   $('#go-again').hidden = ok;
   renderSkillNews($('#r-skills'));
   renderGrowth($('#r-growth'));
@@ -1164,9 +1314,9 @@ function showResult() {
 }
 
 function countUp(el, to, dur, from = 0) {
-  if (S.reduced) { el.textContent = to.toLocaleString('ja-JP'); return; }
+  if (S.reduced) { el.textContent = nf(to); return; }
   let lastV = -1;
-  tween(dur, (k) => { const v = Math.round(lerp(from, to, k)); if (v !== lastV) { el.textContent = v.toLocaleString('ja-JP'); lastV = v; if (v % 5 === 0 || to > 400) audio.play('blip', audio.now(), { m: 72 + Math.floor((v / Math.max(1, to)) * 24), v: 0.06 }); } }, easeOutCubic)
+  tween(dur, (k) => { const v = Math.round(lerp(from, to, k)); if (v !== lastV) { el.textContent = nf(v); lastV = v; if (v % 5 === 0 || to > 400) audio.play('blip', audio.now(), { m: 72 + Math.floor((v / Math.max(1, to)) * 24), v: 0.06 }); } }, easeOutCubic)
     .then(() => { audio.clear(1); const c = centerOf(el); fx.burst(c.x, c.y, { count: 40, kinds: ['confetti', 'star', 'coin'], speed: 700, up: 200, life: 0.6 }); fxBack.burst(c.x, c.y, { count: 90, kinds: ['confetti', 'star', 'coin', 'mini'], speed: 1100, up: 300 }); hero.celebrate(1, { big: true, audio }); });
 }
 
@@ -1179,7 +1329,7 @@ function startExtra() {
   S.combo = 0;
   showCombo();
   $('.clock').classList.add('extra');
-  $('#clock-label').textContent = 'のこり';
+  $('#clock-label').textContent = t('play.clockLeft');
   $('#ok-total').textContent = '';
   updateTally();
   audio.play('musicGain', audio.now(), { v: 0.8, ramp: 0.2 });
@@ -1197,7 +1347,7 @@ async function endExtra() {
   S.ready = false;
   if (S.reach) endReach();
   audio.gong();
-  bigStamp('終了');
+  bigStamp(t('play.stampEnd'));
   S.flash = 0.6;
   await wait(1700);
   if (run === S.run) showFinal();
@@ -1206,11 +1356,16 @@ async function endExtra() {
 function showFinal() {
   const total = BASIC_SCORE + S.extra.score;
   if (S.record) store.updateRecord(S.record.id, { score: total, extraOk: S.extra.solved, extraNg: S.extra.misses, dopaL: S.dopa.L });
-  if (recording()) { growth.noteDopa(stats(), S.dopa.L); store.save(); }
-  $('#f-break').textContent = `基本 ${BASIC_SCORE} ＋ エクストラ ${S.extra.score.toLocaleString('ja-JP')}`;
-  $('#f-ok').innerHTML = `${S.extra.solved}<small>問</small>`;
-  $('#f-ng').innerHTML = `${S.extra.misses}<small>回</small>`;
-  $('#f-bng').innerHTML = `${S.misses}<small>回</small>`;
+  if (recording()) {
+    growth.noteDopa(stats(), S.dopa.L);
+    // Secret trophy: five or more in the Extra without a single "casi".
+    if (S.extra.solved >= 5 && S.extra.misses === 0) growth.setFlag(stats(), 'extraClean');
+    store.save();
+  }
+  $('#f-break').textContent = t('result.break', { basic: BASIC_SCORE, extra: nf(S.extra.score) });
+  $('#f-ok').innerHTML = `${S.extra.solved}<small>${t('unit.q')}</small>`;
+  $('#f-ng').innerHTML = `${S.extra.misses}<small>${t('unit.t')}</small>`;
+  $('#f-bng').innerHTML = `${S.misses}<small>${t('unit.t')}</small>`;
   $('#f-time').textContent = fmtTime(S.endT - S.startT);
   $('#f-dopa').textContent = fmtDopa(S.dopa.L);
   renderSkillNews($('#f-skills'));
@@ -1278,9 +1433,9 @@ addEventListener('pointerdown', (e) => {
 
 function modeName(plan) {
   if (plan.mode === 'grade') return MODE_LABEL.grade(plan.grade);
-  if (plan.mode === 'practice') return `れんしゅう`;
-  if (plan.mode === 'demo') return 'デモ';
-  return MODE_LABEL[plan.mode] || 'ドリル';
+  if (plan.mode === 'practice') return MODE_LABEL.practice();
+  if (plan.mode === 'demo') return t('result.modeDemo');
+  return (MODE_LABEL[plan.mode] || MODE_LABEL.drill)();
 }
 // ---------------------------------------------------------------- time capsule (id039)
 // One problem a day may come back from the child's first days with a mastered
@@ -1302,7 +1457,7 @@ async function capsuleIntro(info) {
   const r = card.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'capsule-intro';
-  el.innerHTML = `<div class="ci-env">${ENVELOPE_SVG}<div class="ci-letter"><small>タイムカプセル</small><b>${fmtDay(info.d)}の もんだい</b><span>はじめて といた ころの もんだいだよ</span></div></div>`;
+  el.innerHTML = `<div class="ci-env">${ENVELOPE_SVG}<div class="ci-letter"><small>${t('capsule.title')}</small><b>${t('capsule.problem', { day: fmtDay(info.d) })}</b><span>${t('capsule.sub')}</span></div></div>`;
   el.style.left = `${r.left + r.width / 2}px`; el.style.top = `${r.top + r.height / 2}px`;
   $('#cutins').appendChild(el);
   const env = el.querySelector('.ci-env'); const letter = el.querySelector('.ci-letter'); const flap = el.querySelector('.env-flap');
@@ -1326,14 +1481,16 @@ function capsuleDone(info) {
   const cmp = growth.capsuleCompare(info, S.qMs, S.qMisses || 0);
   const st = stats(); st.capsules = (st.capsules || 0) + 1; if (cmp.what === 'time') st.capsuleFaster = (st.capsuleFaster || 0) + 1;
   const day = fmtDay(info.d);
-  const sec = (ms) => `${Math.max(0.1, ms / 1000).toFixed(1)}びょう`;
-  const line = cmp.what === 'time' ? `${day} ${sec(cmp.from)} → きょう ${sec(cmp.to)}` : cmp.what === 'miss' ? `${day} おしい ${cmp.from}回 → きょう ${cmp.to}回` : `${day}の もんだいを もう一度 といたよ`;
+  const sec = (ms) => t('growth.seconds', { n: Math.max(0.1, ms / 1000).toFixed(1) });
+  const line = cmp.what === 'time' ? t('capsule.line.time', { day, from: sec(cmp.from), to: sec(cmp.to) })
+    : cmp.what === 'miss' ? t('capsule.line.miss', { day, from: cmp.from, to: cmp.to })
+      : t('capsule.once', { day });
   S.capsuleNews = line;
   const r = stage.getBoundingClientRect();
   const el = document.createElement('div');
   el.className = 'capsule-result';
-  el.innerHTML = cmp.what === 'none' ? `<small>タイムカプセル</small><b>${day}の もんだい</b><span>また とけたね！</span>`
-    : `<small>タイムカプセル</small><span class="cr-row"><span class="cr-old"><i>あの日</i>${cmp.what === 'time' ? sec(cmp.from) : `おしい ${cmp.from}回`}</span><span class="cr-arrow">→</span><span class="cr-new"><i>きょう</i>${cmp.what === 'time' ? sec(cmp.to) : `おしい ${cmp.to}回`}</span></span>`;
+  el.innerHTML = cmp.what === 'none' ? `<small>${t('capsule.title')}</small><b>${t('capsule.problem', { day })}</b><span>${t('capsule.again')}</span>`
+    : `<small>${t('capsule.title')}</small><span class="cr-row"><span class="cr-old"><i>${t('capsule.then')}</i>${cmp.what === 'time' ? sec(cmp.from) : t('u.missCount', { n: cmp.from })}</span><span class="cr-arrow">→</span><span class="cr-new"><i>${t('capsule.today')}</i>${cmp.what === 'time' ? sec(cmp.to) : t('u.missCount', { n: cmp.to })}</span></span>`;
   el.style.left = `${r.left + r.width / 2}px`; el.style.top = `${r.top + 6}px`;
   $('#cutins').appendChild(el);
   audio.unit(0.7);
@@ -1355,7 +1512,7 @@ function polishFx() {
   const r = card.getBoundingClientRect();
   const x = r.left + r.width / 2; const y = r.top + 30;
   if (S.reduced) return;
-  fx.text(x, y, 'ピカッ！ ピカピカ', { color: '#ffd23f', size: 26, vy: -80, life: 1.1 });
+  fx.text(x, y, t('polish.pop'), { color: '#ffd23f', size: 26, vy: -80, life: 1.1 });
   fx.burst(x, y, { count: 36, kinds: ['spark', 'star'], speed: 520, up: 140 });
   fx.ring(x, y, { color: '#fff', radius: 90, width: 8 });
   S.flash = Math.max(S.flash, 0.3);
@@ -1369,9 +1526,9 @@ function renderGrowth(el) {
   const lines = growth.growthLines(S.sessionTimes || {}, progress().skills, today);
   if (!lines.length) return;
   const gst = stats(); gst.grew = (gst.grew || 0) + 1; store.save();
-  const when = (x) => (x.kind === 'first' ? `はじめて（${fmtDay(x.d)}）` : growth.daysBetween(x.d, today) === 1 ? 'きのう' : fmtDay(x.d));
-  const val = (what, v) => (what === 'time' ? `${Math.max(0.1, v / 1000).toFixed(1)}びょう` : `${Math.round(v * 100)}%`);
-  el.innerHTML = `<p class="gb-head">のびたよ！</p>${lines.map((x) => `<div class="gb-line"><b>${SKILL[x.skill].name}</b><span class="gb-row"><span class="gb-what">${x.what === 'time' ? '1もん' : '初回正解'}</span><span class="gb-old"><small>${when(x)}</small>${val(x.what, x.from)}</span><span class="gb-arrow">→</span><span class="gb-new"><small>きょう</small><em data-what="${x.what}" data-from="${x.from}" data-to="${x.to}">${val(x.what, S.reduced ? x.to : x.from)}</em></span></span></div>`).join('')}`;
+  const when = (x) => (x.kind === 'first' ? t('growth.first', { day: fmtDay(x.d) }) : growth.daysBetween(x.d, today) === 1 ? t('growth.yesterday') : fmtDay(x.d));
+  const val = (what, v) => (what === 'time' ? t('growth.seconds', { n: Math.max(0.1, v / 1000).toFixed(1) }) : t('growth.percent', { n: Math.round(v * 100) }));
+  el.innerHTML = `<p class="gb-head">${t('growth.title')}</p>${lines.map((x) => `<div class="gb-line"><b>${SKILL[x.skill].name}</b><span class="gb-row"><span class="gb-what">${x.what === 'time' ? t('growth.oneProblem') : t('growth.firstTry')}</span><span class="gb-old"><small>${when(x)}</small>${val(x.what, x.from)}</span><span class="gb-arrow">→</span><span class="gb-new"><small>${t('growth.today')}</small><em data-what="${x.what}" data-from="${x.from}" data-to="${x.to}">${val(x.what, S.reduced ? x.to : x.from)}</em></span></span></div>`).join('')}`;
   if (S.reduced) return;
   const run = S.run;
   setTimeout(() => {
@@ -1395,18 +1552,18 @@ function starRow(n, max = STAR_MAX) {
 }
 function renderSkillNews(el) {
   const items = [
-    ...(S.capsuleNews ? [`<p class="capsule-news"><b>タイムカプセル</b>${S.capsuleNews}</p>`] : []),
-    ...(S.polished || []).map((id) => `<p class="polish-news">ピカピカ！ ${SKILL[id].name}</p>`),
-    ...Object.entries(S.newStars || {}).map(([id, n]) => `<p class="star-up">${starRow(n)}<span>☆${n}に なった！ ${SKILL[id].name}</span></p>`),
-    ...S.newMastered.map((id) => `<p class="mastered">マスター！ ${SKILL[id].name}</p>`),
-    ...S.newUnlocks.map((id) => `<p>かいほう！ ${SKILL[id].name}</p>`),
+    ...(S.capsuleNews ? [`<p class="capsule-news"><b>${t('news.capsule')}</b>${S.capsuleNews}</p>`] : []),
+    ...(S.polished || []).map((id) => `<p class="polish-news">${t('news.polished', { name: SKILL[id].name })}</p>`),
+    ...Object.entries(S.newStars || {}).map(([id, n]) => `<p class="star-up">${starRow(n)}<span>${t('news.star', { n, name: SKILL[id].name })}</span></p>`),
+    ...S.newMastered.map((id) => `<p class="mastered">${t('news.mastered', { name: SKILL[id].name })}</p>`),
+    ...S.newUnlocks.map((id) => `<p>${t('news.unlock', { name: SKILL[id].name })}</p>`),
   ];
-  if (S.plan.placement) items.unshift(`<p>じつりょくチェック おわり　${SKILLS.filter((x) => stateOf(progress(), x.id) === 'mastered').length}こ クリア</p>`);
+  if (S.plan.placement) items.unshift(`<p>${t('news.placement', { n: SKILLS.filter((x) => stateOf(progress(), x.id) === 'mastered').length })}</p>`);
   el.innerHTML = items.slice(0, 5).join('');
 }
 function setReviewButton(btn, n) {
   btn.hidden = !n;
-  btn.textContent = `まちがえた ${n}問を やりなおす`;
+  btn.textContent = t('result.reviewBtnN', { n });
 }
 function startReview() {
   const prog = progress();
@@ -1418,7 +1575,7 @@ function refreshTitle() {
   const n = prog.review.length;
   $('#start-review').hidden = !n;
   $('#review-count').textContent = n;
-  $('#level-sub').textContent = prog.placed ? `つぎは「${SKILL[frontier(prog)[0] || ORDER[ORDER.length - 1]].name}」` : 'はじめは じつりょくチェック';
+  $('#level-sub').textContent = prog.placed ? t('title.nextSkill', { name: SKILL[frontier(prog)[0] || ORDER[ORDER.length - 1]].name }) : t('title.startSub');
   const done = SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length;
   $('#tree-badge').textContent = `${done}/${SKILLS.length}`;
   renderQuests();
@@ -1447,14 +1604,22 @@ function toTitle() {
 
 // ---------------------------------------------------------------- frame loop
 let lastClockText = '';
-onFrame((dt, t) => {
+let lastKick = '';
+onFrame((dt, ft) => {
+  // Read layout once, before this frame writes any styles (avoids forced reflows).
+  if (S.screen === 'play' && !stageBox) refreshStage();
+  const stageRect = S.screen === 'play' ? stageBox : null;
+  const lookPt = S.screen === 'play' && !S.lesson ? S.lookPt : null;
   audio.update();
-  demoTick(t);
-  tickCombo(t);
+  demoTick(ft);
+  tickCombo(ft);
   const pulse = audio.pulse();
   const targetKick = audio.playing ? pulse.kick * (S.level >= 1 ? 1 : 0.2) : 0;
   S.kick = S.reduced ? 0 : targetKick;
-  body.style.setProperty('--kick', S.kick.toFixed(3));
+  // --kick lives on <body>, so every write restyles the whole page: only
+  // update it when the value visibly changes.
+  const kickTxt = (Math.round(S.kick * 20) / 20).toFixed(2);
+  if (kickTxt !== lastKick) { for (const el of kickEls) el.style.setProperty('--kick', kickTxt); lastKick = kickTxt; }
 
   // dopa counter rolls in log space
   const d = S.dopa;
@@ -1466,10 +1631,10 @@ onFrame((dt, t) => {
   }
 
   // The confirmation dialog pauses the clocks (see closeConfirm).
-  if (S.screen === 'play' && !S.confirm) {
+  if (S.screen === 'play' && !S.confirm && !S.lesson) {
     let txt;
     if (S.mode === 'extra') {
-      const left = Math.max(0, S.extra.end - t);
+      const left = Math.max(0, S.extra.end - ft);
       txt = fmtTime(left + 999);
       $('.clock').classList.toggle('hurry', left < 10000);
       if (left < 5500 && left > 0) {
@@ -1478,22 +1643,21 @@ onFrame((dt, t) => {
       }
       if (left <= 0 && !S.extra.over) endExtra();
     } else {
-      const el = (S.endT || t) - S.startT;
+      const el = (S.endT || ft) - S.startT;
       txt = fmtTime(el);
       $('.clock').classList.toggle('over', el > S.targetMs);
-      if (el > S.targetMs) $('#clock-label').textContent = '目標超過';
+      if (el > S.targetMs) $('#clock-label').textContent = t('play.clockOver');
     }
     if (txt !== lastClockText) { $('#clock').textContent = txt; lastClockText = txt; }
 
     // Hero wanders around the stage between actions.
-    if (!S.reduced && S.motion >= 0.35 && S.E > 0.3 && t > S.idleAt && t > S.busyUntil && !S.reach && !hero.hands.some((h) => h.job)) {
-      S.idleAt = t + rand(2200, 4200) / (0.6 + S.E);
-      const r = stage.getBoundingClientRect();
+    if (!S.reduced && S.motion >= 0.35 && S.E > 0.3 && ft > S.idleAt && ft > S.busyUntil && !S.reach && !hero.hands.some((h) => h.job)) {
+      S.idleAt = ft + rand(2200, 4200) / (0.6 + S.E);
+      const r = stageRect;
       const x = clamp(r.left + r.width / 2 + rand(-0.28, 0.28) * r.width, r.left + 50, r.right - 50);
       hero.hop(20 + 40 * S.E, 420, { to: { x, y: hero.home.y }, spin: S.E > 0.6 && chance(0.3) ? 360 : 0 }).then((ok) => { if (ok) hero.x = x; });
     }
-    const target = S.problem && S.problem.steps[S.step] ? S.cells[S.problem.steps[S.step].cell] : null;
-    if (target && !hero.hands.some((h) => h.job)) hero.lookAt(centerOf(target));
+    if (lookPt && !hero.hands.some((h) => h.job)) hero.lookAt(lookPt);
   }
 
   // screen shake (keypad stays still to keep tap targets stable)
@@ -1517,9 +1681,10 @@ onFrame((dt, t) => {
   st.reach = lerp(st.reach, S.reach ? 1 : 0, Math.min(1, dt * 5));
   st.hue += dt * 0.03 * S.visualE;
   const hc = hero.headCenter;
-  st.cx = lerp(st.cx || hc.x, S.screen === 'play' ? stage.getBoundingClientRect().left + stage.clientWidth / 2 : innerWidth / 2, Math.min(1, dt * 3));
-  st.cy = lerp(st.cy || hc.y, S.screen === 'play' ? stage.getBoundingClientRect().top + stage.clientHeight * 0.55 : innerHeight * 0.4, Math.min(1, dt * 3));
-  bg.render(t);
+  st.cx = lerp(st.cx || hc.x, stageRect ? stageRect.left + stageRect.width / 2 : view.w / 2, Math.min(1, dt * 3));
+  st.cy = lerp(st.cy || hc.y, stageRect ? stageRect.top + stageRect.height * 0.55 : view.h * 0.4, Math.min(1, dt * 3));
+  gov.sample(dt, S.screen === 'play' || S.screen === 'result');
+  if (gov.bgFrame()) bg.render(ft);
   fx.update(dt);
   fx.draw();
   fxBack.update(dt);
@@ -1528,16 +1693,25 @@ onFrame((dt, t) => {
   if (S.confirm?.urgent) setConfirmFace(true);
   const ctx = { beat: S.kick };
   for (const a of actors) {
-    if (a === hero && S.guideOpen && S.reduced) a.update(0, 0);
-    else a.update(dt, t, ctx);
+    if (a === hero && S.guideOpen && S.reduced) { a.update(0, 0); continue; }
+    // Guests (crowd, parade) animate at 30 fps on lite/low: every SVG
+    // attribute they change costs a style recalculation on the phone.
+    if (a !== hero && gov.tier < 2) {
+      a.skipDt = (a.skipDt || 0) + dt;
+      if ((gov.frame + (a.id | 0)) % 2) continue;
+      a.update(a.skipDt, ft, ctx);
+      a.skipDt = 0;
+      continue;
+    }
+    a.update(dt, ft, ctx);
   }
 });
 
 // Title screen idle performance.
-onFrame((dt, t) => {
+onFrame((dt, ft) => {
   if (S.screen !== 'title' || S.guideOpen || S.reduced || S.settingsOpen || S.confirm || S.bonusOpen || S.hammerOpen || S.trophyOpen || S.scene) return;
-  if (t > S.idleAt && t > S.busyUntil) {
-    S.idleAt = t + rand(1600, 2800);
+  if (ft > S.idleAt && ft > S.busyUntil) {
+    S.idleAt = ft + rand(1600, 2800);
     const r = $('#title-stage').getBoundingClientRect();
     const x = r.left + r.width / 2 + rand(-0.25, 0.25) * r.width;
     const roll = Math.random();
@@ -1565,11 +1739,12 @@ function setMotion(v, { persist = true } = {}) {
 function setMuted(m, { persist = true } = {}) {
   S.muted = m;
   audio.setMuted(m);
+  ads.setMuted(m);
   const b = $('[data-toggle="sound"]');
   b.setAttribute('aria-pressed', String(!m));
-  b.querySelector('b').textContent = m ? 'オフ' : 'オン';
+  b.querySelector('b').textContent = m ? t('settings.off') : t('settings.on');
   $('#mute').setAttribute('aria-pressed', String(m));
-  $('#mute').setAttribute('aria-label', m ? '音を出す' : '音を消す');
+  $('#mute').setAttribute('aria-label', m ? t('play.muteOn') : t('play.muteOff'));
   if (persist) store.updateSettings({ sound: !m });
 }
 function setVolume(v, { persist = true } = {}) {
@@ -1643,7 +1818,7 @@ function renderTree(justIds = [], starIds = []) {
   tree.style.height = `${TREE.rows * ROW_H + 20}px`;
   const lanes = $('#tree-lanes');
   lanes.style.width = `${colW * TREE.cols}px`;
-  lanes.innerHTML = LANES.map((l) => `<span>${l}</span>`).join('');
+  lanes.innerHTML = LANES.map((l, i) => `<span>${laneLabel(i)}</span>`).join('');
   tree.querySelectorAll('.node').forEach((n) => n.remove());
   const pos = {};
   const rustSet = new Set(rustyOf(prog));
@@ -1664,8 +1839,11 @@ function renderTree(justIds = [], starIds = []) {
     b.className = `node ${st}${justIds.includes(sk.id) ? ' just' : ''}${starIds.includes(sk.id) ? ' star-up' : ''}${rusty ? ' rusty' : ''}`;
     b.dataset.id = sk.id;
     b.style.cssText = `left:${pos[sk.id].x}px;top:${pos[sk.id].y}px;width:${nodeW}px;height:${NODE_H}px;--p:${masteryRatio(prog, sk.id)}`;
-    b.innerHTML = `<i class="hold"></i><span class="g">${sk.grade}年</span><span>${sk.name}</span>${st === 'learning' ? '<i class="ring"></i>' : ''}${st === 'mastered' ? `<i class="stars s${stars}">${starRow(stars)}</i>` : ''}${rusty ? '<i class="rust" aria-hidden="true">さび</i>' : ''}`;
-    b.setAttribute('aria-label', `${sk.name} ${{ locked: 'まだ', new: 'あたらしい', learning: 'れんしゅうちゅう', mastered: `マスター ほし${stars}こ${rusty ? ' さびついている' : ''}` }[st]}`);
+    const stateText = st === 'mastered'
+      ? t('tree.aria.mastered', { n: stars }) + (rusty ? t('tree.aria.rusty') : '')
+      : t(`tree.aria.${st === 'new' ? 'new' : st}`);
+    b.innerHTML = `<i class="hold"></i><span class="g">${t('tree.grade', { g: sk.grade })}</span><span>${sk.name}</span>${st === 'learning' ? '<i class="ring"></i>' : ''}${st === 'mastered' ? `<i class="stars s${stars}">${starRow(stars)}</i>` : ''}${rusty ? `<i class="rust" aria-hidden="true">${t('tree.rust')}</i>` : ''}`;
+    b.setAttribute('aria-label', `${sk.name} ${stateText}`);
     tree.appendChild(b);
   }
   $('#tree-count').textContent = `${SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length} / ${SKILLS.length}`;
@@ -1711,11 +1889,11 @@ function openSkillInfo(id) {
   const times = (r.times || []).filter((e) => e.f);
   const best = times.length ? Math.min(...times.map((e) => e.t)) : null;
   S.skillInfo = id;
-  $('#si-grade').textContent = `${sk.grade}年　${LANES[sk.lane]}`;
+  $('#si-grade').textContent = t('si.grade', { g: sk.grade, lane: laneLabel(sk.lane) });
   $('#si-title').textContent = sk.name;
   $('#si-stars').innerHTML = `${starRow(n)}<span>☆${n} / ${STAR_MAX}</span>`;
-  $('#si-next').innerHTML = next ? `<p class="si-label">つぎの ☆${next.n}</p><p class="si-text">${next.text}</p><p class="si-now">${next.now}</p>` : '<p class="si-text done">☆5 たっせい！ すごい！</p>';
-  $('#si-note').textContent = `${rustyOf(prog).includes(id) ? 'すこし さびているよ。1もん 初回正解で ピカピカ！　' : ''}といた もんだい ${r.n || 0}もん${best != null ? `　いちばん はやい 1もん ${(best / 1000).toFixed(1)}びょう` : ''}`;
+  $('#si-next').innerHTML = next ? `<p class="si-label">${t('si.next', { n: next.n })}</p><p class="si-text">${next.text}</p><p class="si-now">${next.now}</p>` : `<p class="si-text done">${t('si.done')}</p>`;
+  $('#si-note').textContent = `${rustyOf(prog).includes(id) ? t('si.rusty') : ''}${t('si.solved', { n: r.n || 0 })}${best != null ? t('si.best', { s: (best / 1000).toFixed(1) }) : ''}`;
   $('#skill-info').hidden = false;
   const cardEl = $('#skill-info .modal-card');
   if (!S.reduced) tween(260, (k) => { cardEl.style.transform = `translateY(${(1 - k) * 30}px) scale(${0.92 + 0.08 * k})`; }, easeOutBack).then(() => { cardEl.style.transform = ''; });
@@ -1810,18 +1988,19 @@ function askRelock(id) {
   const ids = relockTargets(progress(), id);
   audio.unlock();
   if (!ids.length) {
-    toast('まだ きろくが ないので けせないよ');
+    toast(t('tree.nothingToErase'));
     audio.play('boing', audio.now(), { v: 0.12 });
     return;
   }
   if (navigator.vibrate) navigator.vibrate(25);
   const deps = ids.length - (ids[0] === id ? 1 : 0);
   const MAX = 6;
+  const depsMsg = deps ? t('tree.eraseDeps', { n: deps }) : '';
   openConfirm({
-    title: 'スキルを けす',
-    msg: `「${SKILL[id].name}」の きろくを けします。${deps ? `<br>これに つながる <b>${deps}こ</b> の スキルも きえて、ロックに もどります。` : ''}`,
-    list: ids.slice(0, MAX).map((x) => `<li>${SKILL[x].name}</li>`).join('') + (ids.length > MAX ? `<li class="more">ほか ${ids.length - MAX}こ</li>` : ''),
-    yes: 'けす', no: 'やめる',
+    title: t('tree.eraseTitle'),
+    msg: t('tree.eraseMsg', { name: SKILL[id].name }) + depsMsg,
+    list: ids.slice(0, MAX).map((x) => `<li>${SKILL[x].name}</li>`).join('') + (ids.length > MAX ? `<li class="more">${t('tree.eraseMore', { n: ids.length - MAX })}</li>` : ''),
+    yes: t('common.delete'), no: t('common.cancel'),
     onYes: () => doRelock(id),
     focusBack: $(`.node[data-id="${id}"]`),
   });
@@ -1833,7 +2012,7 @@ function doRelock(id) {
   renderTree();
   audio.erase();
   audio.play('boing', audio.now() + 0.08, { v: 0.12 });
-  toast(`${gone.length}こ の スキルを けしたよ`);
+  toast(t('tree.erasedToast', { n: gone.length }));
   gone.forEach((x, i) => {
     const el = $(`.node[data-id="${x}"]`);
     if (!el || S.reduced) return;
@@ -1848,9 +2027,9 @@ function doRelock(id) {
 function askToTitle() {
   const playing = S.screen === 'play';
   openConfirm({
-    title: 'タイトルに もどる？',
-    msg: playing ? 'いまの プレイは ここで おわります。' : 'タイトル画面に もどります。',
-    yes: 'もどる', no: 'つづける', danger: playing,
+    title: t('confirm.toTitle'),
+    msg: playing ? t('confirm.toTitlePlaying') : t('confirm.toTitleMsg'),
+    yes: t('confirm.back'), no: t('confirm.stay'), danger: playing,
     onYes: () => { audio.play('blip', audio.now(), { m: 72, v: 0.08 }); toTitle(); },
     focusBack: document.activeElement && document.activeElement !== document.body ? document.activeElement : null,
   });
@@ -1866,7 +2045,13 @@ function toast(msg) {
 
 // ---------------------------------------------------------------- calendar
 const cal = { y: new Date().getFullYear(), m: new Date().getMonth(), seen: new Set() };
-const MODE_NAMES = { drill: (h) => `${h.count || ''}問ドリル`, level: () => 'じぶんレベル', grade: (h) => `${h.grade}ねんせい`, review: () => 'ふくしゅう', practice: (h) => `れんしゅう（${SKILL[h.skill]?.name || ''}）` };
+const MODE_NAMES = {
+  drill: (h) => t('cal.drillName', { n: h.count || '' }),
+  level: () => t('cal.levelName'),
+  grade: (h) => t('cal.gradeName', { g: h.grade }),
+  review: () => t('cal.reviewName'),
+  practice: (h) => t('cal.practiceName', { name: SKILL[h.skill]?.name || '' }),
+};
 const stampSvg = (score) => {
   const gold = score > 100;
   const col = gold ? '#ffb000' : '#ff4f6d';
@@ -1876,7 +2061,7 @@ function renderCalendar(animateNew = false) {
   const { y, m } = cal;
   const today = new Date();
   const todayKey = store.dayKey(today);
-  $('#cal-title').textContent = `${y}年${m + 1}月`;
+  $('#cal-title').textContent = t('cal.title', { y, m: m + 1, month: t(`month.${m + 1}`) });
   const sum = store.monthSummary(y, m);
   const nocount = store.nocountDays();
   const questDays = (store.load().quests || {}).doneDays || {};
@@ -1890,17 +2075,19 @@ function renderCalendar(animateNew = false) {
     const cls = ['cal-day'];
     if (key === todayKey) cls.push('today');
     if (info) { cls.push('played'); if (animateNew && !cal.seen.has(`${key}:${info.best}`)) cls.push('pop'); }
-    const label = info ? `${m + 1}月${d}日 ${info.plays}回 さいこう${info.best}点${questDays[key] ? ' クエスト コンプリート' : ''}` : `${m + 1}月${d}日`;
+    const label = info
+      ? t('cal.dayAriaInfo', { m: m + 1, d, plays: info.plays, best: nf(info.best) }) + (questDays[key] ? t('cal.questDone') : '')
+      : t('cal.dayAria', { m: m + 1, d });
     const sticker = store.stickerOn(key);
     const stk = sticker ? `<span class="stk">${stickerSvg(sticker)}</span>` : '';
     const nc = !info && nocount[key];
     if (questDays[key]) cls.push('quest');
     const qd = questDays[key] ? '<span class="qd" aria-hidden="true">★</span>' : '';
     if (nc) cls.push('nocount');
-    const ncStamp = nc ? '<span class="nc">ノーカン</span>' : '';
+    const ncStamp = nc ? `<span class="nc">${t('cal.nocount')}</span>` : '';
     html += info
-      ? `<button type="button" class="${cls.join(' ')}" data-day="${key}" data-key="${key}" aria-label="${label}"><span class="n">${d}</span>${stampSvg(info.best)}<span class="sc${info.best >= 10000 ? ' big' : ''}">${info.best.toLocaleString('ja-JP')}</span>${stk}${qd}</button>`
-      : `<span class="${cls.join(' ')}" data-key="${key}" aria-label="${label}${nc ? ' ノーカン' : ''}"><span class="n">${d}</span>${ncStamp}${stk}</span>`;
+      ? `<button type="button" class="${cls.join(' ')}" data-day="${key}" data-key="${key}" aria-label="${label}"><span class="n">${d}</span>${stampSvg(info.best)}<span class="sc${info.best >= 10000 ? ' big' : ''}">${nf(info.best)}</span>${stk}${qd}</button>`
+      : `<span class="${cls.join(' ')}" data-key="${key}" aria-label="${label}${nc ? ` ${t('cal.nocount')}` : ''}"><span class="n">${d}</span>${ncStamp}${stk}</span>`;
     if (info) cal.seen.add(`${key}:${info.best}`);
   }
   $('#cal-grid').innerHTML = html;
@@ -1909,12 +2096,12 @@ function renderCalendar(animateNew = false) {
   const best = store.bestStreak();
   const bonus = store.bonusState();
   const badges = [];
-  if (n >= 1) badges.push(`<span class="cal-badge${n >= 3 ? ' hot' : ''}">れんぞく<b>${n}</b>日${playedToday ? '' : '（きょうで' + (n + 1) + '日）'}</span>`);
-  else badges.push(`<span class="cal-badge">きょうから れんぞく記録スタート</span>`);
-  if (best >= 2) badges.push(`<span class="cal-badge best">さいこう<b>${best}</b>日</span>`);
-  if (bonus.total) badges.push(`<span class="cal-badge stk">シール<b>${bonus.total}</b>まい</span>`);
+  if (n >= 1) badges.push(`<span class="cal-badge${n >= 3 ? ' hot' : ''}">${t('cal.streak', { n })}${playedToday ? '' : t('cal.streakToday', { n: n + 1 })}</span>`);
+  else badges.push(`<span class="cal-badge">${t('title.streakStart')}</span>`);
+  if (best >= 2) badges.push(`<span class="cal-badge best">${t('cal.best', { n: best })}</span>`);
+  if (bonus.total) badges.push(`<span class="cal-badge stk">${t('cal.stickers', { n: bonus.total })}</span>`);
   const hammers = store.items().hammer;
-  badges.push(`<span class="cal-badge hmr" aria-label="ノーカンハンマー ${hammers}本"><i>${HAMMER_SVG}</i><b>${hammers}</b>本</span>`);
+  badges.push(`<span class="cal-badge hmr" aria-label="${t('cal.hammers', { n: hammers })}">${t('cal.hammerCount', { icon: HAMMER_SVG, n: hammers })}</span>`);
   $('#cal-badges').innerHTML = badges.join('');
   $('#cal-next').disabled = y > today.getFullYear() || (y === today.getFullYear() && m >= today.getMonth());
   if (animateNew && !S.reduced) $$('.cal-day.pop').forEach((el, i) => setTimeout(() => { const c = centerOf(el); fx.burst(c.x, c.y, { count: 14, kinds: ['confetti', 'star'], speed: 260, up: 80 }); audio.play('blip', audio.now(), { m: 84, v: 0.08 }); }, 350 + i * 120));
@@ -1937,7 +2124,9 @@ function stickerSvg(type) {
 let titleRewardTimer = 0;
 function scheduleTitleReward(callback) {
   clearTimeout(titleRewardTimer);
-  titleRewardTimer = setTimeout(callback, 500);
+  // A quick tap on a mode can leave the title within the delay: then the
+  // reward waits (S.pendingLoginBonus) until the next visit to the title.
+  titleRewardTimer = setTimeout(() => { if (S.screen === 'title' && !S.demo && !S.guideOpen) callback(); }, 500);
 }
 function openBonus(res) {
   if (S.guideOpen) return;
@@ -1945,15 +2134,15 @@ function openBonus(res) {
   S.bonusOpen = true;
   const m = $('#bonus');
   m.hidden = false;
-  $('#bonus-run').innerHTML = res.run >= 2 ? `れんぞく<b>${res.run}</b>日め` : 'きょうの ボーナス';
+  $('#bonus-run').innerHTML = res.run >= 2 ? t('bonus.run', { n: res.run }) : t('bonus.today');
   const slots = [];
   for (let i = 1; i <= 7; i++) {
     const got = i <= res.slot;
     const type = store.STICKERS[i - 1];
-    slots.push(`<div class="bonus-slot${got ? ' got' : ''}${i === res.slot ? ' today stamping' : ''}${i === 7 ? ' big' : ''}"><span class="d">${i}日め</span>${got ? stickerSvg(type) : i === 7 ? '？' : i}</div>`);
+    slots.push(`<div class="bonus-slot${got ? ' got' : ''}${i === res.slot ? ' today stamping' : ''}${i === 7 ? ' big' : ''}"><span class="d">${t('bonus.day', { n: i })}</span>${got ? stickerSvg(type) : i === 7 ? '？' : i}</div>`);
   }
   $('#bonus-grid').innerHTML = slots.join('');
-  $('#bonus-note').textContent = res.slot === 7 ? 'とくべつシール！ カレンダーに はったよ' : `あと${7 - res.slot}日で とくべつシール`;
+  $('#bonus-note').textContent = res.slot === 7 ? t('bonus.special') : t('bonus.left', { n: 7 - res.slot });
   audio.unlock();
   requestAnimationFrame(() => {
     layoutActors();
@@ -2052,12 +2241,12 @@ function openTrophies() {
   ts.batch = null; store.save();
   if (!list.length) return;
   S.trophyOpen = true;
-  $('#tg-title').textContent = 'トロフィー ゲット！';
-  $('#tg-sub').innerHTML = batch.length ? `これまでの きろくで <b>${batch.length}</b>こ ゲット！` : list.length > 1 ? `<b>${list.length}</b>こ ゲット！` : '';
+  $('#tg-title').textContent = t('trophy.gotTitle');
+  $('#tg-sub').innerHTML = batch.length ? t('trophy.batch', { n: batch.length }) : list.length > 1 ? t('trophy.many', { n: list.length }) : '';
   const MAX = 6;
   const rewards = list.map((x) => x.reward && ul.ITEM[x.reward]).filter(Boolean);
-  $('#tg-list').innerHTML = list.slice(0, MAX).map((x) => `<li class="r-${x.rank}"><i>${trophySvg(x.rank)}</i><span><b>${x.name}</b><small>${x.desc}</small></span></li>`).join('') + (list.length > MAX ? `<li class="more">ほか ${list.length - MAX}こ</li>` : '')
-    + rewards.map((it) => `<li class="reward"><i>${itemThumb(it)}</i><span><b>${catName(it.cat)}「${it.name}」を てにいれた！</b><small>コレクションで えらべるよ</small></span></li>`).join('');
+  $('#tg-list').innerHTML = list.slice(0, MAX).map((x) => `<li class="r-${x.rank}"><i>${trophySvg(x.rank)}</i><span><b>${x.name}</b><small>${x.desc}</small></span></li>`).join('') + (list.length > MAX ? `<li class="more">${t('trophy.more', { n: list.length - MAX })}</li>` : '')
+    + rewards.map((it) => `<li class="reward"><i>${itemThumb(it)}</i><span><b>${t('trophy.rewardItem', { cat: catName(it.cat), name: it.name })}</b><small>${t('trophy.rewardNote')}</small></span></li>`).join('');
   $('#trophy-got').hidden = false;
   audio.unlock();
   audio.unit(Math.min(1, 0.4 + list.length * 0.1));
@@ -2082,32 +2271,34 @@ function closeTrophies() {
 
 // The list screen: one card per series, folded; filters for earned / not yet.
 const trFilter = { f: 'all' };
-function trophyValueText(t, v) {
-  if (t.metric === 'bestDopaL') return `いま ${fmtDopa(stats().bestDopaL || 0)}`;
-  if (t.metric === 'minutes') return `いま ${v}ふん`;
-  if (/^(flag:|gradeDone|laneDone|allModes)/.test(t.metric)) return '';
-  return `いま ${v.toLocaleString('ja-JP')}`;
+function trophyValueText(item, v) {
+  if (item.metric === 'bestDopaL') return t('trophy.now', { value: fmtDopa(stats().bestDopaL || 0) });
+  if (item.metric === 'minutes') return t('trophy.minutes', { n: v });
+  if (/^(flag:|gradeDone|laneDone|allModes)/.test(item.metric)) return '';
+  return t('trophy.now', { value: nf(v) });
 }
 function renderTrophyList() {
   const ts = trophyState();
   const m = tr.trophyMetrics(trophySnap());
   const got = ts.got || {};
-  const day = (at) => { const d = new Date(at); return `${d.getMonth() + 1}/${d.getDate()}`; };
+  const day = (at) => { const d = new Date(at); return t('date.short', { m: d.getMonth() + 1, d: d.getDate() }); };
   let html = '';
   for (const cat of tr.CATS) {
     const cards = tr.SERIES.filter((s) => s.cat === cat).map((s) => tr.seriesView(s, ts, m)).filter((v) => trFilter.f === 'all' || (trFilter.f === 'got' ? v.got.length : v.next));
     if (trFilter.f === 'soon') continue;
     if (!cards.length) continue;
-    html += `<h3 class="tr-cat">${cat}</h3>`;
+    html += `<h3 class="tr-cat">${catLabel(cat)}</h3>`;
     for (const v of cards) {
       const s = v.series;
       const secret = s.cat === 'ひみつ';
       const dots = s.items.map((x) => `<i class="${got[x.id] ? `on r-${x.rank}` : ''}"></i>`).join('');
-      const next = v.next ? `<span class="tr-next">つぎ：${secret ? '？？？' : v.next.name}${!secret && trophyValueText(v.next, v.value) ? `（${trophyValueText(v.next, v.value)}）` : ''}</span>` : '<span class="tr-next done">コンプリート！</span>';
+      const nextName = secret ? t('trophy.unknown') : v.next?.name || '';
+      const nextValue = !secret && v.next && trophyValueText(v.next, v.value) ? t('trophy.nextValue', { value: trophyValueText(v.next, v.value) }) : '';
+      const next = v.next ? `<span class="tr-next">${t('trophy.next', { name: nextName, value: nextValue })}</span>` : `<span class="tr-next done">${t('trophy.done')}</span>`;
       const items = s.items.filter((x) => trFilter.f !== 'got' || got[x.id]).map((x) => {
         const hide = x.secret && !got[x.id];
         const rw = x.reward && ul.ITEM[x.reward];
-        return `<li class="${got[x.id] ? 'got' : ''}"><i>${trophySvg(got[x.id] ? x.rank : 'none')}</i><span><b>${hide ? '？？？' : x.name}</b><small>${hide ? 'ひみつの トロフィー' : x.desc}</small>${rw && !hide ? `<small class="rw">ごほうび：${catName(rw.cat)}「${rw.name}」</small>` : ''}</span><em>${got[x.id] ? day(got[x.id]) : ''}</em></li>`;
+        return `<li class="${got[x.id] ? 'got' : ''}"><i>${trophySvg(got[x.id] ? x.rank : 'none')}</i><span><b>${hide ? t('trophy.unknown') : x.name}</b><small>${hide ? t('trophy.secretDesc') : x.desc}</small>${rw && !hide ? `<small class="rw">${t('trophy.rewardLine', { cat: catName(rw.cat), name: rw.name })}</small>` : ''}</span><em>${got[x.id] ? day(got[x.id]) : ''}</em></li>`;
       }).join('');
       html += `<details class="tr-series"><summary><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${s.title}</b>${next}</span><span class="tr-n">${v.got.length}/${s.items.length}</span><span class="tr-dots">${dots}</span></summary><ul>${items}</ul></details>`;
     }
@@ -2116,9 +2307,9 @@ function renderTrophyList() {
     // Closest next steps first (secrets and yes/no goals left out).
     const soon = tr.SERIES.map((s) => tr.seriesView(s, ts, m)).filter((v) => v.next && v.series.cat !== 'ひみつ' && v.next.need > 1 && v.next.metric !== 'bestDopaL')
       .map((v) => ({ v, k: Math.min(0.999, v.value / v.next.need) })).sort((a, b) => b.k - a.k).slice(0, 12);
-    html = soon.map(({ v, k }) => `<div class="tr-soon"><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${v.next.name}</b><span class="tr-next">${v.series.title}　${trophyValueText(v.next, v.value)} / ${v.next.need.toLocaleString('ja-JP')}</span></span><span class="tr-pct" style="--p:${k.toFixed(3)}"><b>${Math.floor(k * 100)}%</b></span></div>`).join('');
+    html = soon.map(({ v, k }) => `<div class="tr-soon"><i class="tr-icon">${trophySvg(v.top ? v.top.rank : 'none')}</i><span class="tr-t"><b>${v.next.name}</b><span class="tr-next">${v.series.title} · ${trophyValueText(v.next, v.value)} / ${nf(v.next.need)}</span></span><span class="tr-pct" style="--p:${k.toFixed(3)}"><b>${Math.floor(k * 100)}%</b></span></div>`).join('');
   }
-  $('#tr-list').innerHTML = html || '<p class="tr-empty">まだ ないよ</p>';
+  $('#tr-list').innerHTML = html || `<p class="tr-empty">${t('trophy.empty')}</p>`;
   $('#trophy-count').textContent = `${tr.earnedCount(ts)} / ${tr.TROPHIES.length}`;
 }
 function openTrophyList() {
@@ -2184,17 +2375,17 @@ function renderCollection() {
   $('#co-tabs').innerHTML = ul.CATS.map((c) => { const own = ul.unlockedIn(c.key, got).length; const all = ul.ITEMS.filter((it) => it.cat === c.key).length; return `<button type="button" data-cat="${c.key}" aria-pressed="${c.key === co.cat}">${c.name}<small>${own}/${all}</small></button>`; }).join('');
   const items = ul.ITEMS.filter((it) => it.cat === co.cat);
   const auto = eq[co.cat] === 'auto';
-  $('#co-note').textContent = auto ? '「おまかせ」は もっている ものから まいかい かわるよ' : 'えらんだ ものを いつも つかうよ';
-  $('#co-grid').innerHTML = `<button type="button" class="co-item auto${auto ? ' on' : ''}" data-id="auto"><span class="co-th"><b>？</b></span><span class="co-name">おまかせ</span><small>まいかい かわる</small></button>`
+  $('#co-note').textContent = auto ? t('co.autoNote') : t('co.fixedNote');
+  $('#co-grid').innerHTML = `<button type="button" class="co-item auto${auto ? ' on' : ''}" data-id="auto"><span class="co-th"><b>？</b></span><span class="co-name">${t('co.auto')}</span><small>${t('co.autoSub')}</small></button>`
     + items.map((it) => {
       const own = ul.isUnlocked(it, got);
       const on = !auto && eq[co.cat] === it.id;
       const tro = it.trophy && tr.TROPHY[it.trophy];
-      return `<button type="button" class="co-item${own ? '' : ' locked'}${on ? ' on' : ''}" data-id="${it.id}"${own ? '' : ` aria-label="まだ　トロフィー ${tro ? tro.name : ''}で もらえる"`}><span class="co-th">${itemThumb(it)}</span><span class="co-name">${own ? it.name : '？？？'}</span>${own ? '<small>&nbsp;</small>' : `<small class="co-lock">トロフィー「${tro ? tro.name : ''}」</small>`}</button>`;
+      return `<button type="button" class="co-item${own ? '' : ' locked'}${on ? ' on' : ''}" data-id="${it.id}"${own ? '' : ` aria-label="${t('co.lockedAria', { name: tro ? tro.name : '' })}"`}><span class="co-th">${itemThumb(it)}</span><span class="co-name">${own ? it.name : t('trophy.unknown')}</span>${own ? '<small>&nbsp;</small>' : `<small class="co-lock">${t('co.lockLabel', { name: tro ? tro.name : '' })}</small>`}</button>`;
     }).join('');
   const all = ul.ITEMS.length; const own = ul.ITEMS.filter((it) => ul.isUnlocked(it, got)).length;
   $('#collect-count').textContent = `${own} / ${all}`;
-  $('#co-now').textContent = `${catName(co.cat)}：${auto ? 'おまかせ' : (ul.ITEM[eq[co.cat]] || {}).name || ''}`;
+  $('#co-now').textContent = t('co.now', { cat: catName(co.cat), name: auto ? t('co.auto') : (ul.ITEM[eq[co.cat]] || {}).name || '' });
 }
 // Try an item out on this screen.
 function previewItem(id) {
@@ -2240,16 +2431,16 @@ function pickItem(id) {
 const HAMMER_SVG = `<svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#1b1d4d" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M44.5 40 L55.5 40 L57 97 L43 97Z" fill="#3b6bff"/><path d="M44 60 L56 57 M44 74 L56 71 M44 88 L56 85" fill="none" stroke-width="2.6"/><rect x="13" y="12" width="74" height="30" rx="13" fill="#ff7ab6"/><rect x="5" y="8" width="15" height="38" rx="6" fill="#ffd23f"/><rect x="80" y="8" width="15" height="38" rx="6" fill="#ffd23f"/><path d="M28 20 Q50 15 72 20" fill="none" stroke="#fff" stroke-width="3" opacity=".85"/></g></svg>`;
 const HAMMER_REACH = 67; // grip to head centre, in px at the swing size
 
-const fmtDay = (key) => { const [, m, d] = key.split('-').map(Number); return `${m}月${d}日`; };
+const fmtDay = (key) => { const [, m, d] = key.split('-').map(Number); return t('date.short', { m, d }); };
 function openHammer(offer) {
   if (S.guideOpen) return;
   S.hammerOpen = offer;
   $('#hammer-art').innerHTML = HAMMER_SVG;
-  const days = offer.days.map(fmtDay).join('と');
-  $('#hammer-msg').innerHTML = `${days}は あそばなかったね。<br>ハンマーで <b>ノーカン</b>に すると<br>れんぞく<b>${offer.run}</b>日が つづくよ！`;
+  const days = offer.days.map(fmtDay).join(t('hammer.daysJoin'));
+  $('#hammer-msg').innerHTML = t('hammer.msg', { days, n: offer.run });
   const max = store.HAMMER.max;
-  $('#hammer-have').innerHTML = `もっている ハンマー ${Array.from({ length: max }, (_, i) => `<i class="${i < offer.hammers ? 'on' : ''}">${HAMMER_SVG}</i>`).join('')}`;
-  $('#hammer-yes').textContent = `つかう（${offer.days.length}本）`;
+  $('#hammer-have').innerHTML = t('hammer.have', { icons: Array.from({ length: max }, (_, i) => `<i class="${i < offer.hammers ? 'on' : ''}">${HAMMER_SVG}</i>`).join('') });
+  $('#hammer-yes').textContent = t('hammer.use', { n: offer.days.length });
   $('#hammer').hidden = false;
   audio.unlock();
   audio.play('boing', audio.now(), { v: 0.12 });
@@ -2292,7 +2483,7 @@ async function runHammer(offer) {
   const badge = $('.cal-badge');
   if (badge) {
     const c = centerOf(badge);
-    if (!S.reduced) { fx.text(c.x, c.y - 30, `れんぞく${offer.run}日 キープ！`, { color: '#ff7ab6', size: 26, vy: -70, life: 1.4 }); fx.burst(c.x, c.y, { count: 40, kinds: ['star', 'confetti', 'heart'], speed: 520, up: 160 }); }
+    if (!S.reduced) { fx.text(c.x, c.y - 30, t('hammer.keep', { n: offer.run }), { color: '#ff7ab6', size: 26, vy: -70, life: 1.4 }); fx.burst(c.x, c.y, { count: 40, kinds: ['star', 'confetti', 'heart'], speed: 520, up: 160 }); }
     audio.unit(0.6);
     popEl(badge, 0.5, 400);
   }
@@ -2365,12 +2556,14 @@ function moveMonth(dir) {
 function openDay(key) {
   const [y, m, d] = key.split('-').map(Number);
   const list = store.monthSummary(y, m - 1)[key]?.entries || [];
-  $('#day-title').textContent = `${m}月${d}日のきろく`;
+  $('#day-title').textContent = t('cal.logTitle', { m, d });
   $('#day-list').innerHTML = list.slice().reverse().map((h) => {
-    const t = new Date(h.at);
+    const tm = new Date(h.at);
     const name = (MODE_NAMES[h.mode] || (() => h.mode))(h);
-    const extra = h.extraOk ? `　エクストラ ${h.extraOk}問` : '';
-    return `<li><span class="t">${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}</span><span class="m">${name}</span><span class="s">${(h.score || 0).toLocaleString('ja-JP')}点</span><span class="d">正解 ${h.ok ?? '-'}　おしい ${h.ng ?? '-'}${extra}　${fmtTime(h.timeMs || 0)}</span></li>`;
+    const extra = h.extraOk ? t('cal.logExtra', { n: h.extraOk }) : '';
+    const sep = t('cal.logSep');
+    const parts = [t('cal.logOk', { n: h.ok ?? '-' }), t('cal.logNg', { n: h.ng ?? '-' }), ...(extra ? [extra] : []), fmtTime(h.timeMs || 0)];
+    return `<li><span class="t">${tm.getHours()}:${String(tm.getMinutes()).padStart(2, '0')}</span><span class="m">${name}</span><span class="s">${t('cal.logScore', { n: nf(h.score || 0) })}</span><span class="d">${parts.join(sep)}</span></li>`;
   }).join('');
   $('#day-log').hidden = false;
   audio.unlock();
@@ -2407,13 +2600,13 @@ function askReset() {
   if (S.demo || !S.settingsOpen) return;
   closeSettings();
   openConfirm({
-    title: 'すべて リセット',
-    msg: 'きろく・スキル・トロフィー・コレクション・シール・せっていを ぜんぶ けします。',
-    yes: 'けす', no: 'やめる', focusBack: $('#open-settings'),
+    title: t('reset.title'),
+    msg: t('reset.msg'),
+    yes: t('common.delete'), no: t('common.cancel'), focusBack: $('#open-settings'),
     onYes: () => openConfirm({
-      title: 'ほんとうに けしますか？',
-      msg: 'けしたら もとに もどせません。',
-      yes: 'ぜんぶ けす', no: 'やめる', urgent: true, focusBack: $('#open-settings'),
+      title: t('reset.askTitle'),
+      msg: t('reset.askMsg'),
+      yes: t('reset.yes'), no: t('common.cancel'), urgent: true, focusBack: $('#open-settings'),
       onYes: () => { store.reset(); location.reload(); },
     }),
   });
@@ -2469,6 +2662,7 @@ $('#hammer-yes').addEventListener('click', () => closeHammer(true));
 $('#tg-ok').addEventListener('click', closeTrophies);
 $('#si-close').addEventListener('click', () => { audio.play('blip', audio.now(), { m: 72, v: 0.08 }); closeSkillInfo(); });
 $('#si-go').addEventListener('click', () => { const id = S.skillInfo; closeSkillInfo(); audio.play('blip', audio.now(), { m: 84, v: 0.12 }); startGame('practice', id); });
+$('#si-example').addEventListener('click', () => { const id = S.skillInfo; closeSkillInfo(); audio.play('blip', audio.now(), { m: 84, v: 0.12 }); startGame('practice', id, { lesson: id }); });
 $('#skill-info').addEventListener('click', (e) => { if (e.target.id === 'skill-info') closeSkillInfo(); });
 $('#trophy-got').addEventListener('click', (e) => { if (e.target.id === 'trophy-got') closeTrophies(); });
 $('#open-trophy').addEventListener('click', openTrophyList);
@@ -2487,9 +2681,11 @@ $('#motion').addEventListener('input', (e) => { const v = e.target.value / 100; 
 $('#motion').addEventListener('change', () => { S.previewE = 0.04 + 0.3 * S.motion; });
 $('#mute').addEventListener('click', () => setMuted(!S.muted));
 $('#go-extra').addEventListener('click', startExtra);
-$('#go-title').addEventListener('click', toTitle);
-$('#go-again').addEventListener('click', () => startGame(S.kind, S.kindArg));
-$('#again').addEventListener('click', toTitle);
+// Leaving a result screen is the only place an interstitial may appear
+// (ads.gate shows one when due, then continues; on the web it just continues).
+$('#go-title').addEventListener('click', () => ads.gate(toTitle));
+$('#go-again').addEventListener('click', () => ads.gate(() => startGame(S.kind, S.kindArg)));
+$('#again').addEventListener('click', () => ads.gate(toTitle));
 $('#go-review').addEventListener('click', startReview);
 $('#f-review').addEventListener('click', startReview);
 $('#start-review').addEventListener('click', startReview);
@@ -2511,8 +2707,8 @@ $('#tree').addEventListener('click', (e) => {
   if (hold.fired || hold.dragged) { hold.fired = false; hold.dragged = false; return; }
   const id = b.dataset.id; const st = stateOf(progress(), id);
   if (st === 'locked') {
-    const need = SKILL[id].req.filter((q) => stateOf(progress(), q) !== 'mastered').map((q) => `「${SKILL[q].name}」`);
-    toast(`${need.join('と')}を マスターすると ひらくよ`);
+    const need = SKILL[id].req.filter((q) => stateOf(progress(), q) !== 'mastered').map((q) => (isJapanese() ? `「${SKILL[q].name}」` : `“${SKILL[q].name}”`));
+    toast(t('tree.lockedToast', { names: need.join(isJapanese() ? t('p.word.and') : ` ${t('p.word.and')} `) }));
     audio.play('boing', audio.now(), { v: 0.12 });
     if (!S.reduced) tween(300, (k) => { b.style.translate = `${Math.sin(k * 20) * 5 * (1 - k)}px 0`; }).then(() => { b.style.translate = ''; });
     return;
@@ -2533,6 +2729,7 @@ addEventListener('keydown', (e) => {
   if (guide.keydown(e)) return;
   if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
   if (S.demo) { e.preventDefault(); stopDemo(); return; }
+  if (S.privacyOpen) { if (e.key === 'Escape') closePrivacy(); return; }
   if (S.settingsOpen) { if (e.key === 'Escape') closeSettings(); return; }
   if (S.confirm) { if (e.key === 'Escape') closeConfirm(); return; }
   if (S.screen === 'tree' && e.key === 'Delete' && document.activeElement && document.activeElement.classList.contains('node')) { askRelock(document.activeElement.dataset.id); e.preventDefault(); return; }
@@ -2579,10 +2776,77 @@ addEventListener('resize', () => requestAnimationFrame(() => {
   $('#logo-burst-path').setAttribute('d', star(96, 66, 14, 0.14, 7));
   $('#logo-burst-inner').setAttribute('d', star(70, 52, 14, 0.1, 3));
   const burst = $('.logo-burst');
-  onFrame((dt, t) => { if (S.screen === 'title' && !S.reduced) burst.style.setProperty('--spin', (t / 1000 * 10 * (0.3 + S.motion)) % 360); });
+  onFrame((dt, ft) => { if (S.screen === 'title' && !S.reduced) burst.style.setProperty('--spin', (ft / 1000 * 10 * (0.3 + S.motion)) % 360); });
 })();
 
+// ---------------------------------------------------------------- idioma
+// La aplicación se publica en español e inglés (selector en Ajustes).
+// `?lang=ja` se mantiene para trabajar sobre el idioma de origen del
+// proyecto y no se ofrece en la UI.
+// The title logo is one letter per <i>: "DOPA" / "DRILL" in Spanish and
+// English, the original "ドパ" / "ドリル" with ?lang=ja. Latin letters get the
+// `latin` class (a smaller size: four letters on top instead of two).
+function renderLogo() {
+  const top = t('app.logoTop');
+  const bottom = t('app.logoBottom');
+  const latin = /^[\x20-\x7e]+$/.test(top + bottom);
+  $('.logo-top').innerHTML = [...top].map((c) => `<i data-c="${c}">${c}</i>`).join('');
+  const ribbon = $('.logo-ribbon');
+  ribbon.querySelectorAll('i').forEach((el) => el.remove());
+  ribbon.insertAdjacentHTML('beforeend', [...bottom].map((c) => `<i>${c}</i>`).join(''));
+  $('#logo').classList.toggle('latin', latin);
+}
+function applyDocumentText() {
+  applyStatic();
+  renderLogo();
+  $('#app-version').textContent = t('settings.version', { v: APP_VERSION });
+  const ns = document.querySelector('noscript');
+  if (ns) ns.textContent = t('app.notScript');
+}
+
+// ---------------------------------------------------------------- privacy (Settings → Sobre la app)
+function openPrivacy() {
+  audio.play('blip', audio.now(), { m: 79, v: 0.1 });
+  S.privacyOpen = true;
+  $('#privacy').hidden = false;
+  $('#privacy-close').focus({ preventScroll: true });
+}
+function closePrivacy() {
+  if (!S.privacyOpen) return;
+  S.privacyOpen = false;
+  $('#privacy').hidden = true;
+  audio.play('blip', audio.now(), { m: 72, v: 0.08 });
+  $('#open-privacy').focus({ preventScroll: true });
+}
+$('#open-privacy').addEventListener('click', openPrivacy);
+$('#privacy-close').addEventListener('click', closePrivacy);
+$('#privacy').addEventListener('click', (e) => { if (e.target.id === 'privacy') closePrivacy(); });
+function syncLangPick() {
+  $$('.lang-pick button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.lang === getLocale())));
+}
+$$('.lang-pick button').forEach((b) => b.addEventListener('click', () => {
+  audio.unlock();
+  audio.play('blip', audio.now(), { m: 80, v: 0.12 });
+  setLocale(b.dataset.lang); // persists, rewrites [data-i18n] and notifies below
+}));
+// applyStatic() rewrites every [data-i18n] element, including the ones JS
+// fills in afterwards (#level-sub, #cal-title, the sound toggle, ...), so
+// redraw everything that shows dynamic text in the new language.
+onLocaleChange(() => {
+  applyDocumentText();
+  syncLangPick();
+  setMuted(S.muted, { persist: false });
+  refreshTitle();
+  renderCalendar();
+  if (S.screen === 'tree') renderTree();
+  else if (S.screen === 'trophy') renderTrophyList();
+  else if (S.screen === 'collect') renderCollection();
+});
+
 const saved = store.settings();
+setLocale(initialLocale(location.search), { persist: false, notify: false });
+applyDocumentText();
+syncLangPick();
 const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 setCount(params.has('count') ? Number(params.get('count')) : saved.count, { persist: false });
 setMotion(saved.motion ?? (prefersReduced ? 0 : 1), { persist: false });
@@ -2594,6 +2858,10 @@ refreshTitle();
 checkLoginBonus();
 applyLevel(0.02);
 startClock();
+ads.init(); // native only; resolves quietly on the web
 document.fonts.ready.then(layoutActors);
 layoutActors();
-Object.assign(window.__dopa, { hanamaru, applyLook, fx, fxBack, bg, hero, actors, crowd, press, startGame, startExtra, fmtDopa, store, progress, stats, quests, trophyState, checkTrophies });
+// Android back button (MainActivity): anything open over the screen gets
+// Escape first; only a bare title screen lets the app close.
+window.__dopa.backTarget = () => (S.guideOpen || S.demo || S.privacyOpen || S.settingsOpen || S.confirm || S.bonusOpen || S.hammerOpen || S.trophyOpen || S.skillInfo || S.scene || !$('#day-log').hidden ? 'overlay' : String(S.screen));
+Object.assign(window.__dopa, { gov, startDemo, hanamaru, applyLook, fx, fxBack, bg, hero, actors, crowd, press, startGame, startExtra, fmtDopa, store, progress, stats, quests, trophyState, checkTrophies });

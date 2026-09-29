@@ -2,12 +2,19 @@
 // Each skill: id, name (shown on screen), grade, lane (tree column),
 // req (all must be mastered to unlock), gen (generator + params, problems.js).
 
+import { t } from './i18n.js';
+
 export const LANES = ['たし・ひき', 'かけ・わり', '小数・分数', 'そのほか'];
+
+// Display names for the lanes. LANES keeps the source strings because they
+// double as stable identifiers in the saved data and the trophy series.
+const LANE_KEYS = ['lane.addsub', 'lane.muldiv', 'lane.decfrac', 'lane.other'];
+export const laneLabel = (i) => t(LANE_KEYS[i] || 'lane.other');
 
 // Mastery / unlock rule (provisional): 5 first-try clears in the last 6 attempts.
 export const MASTERY = { window: 6, need: 5 };
 
-export const SKILLS = [
+const RAW_SKILLS = [
   // ---------------------------------------------------------------- grade 1
   { id: 'g1-compose10', name: '10のまとまり', grade: 1, lane: 0, req: [], gen: ['compose', { total: 10 }] },
   { id: 'g1-add-nc', name: '1けたのたしざん', grade: 1, lane: 0, req: [], gen: ['hadd', { a: [1, 9], b: [1, 9], carry: 'none' }] },
@@ -78,6 +85,18 @@ export const SKILLS = [
   { id: 'g6-ratio', name: '等しい比', grade: 6, lane: 3, req: ['g5-lcm'], gen: ['ratio', {}] },
   { id: 'g6-letter', name: 'xをもとめる', grade: 6, lane: 3, req: ['g4-order'], gen: ['letter', {}] },
 ];
+
+// `name` is a live getter so the whole tree follows the current language.
+export const SKILLS = RAW_SKILLS.map((s) => {
+  const name = s.name;
+  const key = `sk.${s.id}`;
+  const out = { ...s };
+  Object.defineProperty(out, 'name', {
+    get: () => { const v = t(key); return v === key ? name : v; },
+    enumerable: true,
+  });
+  return out;
+});
 
 export const SKILL = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
 

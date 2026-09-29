@@ -20,6 +20,41 @@ test('the catalogue: more than 100 trophies, unique ids, rising steps, known cat
   assert.ok(steps('days') >= steps('plays'));
 });
 
+test('labels agree in number and series come in reach order', async () => {
+  const { setLocale } = await import('../app/js/i18n.js');
+  const byId = (id) => TROPHY[id];
+  setLocale('es', { persist: false, notify: false });
+  try {
+    assert.equal(byId('days-1').name, '1 día jugado');
+    assert.equal(byId('days-3').name, '3 días jugados');
+    assert.equal(byId('plays-1').desc, 'Termina 1 ronda completa');
+    assert.equal(byId('mastered-1').desc, 'Domina 1 habilidad');
+    assert.equal(byId('minutes-60').name, '1 hora en total');
+    assert.equal(byId('minutes-120').name, '2 horas en total');
+    assert.equal(byId('grade1-1').name, '1 partida en 1º');
+    assert.equal(byId('extras-1').desc, 'Llega al Extra 1 vez');
+    setLocale('en', { persist: false, notify: false });
+    assert.equal(byId('days-1').name, '1 day played');
+    assert.equal(byId('capsules-1').desc, 'Open 1 time capsule');
+    assert.equal(byId('capsules-3').desc, 'Open 3 time capsules');
+  } finally {
+    setLocale('es', { persist: false, notify: false });
+  }
+  // Inside a category the first series is the one a new player reaches first.
+  const keysIn = (cat) => SERIES.filter((s) => s.cat === cat).map((s) => s.key);
+  assert.equal(keysIn('つづける')[0], 'days');
+  assert.equal(keysIn('たくさん')[0], 'plays');
+  assert.deepEqual(keysIn('スキル').slice(0, 3), ['unlocked', 'starsTotal', 'mastered']);
+  assert.deepEqual(keysIn('がくねん'), ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6']);
+  // Ranks rise along every series: bronze before silver before gold, rainbow last.
+  const order = { bronze: 0, silver: 1, gold: 2, rainbow: 3 };
+  for (const s of SERIES.filter((x) => x.cat !== 'ひみつ')) {
+    const ranks = s.items.map((t) => order[t.rank]);
+    for (let i = 1; i < ranks.length; i++) assert.ok(ranks[i] >= ranks[i - 1], `${s.key} rank order`);
+    if (ranks.length > 1) assert.equal(ranks[ranks.length - 1], 3, `${s.key} ends in rainbow`);
+  }
+});
+
 test('earning: conditions met, kept forever, first run is a quiet batch', () => {
   const stats = emptyStats();
   Object.assign(stats, { problems: 120, plays: 6, days: 4, maxCombo: 12, bestDopaL: 4.3, playMs: 40 * 60000, flags: { sunday: true } });

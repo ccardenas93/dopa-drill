@@ -1,0 +1,32 @@
+{
+  "name": "dopa-drill",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dopa Drill: cuaderno de cálculo con celebración. Web + iOS + Android con un solo código.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "i18n": "node tools/check_i18n.mjs",
+    "serve": "python3 -m http.server 8000 -d app",
+    "sync": "cap sync",
+    "copy": "cap copy",
+    "ios": "cap open ios",
+    "android": "cap open android",
+    "apk": "cd android && ./gradlew -Dorg.gradle.java.home=\"${JDK21:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" assembleDebug",
+    "apk:release": "cd android && ./gradlew -Dorg.gradle.java.home=\"${JDK21:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" assembleRelease",
+    "aab": "cd android && ./gradlew -Dorg.gradle.java.home=\"${JDK21:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" bundleRelease",
+    "store": "node tools/store_assets.mjs",
+    "ios:build": "xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build",
+    "ipa": "cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath build/App.xcarchive archive"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^7.2.0",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "puppeteer-core": "^25.12.0"
+  }
+}

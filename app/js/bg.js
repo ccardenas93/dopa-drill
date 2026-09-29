@@ -1,6 +1,8 @@
 // Full-screen WebGL backdrop: sunburst rays that grow into a rainbow tunnel of
 // Dopakichi silhouettes. Falls back to a CSS conic gradient without WebGL.
 
+import { view } from './core.js';
+
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
 const FRAG = `precision highp float;
 uniform vec2 uRes; uniform vec2 uCenter; uniform float uTime, uE, uKick, uFlash, uReach, uHue, uTheme;
@@ -211,6 +213,11 @@ export class Backdrop {
     this.fallback = fallback;
     this.state = { E: 0, kick: 0, flash: 0, reach: 0, hue: 0, cx: 0, cy: 0, theme: 0 };
     this.gl = null;
+    // Render scale in canvas pixels per CSS pixel, set by the quality
+    // governor (perf.js). The backdrop is soft, so phones draw it small and
+    // CSS stretches it back to full size.
+    this.quality = 1.25;
+    this.blank = false;
     try { this.init(); } catch (e) { console.warn('webgl off', e); this.gl = null; }
     if (!this.gl) { canvas.style.display = 'none'; fallback.style.display = 'block'; }
   }
@@ -236,8 +243,8 @@ export class Backdrop {
     this.canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); this.gl = null; this.canvas.style.display = 'none'; this.fallback.style.display = 'block'; });
   }
   resize() {
-    const dpr = Math.min(1.25, window.devicePixelRatio || 1);
-    const w = Math.round(innerWidth * dpr); const h = Math.round(innerHeight * dpr);
+    const dpr = Math.min(this.quality, window.devicePixelRatio || 1);
+    const w = Math.round(view.w * dpr); const h = Math.round(view.h * dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     this.dpr = dpr;
   }
@@ -256,8 +263,15 @@ export class Backdrop {
       f.style.filter = s.E > 0.6 ? `hue-rotate(${(t / 20) % 360}deg)` : 'none';
       return;
     }
-    this.resize();
     const gl = this.gl;
+    // Fully transparent (title, tree, trophy screens): clear once and stop
+    // paying for a full-screen shader nobody can see.
+    if (s.E < 0.1 && s.reach < 0.005 && s.flash < 0.005) {
+      if (!this.blank) { gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT); this.blank = true; }
+      return;
+    }
+    this.blank = false;
+    this.resize();
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.uniform2f(this.u.uRes, this.canvas.width, this.canvas.height);
     gl.uniform2f(this.u.uCenter, s.cx * this.dpr, s.cy * this.dpr);

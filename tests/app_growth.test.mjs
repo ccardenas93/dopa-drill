@@ -37,6 +37,25 @@ test('solves, plays and extras add up; days count once (id033)', () => {
   assert.deepEqual([s.plays, s.modes.level, s.perfects, s.playMs, s.bestDopaL, s.days], [2, 2, 1, 10000, 5.5, 1]);
 });
 
+test('grade rounds, Sunday and the clean-set flags feed the trophies', async () => {
+  const { setFlag } = await import('../app/js/growth.js');
+  const { trophyMetrics } = await import('../app/js/trophies.js');
+  const { emptyProgress } = await import('../app/js/session.js');
+  const s = emptyStats();
+  notePlay(s, { mode: 'grade', grade: 3, day: '2026-09-27', weekday: 0, timeMs: 1000, firstRate: 1 });
+  notePlay(s, { mode: 'grade', grade: 3, day: '2026-09-28', weekday: 1, timeMs: 1000, firstRate: 0.8 });
+  notePlay(s, { mode: 'level', day: '2026-09-28', weekday: 1, timeMs: 1000, firstRate: 1 });
+  setFlag(s, 'perfect14');
+  setFlag(s, 'extraClean');
+  const m = trophyMetrics({ stats: s, prog: emptyProgress() });
+  assert.equal(m.gradePlays3, 2);
+  assert.equal(m.gradePlays1, 0);
+  assert.equal(m['flag:sunday'], 1);
+  assert.equal(m['flag:perfect14'], 1);
+  assert.equal(m['flag:extraClean'], 1);
+  assert.equal(m['flag:newyear'], undefined);
+});
+
 test('compared with before: only improvements, enough answers, at most three (id038)', async () => {
   const { compareSkill, growthLines } = await import('../app/js/growth.js');
   const r = {

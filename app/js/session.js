@@ -6,6 +6,7 @@ const LANES_N = LANES.length;
 import { makeProblem, signature } from './problems.js';
 import { comboWindowMs } from './scoring.js';
 import { daysBetween } from './growth.js';
+import { t } from './i18n.js';
 
 // Skills in a single easy -> hard order (placement walks along it).
 export const ORDER = SKILLS.slice().sort((a, b) => DEPTH[a.id] - DEPTH[b.id] || a.grade - b.grade || SKILLS.indexOf(a) - SKILLS.indexOf(b)).map((s) => s.id);
@@ -88,7 +89,9 @@ export function recordResult(prog, id, firstTry, sig, info = {}) {
   const wasRusty = rustyOf(prog, at).includes(id);
   const r = rec(prog, id);
   r.n += 1;
-  r.hist.push(firstTry ? 1 : 0);
+  // Guided problems (the first ones after a lesson) are practice with the
+  // method on screen: they count as attempts but not as mastery evidence.
+  if (!info.guided) r.hist.push(firstTry ? 1 : 0);
   if (r.hist.length > MASTERY.window) r.hist.splice(0, r.hist.length - MASTERY.window);
   r.last = at;
   if (firstTry) r.lastOk = at;
@@ -169,16 +172,16 @@ export function nextStar(prog, id, today = null) {
   const pct = (l) => Math.round(rate(l) * 100);
   const cur = (l) => { const v = speedOf(l, grade); return Number.isFinite(v) ? Math.round((v * baseMs(grade, cells)) / 100) / 10 : null; };
   const n = s + 1;
-  if (n === 2) { const l = times.slice(-R.accN); return { n, text: `さいきん ${R.accN}もんの 初回正解が ${R.acc * 100}% いじょう`, now: `いま ${l.length}もん・${pct(l)}%` }; }
-  if (n === 3) { const l = times.slice(-R.speedN); const c = cur(l); return { n, text: `1もんを だいたい ${sec(1)}びょう いないで とく`, now: c == null ? `いま ${l.length}もん` : `いま ${c}びょう（${l.length}/${R.speedN}もん）` }; }
+  if (n === 2) { const l = times.slice(-R.accN); return { n, text: t('star.acc.text', { n: R.accN, p: R.acc * 100 }), now: t('star.acc.now', { n: l.length, p: pct(l) }) }; }
+  if (n === 3) { const l = times.slice(-R.speedN); const c = cur(l); return { n, text: t('star.speed.text', { s: sec(1) }), now: c == null ? t('star.speed.nowShort', { n: l.length }) : t('star.speed.now', { s: c, n: l.length, total: R.speedN }) }; }
   if (n === 4) {
     const since = r.starDay && r.starDay[3];
     const ref = today || (times.length ? times[times.length - 1].d : since);
     const wait = since && ref ? Math.max(0, R.gapDays - daysBetween(since, ref)) : R.gapDays;
-    return { n, text: `☆3から ${R.gapDays}日 たってから、${R.holdRun}もん つづけて 初回正解`, now: wait ? `あと ${wait}日 まってね` : 'きょうから ちょうせん できるよ' };
+    return { n, text: t('star.hold.text', { days: R.gapDays, run: R.holdRun }), now: wait ? t('star.hold.wait', { n: wait }) : t('star.hold.go') };
   }
   const l = times.slice(-R.topN); const c = cur(l);
-  return { n, text: `さいきん ${R.topN}もんの 初回正解が ${R.top * 100}% いじょうで、1もん ${sec(R.topSpeed)}びょう いない`, now: `いま ${pct(l)}%${c == null ? '' : `・${c}びょう`}` };
+  return { n, text: t('star.top.text', { n: R.topN, p: R.top * 100, s: sec(R.topSpeed) }), now: t('star.top.now', { p: pct(l), extra: c == null ? '' : t('star.top.nowSec', { s: c }) }) };
 }
 
 function noteTiming(r, firstTry, { day, ms, cells = 1, misses = 0, problem = null }, at) {
@@ -248,6 +251,8 @@ export function gradePlan(grade, N, rng) {
 // Frontier = unlocked but not mastered; "warm" = mastered (light review).
 export function frontier(prog) { return ORDER.filter((id) => isUnlocked(prog, id) && !isMastered(prog, id)); }
 
+export const NEW_BLOCK = 4;
+
 export function levelPlan(prog, N, rng, now = Date.now()) {
   if (!prog.placed) return placementPlan(prog, N);
   const front = frontier(prog);
@@ -257,30 +262,41 @@ export function levelPlan(prog, N, rng, now = Date.now()) {
   // Recent mastered skills first, then the frontier (least practised first).
   const warmPick = warm.slice(-6);
   const nWarm = Math.min(warmPick.length, Math.max(1, Math.round(N * 0.3)));
-  const frontSorted = front.slice(0, 4);
+  // Work in progress stays small: up to 3 skills being learned, plus one
+  // brand-new skill only while fewer than 3 are open. The new skill comes as a
+  // short block (lesson, then guided tries) before mixing with the others.
+  const learning = front.filter((id) => prog.skills[id] && prog.skills[id].n).slice(0, 3);
+  const fresh = learning.length < 3 ? front.filter((id) => !(prog.skills[id] && prog.skills[id].n)).slice(0, 1) : [];
   const basic = [];
   for (let i = 0; i < nWarm; i++) basic.push(i < rusty.length ? rusty[i] : warmPick[Math.floor(rng() * warmPick.length)]);
-  for (let i = nWarm; i < N; i++) basic.push(frontSorted.length ? frontSorted[(i - nWarm) % frontSorted.length] : warm[Math.floor(rng() * warm.length)]);
+  const rest = N - nWarm;
+  const block = fresh.length ? Math.min(rest, learning.length ? NEW_BLOCK : rest) : 0;
+  for (let i = 0; i < block; i++) basic.push(fresh[0]);
+  for (let i = 0; i < rest - block; i++) basic.push(learning.length ? learning[i % learning.length] : warm[Math.floor(rng() * warm.length)]);
   const hardest = front.length ? front.slice(-3) : warm.slice(-3);
   return { mode: 'level', basic, extra: (k) => hardest[k % hardest.length] };
 }
 
 // First session: walk along PLACEMENT, jumping ahead after clean answers and
-// easing back after slips. A clean answer grants that skill and its ancestors,
-// so a skill may be asked before it is unlocked (skipping ahead).
+// easing back after slips. Two clean answers in a row on the same skill grant
+// it and its ancestors (one lucky answer is not enough), so a skill may be
+// asked before it is unlocked (skipping ahead).
 export function placementPlan(prog, N) {
-  const walk = { p: 0, jump: 6, lastOk: -1 };
+  const walk = { p: 0, jump: 6, lastOk: -1, confirm: false };
   return {
     mode: 'level', placement: true, walk,
     basic: Array.from({ length: N }, () => null),
     pick() { return PLACEMENT[Math.min(PLACEMENT.length - 1, walk.p)]; },
     answer(firstTry) {
+      if (firstTry && !walk.confirm) { walk.confirm = true; return; }
       if (firstTry) {
+        walk.confirm = false;
         masterWithAncestors(prog, PLACEMENT[walk.p]);
         walk.lastOk = walk.p;
         walk.p = Math.min(PLACEMENT.length - 1, walk.p + walk.jump);
         walk.jump = Math.min(12, Math.ceil(walk.jump * 1.3));
       } else {
+        walk.confirm = false;
         walk.jump = Math.max(1, Math.floor(walk.jump / 2));
         walk.p = Math.min(walk.p, Math.max(walk.lastOk + 1, walk.p - walk.jump));
       }

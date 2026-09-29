@@ -1,0 +1,15 @@
+{
+  "appId": "com.tanosix.dopa_drill",
+  "appName": "Dopa Drill",
+  "webDir": "app",
+  "loggingBehavior": "debug",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#F3F1FB",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "backgroundColor": "#F3F1FB",
+    "allowMixedContent": false
+  }
+}

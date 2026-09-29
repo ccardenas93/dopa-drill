@@ -3,23 +3,48 @@
 // reward of one trophy (never random), so what is unlocked follows from the
 // trophies earned; only the player's choice per category is saved.
 import { TROPHY } from './trophies.js';
+import { t } from './i18n.js';
 
+// Category labels are getters so the collection follows the current language.
 export const CATS = [
-  { key: 'bg', name: 'はいけい' },
-  { key: 'mark', name: 'せいかいの しるし' },
-  { key: 'particle', name: 'かみふぶき' },
-  { key: 'music', name: 'おんがく' },
-  { key: 'costume', name: 'きせかえ' },
-  { key: 'color', name: 'ドパキチの いろ' },
-  { key: 'crowd', name: 'おきゃくさん' },
-  { key: 'finale', name: 'フィナーレ' },
-];
+  ['bg', 'co.cat.bg'], ['mark', 'co.cat.mark'], ['particle', 'co.cat.particle'], ['music', 'co.cat.music'],
+  ['costume', 'co.cat.costume'], ['color', 'co.cat.color'], ['crowd', 'co.cat.crowd'], ['finale', 'co.cat.finale'],
+].map(([key, nameKey]) => {
+  const o = { key };
+  Object.defineProperty(o, 'name', { get: () => t(nameKey), enumerable: true });
+  return o;
+});
+
+// One translation key per item, keyed by item id.
+const NAME_KEYS = {
+  'bg:classic': 'co.item.classicBg', 'mark:hanamaru': 'co.item.hanamaru', 'particle:classic': 'co.item.confetti',
+  'music:classic': 'co.item.marimba', 'costume:none': 'co.item.none', 'color:pink': 'co.item.pink',
+  'crowd:classic': 'co.item.multiColor', 'finale:classic': 'co.item.giant', 'costume:cap': 'co.item.cap',
+  'particle:note': 'co.item.notes', 'mark:stamp': 'co.item.correctStamp', 'bg:night': 'co.item.nightSky',
+  'color:blue': 'co.item.blue', 'finale:fireworks': 'co.item.fireworksShow', 'music:chip': 'co.item.bit8',
+  'crowd:costume': 'co.item.costumeCrowd', 'bg:sea': 'co.item.sea', 'bg:festival': 'co.item.festival',
+  'bg:paper': 'co.item.paperCraft', 'bg:space': 'co.item.space', 'mark:medal': 'co.item.medal',
+  'mark:crown': 'co.item.crown', 'mark:ring': 'co.item.fireworksRing', 'particle:petal': 'co.item.petals',
+  'particle:digit': 'co.item.digits', 'particle:bubble': 'co.item.bubbles', 'particle:candy': 'co.item.candy',
+  'music:matsuri': 'co.item.festivalDrums', 'music:brass': 'co.item.brassBand', 'music:electro': 'co.item.electro',
+  'costume:hachimaki': 'co.item.hachimaki', 'costume:cape': 'co.item.cape', 'costume:glasses': 'co.item.glasses',
+  'costume:ribbon': 'co.item.ribbon', 'costume:crown': 'co.item.crown', 'costume:wizard': 'co.item.wizardHat',
+  'costume:headphones': 'co.item.headphones', 'color:mint': 'co.item.mint', 'color:snow': 'co.item.snow',
+  'color:yellow': 'co.item.yellow', 'color:violet': 'co.item.violet', 'color:gold': 'co.item.gold',
+  'color:rainbow': 'co.item.rainbow', 'crowd:rainbow': 'co.item.rainbowCrowd', 'crowd:twins': 'co.item.twinCrowd',
+  'finale:parade': 'co.item.parade', 'finale:rocket': 'co.item.rocket',
+};
 
 // base: available from the start. trophy: the trophy whose reward it is.
 export const ITEMS = [];
 export const ITEM = {};
 export function addItems(list) {
   for (const it of list) {
+    const src = it.name;
+    Object.defineProperty(it, 'name', {
+      get: () => { const k = NAME_KEYS[it.id]; return k ? t(k) : src; },
+      enumerable: true,
+    });
     ITEMS.push(it); ITEM[it.id] = it;
     if (it.trophy && TROPHY[it.trophy]) TROPHY[it.trophy].reward = it.id;
   }

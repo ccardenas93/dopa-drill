@@ -1,6 +1,6 @@
 // Canvas 2D particle layer: paper confetti, stars, sparks, coins, fireworks,
 // streamers, mini Dopakichi sprites and floating score text.
-import { rand, pick, clamp } from './core.js';
+import { rand, pick, clamp, view } from './core.js';
 import { dopakichiSprite } from './dopakichi.js';
 
 export const COLORS = ['#ff7ab6', '#3b6bff', '#ffd23f', '#3fdcb0', '#a77bff', '#ff5a4f', '#ffffff'];
@@ -14,6 +14,12 @@ export class FX {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.parts = [];
+    this.dirty = true;
+    this.baseMax = max;
+    // Set by the quality governor (perf.js): canvas resolution and a
+    // multiplier on every burst's particle count.
+    this.maxDpr = 2;
+    this.budget = 1;
     this.reduced = false;
     this.motion = 1;
     // Unlockable particle theme (id041, id042): replaces part of the confetti.
@@ -21,18 +27,25 @@ export class FX {
     this.sprites = ['pink', 'blue', 'yellow', 'mint', 'violet'].map((p) => dopakichiSprite(p, 96));
   }
   resize() {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.round(innerWidth * dpr); const h = Math.round(innerHeight * dpr);
+    const dpr = Math.min(this.maxDpr, window.devicePixelRatio || 1);
+    const w = Math.round(view.w * dpr); const h = Math.round(view.h * dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     this.dpr = dpr;
   }
   add(p) {
-    if (this.parts.length >= this.max) this.parts.splice(0, 1 + Math.floor(this.max * 0.02));
+    // Full: drop new decoration instead of shifting the whole array for every
+    // particle of a burst. Score text, rings and firework shells still get in.
+    if (this.parts.length >= this.max) {
+      if (p.kind !== 'text' && p.kind !== 'ring' && p.kind !== 'shell') return p;
+      const i = this.parts.findIndex((q) => q.kind !== 'shell');
+      this.parts.splice(i < 0 ? 0 : i, 1);
+    }
     p.age = 0;
     this.parts.push(p);
     return p;
   }
-  scale(n) { return this.reduced ? Math.min(4, Math.ceil(n * 0.1)) : Math.round(n * (0.15 + 0.85 * this.motion)); }
+  scale(n) { return this.reduced ? Math.min(4, Math.ceil(n * 0.1)) : Math.round(n * (0.15 + 0.85 * this.motion) * this.budget); }
+  setQuality(q) { this.maxDpr = q.fxDpr; this.budget = q.fxBudget; this.max = Math.round(this.baseMax * q.fxMax); }
   themed(kind) { return kind === 'confetti' && this.theme && Math.random() < 0.65 ? this.theme : kind; }
 
   burst(x, y, { count = 20, speed = 420, kinds = ['confetti'], up = 0, spread = Math.PI * 2, angle = -Math.PI / 2, colors = PAPER, size = 1, gravity = 1, life = 1 } = {}) {
@@ -83,7 +96,8 @@ export class FX {
   }
 
   update(dt) {
-    const H = innerHeight + 200;
+    if (!this.parts.length) return;
+    const H = view.h + 200;
     for (const p of this.parts) {
       p.age += dt;
       if (p.kind === 'shell') {
@@ -91,7 +105,7 @@ export class FX {
         const k = clamp((p.age - p.t0) / 0.55);
         const ease = 1 - (1 - k) ** 3;
         p.x = p.x + (p.tx - p.x) * Math.min(1, dt * 8);
-        p.y = innerHeight + 20 + (p.ty - innerHeight - 20) * ease;
+        p.y = view.h + 20 + (p.ty - view.h - 20) * ease;
         if (k >= 1 && !p.done) {
           p.done = true; p.life = 0;
           const col = p.color; const n = 46;
@@ -139,6 +153,9 @@ export class FX {
   }
 
   draw() {
+    // Nothing on screen and nothing left from last frame: skip the full clear.
+    if (!this.parts.length && !this.dirty) return;
+    this.dirty = this.parts.length > 0;
     this.resize();
     const c = this.ctx; const dpr = this.dpr;
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -193,13 +210,11 @@ export class FX {
           break;
         }
         case 'text': {
+          // Pre-rendered once: setting ctx.font on the on-screen canvas every
+          // frame forces a style recalculation of the page.
           const pop = k < 0.12 ? 0.6 + (k / 0.12) * 0.5 : k < 0.2 ? 1.1 - ((k - 0.12) / 0.08) * 0.1 : 1;
-          c.setTransform(dpr * pop, 0, 0, dpr * pop, p.x * dpr, p.y * dpr);
-          c.globalAlpha = fade;
-          c.font = `900 ${p.size}px "Dela Gothic One", "Zen Maru Gothic", sans-serif`;
-          c.textAlign = 'center'; c.textBaseline = 'middle';
-          c.lineWidth = p.size * 0.28; c.lineJoin = 'round'; c.strokeStyle = INK; c.strokeText(p.str, 0, 0);
-          c.fillStyle = p.color; c.fillText(p.str, 0, 0);
+          const spr = textSprite(p.str, p.color, p.size);
+          this.stamp(spr, p.x, p.y, 0, pop, pop, fade);
           break;
         }
         case 'puff': {
@@ -240,6 +255,30 @@ export class FX {
     }
     c.globalAlpha = 1;
   }
+}
+
+// Score pop-ups and other floating text, cached as bitmaps (small LRU).
+const TEXTS = new Map();
+function textSprite(str, color, size) {
+  const key = `${str}|${color}|${size}`;
+  let spr = TEXTS.get(key);
+  if (spr) { TEXTS.delete(key); TEXTS.set(key, spr); return spr; }
+  const font = `900 ${size}px "Dela Gothic One", "Zen Maru Gothic", sans-serif`;
+  const meas = document.createElement('canvas').getContext('2d');
+  meas.font = font;
+  const pad = size * 0.3; const k = 2;
+  const w = Math.ceil(meas.measureText(str).width + pad * 2); const h = Math.ceil(size * 1.4 + pad);
+  const cv = document.createElement('canvas');
+  cv.width = w * k; cv.height = h * k;
+  const g = cv.getContext('2d');
+  g.scale(k, k); g.translate(w / 2, h / 2);
+  g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = size * 0.28; g.lineJoin = 'round'; g.strokeStyle = INK; g.strokeText(str, 0, 0);
+  g.fillStyle = color; g.fillText(str, 0, 0);
+  spr = { cv, w, h };
+  TEXTS.set(key, spr);
+  if (TEXTS.size > 48) TEXTS.delete(TEXTS.keys().next().value);
+  return spr;
 }
 
 // ---------------------------------------------------------------- particle themes (id041, id042)

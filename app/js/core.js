@@ -8,6 +8,12 @@ let running = false;
 
 export const now = () => performance.now();
 
+// Viewport size, refreshed only on resize. Reading innerWidth/innerHeight
+// inside the frame loop, after styles were written, forces the browser to
+// recalculate style and layout mid-frame; on phones that was the main cost.
+export const view = { w: globalThis.innerWidth || 0, h: globalThis.innerHeight || 0 };
+globalThis.addEventListener?.('resize', () => { view.w = innerWidth; view.h = innerHeight; });
+
 export function onFrame(fn) {
   tasks.add(fn);
   return () => tasks.delete(fn);
