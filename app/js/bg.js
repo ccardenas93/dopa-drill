@@ -12,9 +12,9 @@ mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
 // Capi head silhouette: a boxy capybara head with two small ears on top.
 float sdBox(vec2 p, vec2 b, float r){ vec2 d = abs(p) - b + r; return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r; }
 float dopa(vec2 p){
-  float h = sdBox(p - vec2(0., -0.01), vec2(0.21, 0.155), 0.09);
-  float e1 = length(p - vec2(-0.14, 0.17)) - 0.045;
-  float e2 = length(p - vec2(0.14, 0.17)) - 0.045;
+  float h = sdBox(p - vec2(0., -0.01), vec2(0.25, 0.14), 0.07);
+  float e1 = length(p - vec2(-0.21, 0.11)) - 0.038;
+  float e2 = length(p - vec2(0.21, 0.11)) - 0.038;
   return min(h, min(e1, e2));
 }
 // Beat rings travelling outward (shared).

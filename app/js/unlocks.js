@@ -28,7 +28,7 @@ const NAME_KEYS = {
   'particle:digit': 'co.item.digits', 'particle:bubble': 'co.item.bubbles', 'particle:candy': 'co.item.candy',
   'music:matsuri': 'co.item.festivalDrums', 'music:brass': 'co.item.brassBand', 'music:electro': 'co.item.electro',
   'costume:hachimaki': 'co.item.hachimaki', 'costume:cape': 'co.item.cape', 'costume:glasses': 'co.item.glasses',
-  'costume:ribbon': 'co.item.ribbon', 'costume:crown': 'co.item.crown', 'costume:wizard': 'co.item.wizardHat',
+  'costume:ribbon': 'co.item.ribbon', 'costume:crown': 'co.item.leafCrown', 'costume:wizard': 'co.item.wizardHat',
   'costume:headphones': 'co.item.headphones', 'color:mint': 'co.item.mint', 'color:snow': 'co.item.snow',
   'color:yellow': 'co.item.yellow', 'color:violet': 'co.item.violet', 'color:gold': 'co.item.gold',
   'color:rainbow': 'co.item.rainbow', 'crowd:rainbow': 'co.item.rainbowCrowd', 'crowd:twins': 'co.item.twinCrowd',
@@ -64,7 +64,7 @@ addItems([
 // Rewards follow effort and coming back (plays, days, streaks, stars earned by
 // practice), not the placement check, which can master many skills at once.
 addItems([
-  { id: 'costume:cap', cat: 'costume', name: 'ぼうし', trophy: 'days-1' },
+  { id: 'costume:cap', cat: 'costume', name: 'パーティーぼうし', trophy: 'days-1' },
   { id: 'particle:note', cat: 'particle', name: 'おんぷ', trophy: 'days-3' },
   { id: 'mark:stamp', cat: 'mark', name: 'せいかいスタンプ', trophy: 'plays-3' },
   { id: 'bg:night', cat: 'bg', name: 'よぞら', trophy: 'streak-3' },
@@ -95,12 +95,12 @@ addItems([
 ]);
 // id044: costumes, colours, crowd and finales (id045 moved three rewards to the new series).
 addItems([
-  { id: 'costume:hachimaki', cat: 'costume', name: 'はちまき', trophy: 'problems-50' },
-  { id: 'costume:cape', cat: 'costume', name: 'マント', trophy: 'combo-20' },
+  { id: 'costume:hachimaki', cat: 'costume', name: 'マフラー', trophy: 'problems-50' },
+  { id: 'costume:cape', cat: 'costume', name: 'リュック', trophy: 'combo-20' },
   { id: 'costume:glasses', cat: 'costume', name: 'まるめがね', trophy: 'firstTry-100' },
-  { id: 'costume:ribbon', cat: 'costume', name: 'リボン', trophy: 'stickers-14' },
-  { id: 'costume:crown', cat: 'costume', name: 'おうかん', trophy: 'streak-14' },
-  { id: 'costume:wizard', cat: 'costume', name: 'まほうの ぼうし', trophy: 'star5-1' },
+  { id: 'costume:ribbon', cat: 'costume', name: 'ちょうネクタイ', trophy: 'stickers-14' },
+  { id: 'costume:crown', cat: 'costume', name: 'はっぱの かんむり', trophy: 'streak-14' },
+  { id: 'costume:wizard', cat: 'costume', name: 'はなの ぼうし', trophy: 'star5-1' },
   { id: 'costume:headphones', cat: 'costume', name: 'ヘッドホン', trophy: 'capsules-1' },
   { id: 'color:mint', cat: 'color', name: 'みどり', trophy: 'days-7' },
   { id: 'color:snow', cat: 'color', name: 'ゆきいろ', trophy: 'questDays-7' },

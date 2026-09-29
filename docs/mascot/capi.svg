@@ -1,18 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="224" height="240" viewBox="-112 -232 224 240" fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-<g id="foot-l"><path d="M -30 -16 Q -22 -20 -13 -16 L -9 -9 Q -5 -1.5 -14 -1.5 L -31 -1.5 Q -39 -1.5 -35 -8 Z" fill="#2F79F7" /></g>
-<g id="foot-r" transform="scale(-1 1)"><path d="M -30 -16 Q -22 -20 -13 -16 L -9 -9 Q -5 -1.5 -14 -1.5 L -31 -1.5 Q -39 -1.5 -35 -8 Z" fill="#2F79F7" /></g>
-<g id="body"><path d="M -18 -73 C -24 -61 -27 -50 -30 -32 C -34 -12 -22 -9 0 -9 C 22 -9 34 -12 30 -32 C 27 -50 24 -61 18 -73 Z" fill="#D89A5B" /></g>
-<g id="belly"><ellipse cx="0" cy="-32" rx="18" ry="13.5" fill="#FFF3E4" stroke="none"/></g>
-<g id="ear-l"><ellipse cx="-40" cy="-148" rx="9" ry="11" fill="#D89A5B" stroke="#1B1D4D"/><ellipse cx="-40" cy="-148" rx="4.5" ry="6" fill="#FFD6B8" stroke="none"/></g>
-<g id="ear-r"><ellipse cx="40" cy="-148" rx="9" ry="11" fill="#D89A5B" stroke="#1B1D4D"/><ellipse cx="40" cy="-148" rx="4.5" ry="6" fill="#FFD6B8" stroke="none"/></g>
-<g id="head"><path d="M -17 -63 C -41 -61 -56 -69 -56 -91 L -56 -116 Q -56 -144 -30 -144 L 30 -144 Q 56 -144 56 -116 L 56 -91 C 56 -69 41 -61 17 -63 Z" fill="#D89A5B" stroke="none"/><path d="M -17 -63 C -41 -61 -56 -69 -56 -91 L -56 -116 Q -56 -144 -30 -144 L 30 -144 Q 56 -144 56 -116 L 56 -91 C 56 -69 41 -61 17 -63" fill="none" /><path d="M -41 -81 C -40 -91 -22 -89 0 -89 C 22 -89 40 -91 41 -81 C 45 -69 27 -65 0 -65 C -27 -65 -45 -69 -41 -81 Z" fill="#FFF3E4" stroke="none"/><path d="M -5 -87 Q 0 -89 5 -87 Q 7 -84 2 -82 Q 0 -81 -2 -82 Q -7 -84 -5 -87 Z" fill="#1B1D4D" stroke="none"/></g>
-<g id="brow-l"><ellipse cx="-13" cy="-111" rx="3.8" ry="1.8" fill="#1B1D4D" stroke="none"/></g>
-<g id="brow-r"><ellipse cx="13" cy="-111" rx="3.8" ry="1.8" fill="#1B1D4D" stroke="none"/></g>
-<g id="eye-l"><ellipse cx="-23" cy="-94" rx="11" ry="11" fill="#FFFFFF" stroke="#1B1D4D"/><ellipse cx="-23" cy="-94" rx="8" ry="8" fill="#D89A5B" stroke="none"/><ellipse cx="-23" cy="-94" rx="3.7" ry="4.9" fill="#1B1D4D" stroke="none"/><ellipse cx="-25" cy="-97" rx="1.9" ry="1.9" fill="#FFFFFF" stroke="none"/></g>
-<g id="eye-r"><ellipse cx="23" cy="-94" rx="11" ry="11" fill="#FFFFFF" stroke="#1B1D4D"/><ellipse cx="23" cy="-94" rx="8" ry="8" fill="#D89A5B" stroke="none"/><ellipse cx="23" cy="-94" rx="3.7" ry="4.9" fill="#1B1D4D" stroke="none"/><ellipse cx="21" cy="-97" rx="1.9" ry="1.9" fill="#FFFFFF" stroke="none"/></g>
-<g id="cheek-l"><ellipse cx="-31" cy="-79" rx="6.5" ry="3.7" fill="#FFB7C5" stroke="none"/></g>
-<g id="cheek-r"><ellipse cx="31" cy="-79" rx="6.5" ry="3.7" fill="#FFB7C5" stroke="none"/></g>
-<g id="mouth"><path d="M -6 -75 Q 0 -68 6 -75" fill="none" /></g>
-<g id="hand-l"><ellipse cx="-38" cy="-35" rx="10" ry="10" fill="#2F79F7" stroke="#1B1D4D"/></g>
-<g id="hand-r"><ellipse cx="38" cy="-35" rx="10" ry="10" fill="#2F79F7" stroke="#1B1D4D"/></g>
+<!-- Eye centers: (-38,-94), (38,-94). Head pivot: (0,-63). Feet baseline: y=0. -->
+<g id="foot-l"><path transform="scale(1 1)" d="M -30 -17 Q -39 -12 -37 -5 Q -37 -1.5 -32 -1.5 H -16 Q -11 -1.5 -12 -7 L -15 -17 Z" fill="#D89A5B"/></g>
+<g id="foot-r"><path transform="scale(-1 1)" d="M -30 -17 Q -39 -12 -37 -5 Q -37 -1.5 -32 -1.5 H -16 Q -11 -1.5 -12 -7 L -15 -17 Z" fill="#D89A5B"/></g>
+<g id="body"><path d="M -21 -66 Q -29 -58 -33 -44 C -41 -15 -31 -10 0 -10 C 31 -10 41 -15 33 -44 Q 29 -58 21 -66 Z" fill="#D89A5B" /></g>
+<g id="belly"><path d="M -17 -45 Q 0 -53 17 -45 Q 24 -33 20 -21 Q 0 -14 -20 -21 Q -24 -33 -17 -45 Z" fill="#FFF3E4" stroke="none"/></g>
+<g id="ear-l"><ellipse cx="-47" cy="-112" rx="7" ry="8" fill="#D89A5B" /><ellipse cx="-47" cy="-113" rx="3" ry="4" fill="#B67542" stroke="none"/></g>
+<g id="ear-r"><ellipse cx="47" cy="-112" rx="7" ry="8" fill="#D89A5B" /><ellipse cx="47" cy="-113" rx="3" ry="4" fill="#B67542" stroke="none"/></g>
+<g id="head"><path d="M -30 -119 Q -46 -119 -50 -106 L -57 -85 Q -61 -63 -39 -62 H 39 Q 61 -63 57 -85 L 50 -106 Q 46 -119 30 -119 Z" fill="#D89A5B" /><path d="M -41 -87 H 41 Q 54 -87 54 -78 V -74 Q 54 -62 40 -62 H -40 Q -54 -62 -54 -74 V -78 Q -54 -87 -41 -87 Z" fill="#FFF3E4" stroke="none"/><ellipse cx="0" cy="-85" rx="14" ry="5" fill="#1B1D4D" stroke="none"/><ellipse cx="-7" cy="-85.5" rx="2.5" ry="1.2" fill="#9A6846" stroke="none"/><ellipse cx="7" cy="-85.5" rx="2.5" ry="1.2" fill="#9A6846" stroke="none"/><path d="M -44 -78 L -52 -80 M -44 -73 L -53 -72 M 44 -78 L 52 -80 M 44 -73 L 53 -72" fill="none" /></g>
+<g id="brow-l"><path d="M -16 -111 Q -13 -112 -10 -111" fill="none" /></g>
+<g id="eye-l"><path d="M -43 -94 Q -38 -93 -33 -94 L -33 -92 Q -38 -86 -43 -92 Z" fill="#1B1D4D" /><ellipse cx="-38" cy="-92" rx="2" ry="2.5" fill="#1B1D4D" stroke="none"/><path d="M -44 -95 L -32 -94" fill="none" stroke-width="3"/></g>
+<g id="cheek-l"><ellipse cx="-31" cy="-79" rx="5.8" ry="2.7" fill="#EFB09A" stroke="none"/></g>
+<g id="brow-r"><path d="M 10 -111 Q 13 -112 16 -111" fill="none" /></g>
+<g id="eye-r"><path d="M 33 -94 Q 38 -93 43 -94 L 43 -92 Q 38 -86 33 -92 Z" fill="#1B1D4D" /><ellipse cx="38" cy="-92" rx="2" ry="2.5" fill="#1B1D4D" stroke="none"/><path d="M 32 -95 L 44 -94" fill="none" stroke-width="3"/></g>
+<g id="cheek-r"><ellipse cx="31" cy="-79" rx="5.8" ry="2.7" fill="#EFB09A" stroke="none"/></g>
+<g id="mouth"><path d="M -7 -74 Q 0 -71 7 -74" fill="none" /></g>
+<g id="hand-l"><ellipse cx="-38" cy="-35" rx="10" ry="10" fill="#D89A5B" /></g>
+<g id="hand-r"><ellipse cx="38" cy="-35" rx="10" ry="10" fill="#D89A5B" /></g>
 </svg>

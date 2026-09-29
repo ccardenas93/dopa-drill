@@ -9,7 +9,7 @@ export const INK = '#1b1d4d';
 const CREAM = '#fff3e4';
 export const PALETTES = {
   // The base look: caramel capybara (docs/mascot/capi.svg).
-  capi: { body: '#d89a5b', inner: '#ffd6b8', leg: '#2f79f7', cheek: '#ffb7c5' },
+  capi: { body: '#d89a5b', inner: '#b67542', leg: '#d89a5b', cheek: '#efb09a' },
   pink: { body: '#ff97bf', inner: '#ffe6f0', leg: '#2f79f7', cheek: '#ffe6f0' },
   blue: { body: '#6fa0ff', inner: '#dde8ff', leg: '#ff97bf', cheek: '#ffd6e6' },
   yellow: { body: '#ffd452', inner: '#fff3c4', leg: '#2f79f7', cheek: '#ffd9c2' },
@@ -21,19 +21,19 @@ export const PALETTES = {
   rainbow: { body: 'url(#dk-rainbow)', inner: '#fff4f9', leg: '#2f79f7', cheek: '#ffe6f0', flat: '#ff97bf' },
 };
 
-// Costumes drawn over the base shape (docs/mascot/capi.svg is never changed).
-// head: moves with the head; back: behind the body (capes).
-// Hats were drawn for a taller round head; the capybara's flat top sits a bit lower.
-const HAT_LIFT = -11;
+// Accessories drawn over the base shape (docs/mascot/acc-*.svg, fitted to the
+// rig). Keys are the collection ids; head layers turn with the head, face layers
+// sit over the eyes, back layers go behind the body.
+const HAT_LIFT = 0;
 export const COSTUMES = {
-  cap: { head: `<path class="dk-l" d="M-44 -133 C-44 -166 44 -166 44 -133 Z" fill="#3b6bff"/><path class="dk-l" d="M-6 -133 C10 -140 52 -142 60 -132 C52 -126 20 -126 -6 -133Z" fill="#2a4fd6"/><circle class="dk-l" cx="0" cy="-160" r="5" fill="#ffd23f"/><path d="M-30 -147 Q0 -158 30 -147" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>` },
-  hachimaki: { head: `<path class="dk-l" d="M-55 -128 Q0 -142 55 -128 L55 -116 Q0 -130 -55 -116Z" fill="#fff"/><circle cx="0" cy="-129" r="6" fill="#ff4f6d"/><path class="dk-l" d="M50 -124 Q70 -132 82 -122 Q70 -118 56 -120Z M52 -120 Q66 -110 74 -98 Q62 -104 52 -114Z" fill="#fff"/>` },
-  cape: { back: `<path class="dk-l" d="M-30 -58 C-60 -30 -64 -10 -58 4 L58 4 C64 -10 60 -30 30 -58 Z" fill="#ff4f6d"/><path d="M-50 -2 L50 -2" stroke="#ffd23f" stroke-width="5"/>`, head: `<path class="dk-l" d="M-24 -66 Q0 -58 24 -66 L20 -58 Q0 -52 -20 -58Z" fill="#ff4f6d"/><circle class="dk-l" cx="0" cy="-59" r="4.5" fill="#ffd23f"/>` },
-  crown: { head: `<path class="dk-l" d="M-32 -140 L-36 -176 L-18 -156 L0 -184 L18 -156 L36 -176 L32 -140 Z" fill="#ffd23f"/><circle class="dk-l" cx="0" cy="-160" r="5" fill="#ff4f6d"/><circle class="dk-l" cx="-22" cy="-150" r="3.5" fill="#3b6bff"/><circle class="dk-l" cx="22" cy="-150" r="3.5" fill="#3fdcb0"/>` },
-  glasses: { face: `<g class="dk-l" fill="rgba(255,255,255,.25)"><circle cx="-23.4" cy="-93.8" r="15"/><circle cx="23.4" cy="-93.8" r="15"/></g><path class="dk-l" d="M-8.4 -95 Q0 -100 8.4 -95 M-38 -97 L-48 -101 M38 -97 L48 -101" fill="none"/>` },
-  ribbon: { head: `<path class="dk-l" d="M0 -150 C-14 -176 -46 -170 -36 -150 C-30 -140 -12 -142 0 -150Z M0 -150 C14 -176 46 -170 36 -150 C30 -140 12 -142 0 -150Z" fill="#ff5a9c"/><circle class="dk-l" cx="0" cy="-151" r="7" fill="#ff7ab6"/><path d="M-28 -160 Q-20 -156 -14 -152 M28 -160 Q20 -156 14 -152" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>` },
-  headphones: { head: `<path class="dk-l" d="M-60 -110 C-60 -178 60 -178 60 -110" fill="none" stroke-width="7" stroke="#1b1d4d"/><path d="M-60 -110 C-60 -178 60 -178 60 -110" fill="none" stroke="#a77bff" stroke-width="5"/><rect class="dk-l" x="-68" y="-122" width="16" height="30" rx="7" fill="#a77bff"/><rect class="dk-l" x="52" y="-122" width="16" height="30" rx="7" fill="#a77bff"/>` },
-  wizard: { head: `<path class="dk-l" d="M-52 -138 Q0 -152 52 -138 Q0 -128 -52 -138Z" fill="#5b3fd6"/><path class="dk-l" d="M-34 -141 C-20 -170 -4 -208 22 -222 C14 -200 26 -170 34 -141 Z" fill="#6f52ff"/><path class="dk-l" d="M-4 -182 L-1 -175 L6 -175 L0 -170 L3 -163 L-4 -167 L-10 -163 L-8 -170 L-14 -175 L-6 -175Z" fill="#ffd23f"/><circle class="dk-l" cx="22" cy="-222" r="5" fill="#ffd23f"/>` },
+  cap: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -26 -119 L 0 -181 L 28 -119 Q 0 -113 -26 -119 Z" fill="#78B8B0" /><path d="M -15 -145 L 17 -144 M -22 -130 L 23 -129" fill="none" stroke="#FFF3E4" stroke-width="6"/><path d="M -26 -119 L 0 -181 L 28 -119" fill="none" /><ellipse cx="0" cy="-181" rx="7" ry="7" fill="#EFC16B" /></g>` }, // gorro-fiesta
+  hachimaki: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M 7 -57 L 25 -59 L 30 -29 L 15 -27 Z" fill="#DD7566" /><path d="M 14 -44 L 27 -46 M 17 -33 L 29 -35" fill="none" stroke="#FFF3E4" stroke-width="5"/><path d="M -29 -63 Q 0 -57 29 -63 L 27 -51 Q 0 -46 -27 -51 Z" fill="#DD7566" /><path d="M -15 -59 L -15 -52 M -2 -57 L -2 -51 M 11 -58 L 11 -51" fill="none" stroke="#FFF3E4" stroke-width="4"/></g>` }, // bufanda
+  cape: { back: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -28 -53 Q -42 -60 -45 -43 V -19 Q -44 -13 -35 -14 H 35 Q 44 -13 45 -19 V -43 Q 42 -60 28 -53 Z" fill="#57988A" /><path d="M -28 -50 Q -38 -49 -37 -28 M 28 -50 Q 38 -49 37 -28" fill="none" stroke="#FFF3E4" stroke-width="5"/><path d="M -44 -31 H -36 M 36 -31 H 44" fill="none" /></g>` }, // mochila
+  glasses: { face: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="-38" cy="-94" rx="12" ry="12" fill="none" /><ellipse cx="38" cy="-94" rx="12" ry="12" fill="none" /><path d="M -26 -95 Q 0 -107 26 -95 M -50 -96 L -53 -100 M 50 -96 L 53 -100" fill="none" /><path d="M -44 -100 L -41 -103 M 32 -100 L 35 -103" fill="none" stroke="#FFF3E4"/></g>` }, // gafas
+  ribbon: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -3 -57 Q -13 -67 -20 -63 L -20 -46 Q -12 -42 -3 -53 Z" fill="#DD7566" /><path d="M 3 -57 Q 13 -67 20 -63 L 20 -46 Q 12 -42 3 -53 Z" fill="#DD7566" /><ellipse cx="0" cy="-55" rx="5" ry="5" fill="#EFC16B" /></g>` }, // corbatin
+  crown: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -36 -122 Q 0 -112 36 -122" fill="none" stroke="#477E60"/><path transform="rotate(-30 -29 -124)" d="M -29 -119 Q -41 -126 -33 -136 Q -21 -134 -29 -119 Z" fill="#78A77A"/><path transform="rotate(-15 -17 -124)" d="M -17 -119 Q -29 -126 -21 -136 Q -9 -134 -17 -119 Z" fill="#78A77A"/><path transform="rotate(15 18 -124)" d="M 18 -119 Q 6 -126 14 -136 Q 26 -134 18 -119 Z" fill="#78A77A"/><path transform="rotate(30 30 -124)" d="M 30 -119 Q 18 -126 26 -136 Q 38 -134 30 -119 Z" fill="#78A77A"/><ellipse cx="0" cy="-131" rx="12" ry="10" fill="#F4A044" /><path d="M 0 -141 L 1 -146" fill="none" /><path d="M 1 -145 Q 7 -153 14 -146 Q 8 -139 1 -145 Z" fill="#78A77A" /></g>` }, // corona-hojas
+  wizard: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -33 -126 L -26 -149 Q -2 -156 25 -149 L 34 -125 Z" fill="#EEC57E" /><path d="M -31 -134 Q 0 -128 31 -134 L 34 -125 H -34 Z" fill="#57988A" /><path d="M -48 -125 Q 0 -137 48 -125 Q 53 -120 44 -117 Q 0 -111 -44 -117 Q -53 -120 -48 -125 Z" fill="#EEC57E" /><ellipse cx="30.0" cy="-136.0" rx="4.5" ry="4.5" fill="#FFF3E4" /><ellipse cx="25.854101966249686" cy="-130.29366090222908" rx="4.5" ry="4.5" fill="#FFF3E4" /><ellipse cx="19.145898033750317" cy="-132.47328848624517" rx="4.5" ry="4.5" fill="#FFF3E4" /><ellipse cx="19.145898033750314" cy="-139.52671151375483" rx="4.5" ry="4.5" fill="#FFF3E4" /><ellipse cx="25.854101966249683" cy="-141.70633909777092" rx="4.5" ry="4.5" fill="#FFF3E4" /><ellipse cx="24" cy="-136" rx="3.5" ry="3.5" fill="#EDAB46" /></g>` }, // sombrero-flor
+  headphones: { head: `<g fill="none" stroke="#1B1D4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M -54 -92 V -106 C -54 -144 54 -144 54 -106 V -92" fill="none" stroke-width="9"/><path d="M -54 -96 V -107 C -54 -141 54 -141 54 -107 V -96" fill="none" stroke="#78B8B0" stroke-width="3"/><path d="M -55 -105 Q -62 -105 -62 -98 V -85 Q -62 -78 -54 -78 H -49 V -105 Z" fill="#78B8B0" /><path d="M 55 -105 Q 62 -105 62 -98 V -85 Q 62 -78 54 -78 H 49 V -105 Z" fill="#78B8B0" /></g>` }, // auriculares
 };
 
 const el = (name, attrs = {}, parent) => {
@@ -50,15 +50,16 @@ const F = 'class="dk-f"';
 // Eye rings use a thinner line so the white ring stays visible, as in the drawing.
 const T = 'class="dk-t"';
 const EYE = {
-  open: (p) => `<circle r="11.2" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="8.6" fill="${p.body}"/><ellipse rx="3.7" ry="4.9" fill="${INK}"/><circle cx="-2" cy="-3" r="1.9" fill="#fff"/>`,
-  wide: (p) => `<circle r="12.4" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="5" fill="${p.body}"/><ellipse rx="2.4" ry="3.2" fill="${INK}"/><circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/>`,
-  happy: () => `<path d="M-9 3 Q0 -10 9 3" fill="none" ${F}/>`,
-  closed: () => `<path d="M-9 -1 Q0 7 9 -1" fill="none" ${F}/>`,
-  x: () => `<path d="M-7 -7 L7 7 M7 -7 L-7 7" fill="none" ${F}/>`,
-  swirl: () => `<path d="M0 0 m0 -1.3 a1.3 1.3 0 1 1 -1.3 1.3 a3.4 3.4 0 1 1 3.4 3.4 a5.7 5.7 0 1 1 -5.7 -5.7 a8.3 8.3 0 1 1 8.3 8.3" fill="none" ${L}/>`,
-  star: () => `<path d="M0 -12 L3.5 -3.8 L12 -3.6 L5.3 1.9 L7.6 10.3 L0 5.5 L-7.6 10.3 L-5.3 1.9 L-12 -3.6 L-3.5 -3.8Z" fill="#ffd23f" ${L}/>`,
-  heart: () => `<path d="M0 9.6 C-14.4 -1.2 -10.8 -13.2 -4.3 -11.4 C-1.9 -10.8 0 -8.4 0 -6.5 C0 -8.4 1.9 -10.8 4.3 -11.4 C10.8 -13.2 14.4 -1.2 0 9.6Z" fill="#ff2d7a" ${L}/>`,
-  tight: () => `<path d="M-8 -5 L6 0 L-8 5" fill="none" ${F}/>`,
+  // Capi's resting look: a heavy lid over a small dark eye (the capybara "chill").
+  open: () => `<path d="M-5 0 Q0 1 5 0 L5 2 Q0 8 -5 2Z" fill="${INK}"/><ellipse cy="2" rx="2" ry="2.5" fill="${INK}"/><path d="M-6 -1 L6 0" fill="none" ${F}/>`,
+  wide: () => `<circle r="7" fill="#fff" ${T}/><ellipse cy=".5" rx="3.6" ry="4.4" fill="${INK}"/><circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/>`,
+  happy: () => `<path d="M-7 2 Q0 -6 7 2" fill="none" ${F}/>`,
+  closed: () => `<path d="M-7 -1 Q0 5 7 -1" fill="none" ${F}/>`,
+  x: () => `<path d="M-5 -5 L5 5 M5 -5 L-5 5" fill="none" ${F}/>`,
+  swirl: () => `<g transform="scale(.72)"><path d="M0 0 m0 -1.3 a1.3 1.3 0 1 1 -1.3 1.3 a3.4 3.4 0 1 1 3.4 3.4 a5.7 5.7 0 1 1 -5.7 -5.7 a8.3 8.3 0 1 1 8.3 8.3" fill="none" ${L}/></g>`,
+  star: () => `<g transform="scale(.72)"><path d="M0 -12 L3.5 -3.8 L12 -3.6 L5.3 1.9 L7.6 10.3 L0 5.5 L-7.6 10.3 L-5.3 1.9 L-12 -3.6 L-3.5 -3.8Z" fill="#ffd23f" ${L}/></g>`,
+  heart: () => `<g transform="scale(.72)"><path d="M0 9.6 C-14.4 -1.2 -10.8 -13.2 -4.3 -11.4 C-1.9 -10.8 0 -8.4 0 -6.5 C0 -8.4 1.9 -10.8 4.3 -11.4 C10.8 -13.2 14.4 -1.2 0 9.6Z" fill="#ff2d7a" ${L}/></g>`,
+  tight: () => `<path d="M-6 -4 L4 0 L-6 4" fill="none" ${F}/>`,
 };
 // Brow pose per eye expression: lift (up) and tilt (degrees, inner ends up when > 0).
 const BROW = { happy: [1, 0], star: [1.2, 0], heart: [1, 0], wide: [1.6, 0], x: [0.4, 18], swirl: [0.2, 14], tight: [0, -16], closed: [0, 8] };
@@ -74,26 +75,28 @@ const MOUTH = {
 };
 
 export const G = {
-  // Left foot (the right one is mirrored): a flat rounded sneaker resting on y=0.
-  foot: 'M-30 -16 Q-22 -20 -13 -16 L-9 -9 Q-5 -1.5 -14 -1.5 L-31 -1.5 Q-39 -1.5 -35 -8Z',
-  footPivot: { x: 20, y: -12 },
-  // Body fill reaches up under the head; the neck has no drawn seam.
-  bodyFill: 'M-18 -73 C-24 -61 -27 -50 -30 -32 C-34 -12 -22 -9 0 -9 C22 -9 34 -12 30 -32 C27 -50 24 -61 18 -73Z',
-  bodyLine: 'M-18 -73 C-24 -61 -27 -50 -30 -32 C-34 -12 -22 -9 0 -9 C22 -9 34 -12 30 -32 C27 -50 24 -61 18 -73',
-  belly: { cy: -32, rx: 18, ry: 13.5 },
-  // Boxy capybara head with a wide cream muzzle and a small nose.
-  headFill: 'M-17 -63 C-41 -61 -56 -69 -56 -91 L-56 -116 Q-56 -144 -30 -144 L30 -144 Q56 -144 56 -116 L56 -91 C56 -69 41 -61 17 -63Z',
-  headLine: 'M-17 -63 C-41 -61 -56 -69 -56 -91 L-56 -116 Q-56 -144 -30 -144 L30 -144 Q56 -144 56 -116 L56 -91 C56 -69 41 -61 17 -63',
-  face: 'M-41 -81 C-40 -91 -22 -89 0 -89 C22 -89 40 -91 41 -81 C45 -69 27 -65 0 -65 C-27 -65 -45 -69 -41 -81Z',
-  nose: 'M-5 -87 Q0 -89 5 -87 Q7 -84 2 -82 Q0 -81 -2 -82 Q-7 -84 -5 -87Z',
-  head: { cy: -103, r: 56 },
+  // Left foot (the right one is mirrored): a short flat paw resting on y=0.
+  foot: 'M-30 -17 Q-39 -12 -37 -5 Q-37 -1.5 -32 -1.5 H-16 Q-11 -1.5 -12 -7 L-15 -17Z',
+  footPivot: { x: 22, y: -14 },
+  // Barrel body; the top edge sits under the head so there is no drawn seam.
+  bodyFill: 'M-21 -66 Q-29 -58 -33 -44 C-41 -15 -31 -10 0 -10 C31 -10 41 -15 33 -44 Q29 -58 21 -66Z',
+  bodyLine: 'M-21 -66 Q-29 -58 -33 -44 C-41 -15 -31 -10 0 -10 C31 -10 41 -15 33 -44 Q29 -58 21 -66',
+  bellyPath: 'M-17 -45 Q0 -53 17 -45 Q24 -33 20 -21 Q0 -14 -20 -21 Q-24 -33 -17 -45Z',
+  // Wide, flat capybara head with the cream muzzle band, nose and whiskers.
+  headFill: 'M-30 -119 Q-46 -119 -50 -106 L-57 -85 Q-61 -63 -39 -62 H39 Q61 -63 57 -85 L50 -106 Q46 -119 30 -119Z',
+  headLine: 'M-30 -119 Q-46 -119 -50 -106 L-57 -85 Q-61 -63 -39 -62 H39 Q61 -63 57 -85 L50 -106 Q46 -119 30 -119Z',
+  face: 'M-41 -87 H41 Q54 -87 54 -78 V-74 Q54 -62 40 -62 H-40 Q-54 -62 -54 -74 V-78 Q-54 -87 -41 -87Z',
+  nose: { cy: -85, rx: 14, ry: 5 },
+  nostril: { x: 7, cy: -85.5, rx: 2.5, ry: 1.2, fill: '#9a6846' },
+  whiskers: 'M-44 -78 L-52 -80 M-44 -73 L-53 -72 M44 -78 L52 -80 M44 -73 L53 -72',
+  head: { cy: -90, r: 57 },
   neckY: -63,
-  // Small ears on top of the head; they wiggle around their own centre.
-  ear: { x: 40, cy: -148, rx: 9, ry: 11, irx: 4.5, iry: 6, pivot: 40 },
-  eye: { x: 23, y: -94 },
-  brow: { x: 13, y: -111, rx: 3.8, ry: 1.8 },
-  mouthY: -74,
-  cheek: { x: 31, y: -79, rx: 6.5, ry: 3.7 },
+  // Small ears at the back corners of the head; they wiggle around their own centre.
+  ear: { x: 47, cy: -112, rx: 7, ry: 8, irx: 3, iry: 4, pivot: 47 },
+  eye: { x: 38, y: -94 },
+  brow: { x: 13, y: -111, rx: 3.6, ry: 1.4 },
+  mouthY: -73.5,
+  cheek: { x: 31, y: -79, rx: 5.8, ry: 2.7 },
   shoulder: { x: 26, y: -48 },
   rest: { x: 38, y: -35 },
   arm: 4.6,
@@ -105,9 +108,9 @@ const lineFor = (S) => clamp(1.7 / S, 1.4, 3.2);
 
 // Static parts shared by the live actor and the sprite image.
 const earSVG = (p, s) => `<ellipse ${L} cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.rx}" ry="${G.ear.ry}" fill="${p.body}"/><ellipse cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.irx}" ry="${G.ear.iry}" fill="${p.inner}"/>`;
-const footSVG = (p, s) => `<path ${L} d="${G.foot}" fill="${p.leg}"${s > 0 ? ' transform="scale(-1 1)"' : ''}/>`;
-const bodySVG = (p) => `<path d="${G.bodyFill}" fill="${p.body}"/><path ${L} d="${G.bodyLine}" fill="none"/><ellipse ${L} cy="${G.belly.cy}" rx="${G.belly.rx}" ry="${G.belly.ry}" fill="${CREAM}"/>`;
-const headSVG = (p) => `<path d="${G.headFill}" fill="${p.body}"/><path ${L} d="${G.headLine}" fill="none"/><path d="${G.face}" fill="${CREAM}"/><path d="${G.nose}" fill="${INK}"/>`;
+const footSVG = (p, s) => `<path ${L} d="${G.foot}" fill="${p.flat || p.body}"${s > 0 ? ' transform="scale(-1 1)"' : ''}/>`;
+const bodySVG = (p) => `<path d="${G.bodyFill}" fill="${p.body}"/><path ${L} d="${G.bodyLine}" fill="none"/><path d="${G.bellyPath}" fill="${CREAM}"/>`;
+const headSVG = (p) => `<path d="${G.headFill}" fill="${p.body}"/><path ${L} d="${G.headLine}" fill="none"/><path d="${G.face}" fill="${CREAM}"/><ellipse cy="${G.nose.cy}" rx="${G.nose.rx}" ry="${G.nose.ry}" fill="${INK}"/><ellipse cx="${-G.nostril.x}" cy="${G.nostril.cy}" rx="${G.nostril.rx}" ry="${G.nostril.ry}" fill="${G.nostril.fill}"/><ellipse cx="${G.nostril.x}" cy="${G.nostril.cy}" rx="${G.nostril.rx}" ry="${G.nostril.ry}" fill="${G.nostril.fill}"/><path ${L} d="${G.whiskers}" fill="none"/>`;
 const STYLE = `.dk-l,.dk-f,.dk-t{stroke:${INK};stroke-linecap:round;stroke-linejoin:round}.dk-l{stroke-width:var(--dkw)}.dk-f{stroke-width:calc(var(--dkw) * 1.5)}.dk-t{stroke-width:calc(var(--dkw) * 0.55)}`;
 
 let uid = 0;

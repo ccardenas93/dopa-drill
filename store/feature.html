@@ -39,14 +39,14 @@
   </div>
   <div class="right" id="mascot"></div>
   <script type="module">
-    import { dopakichiSVG } from '../app/js/dopakichi.js';
+    import { mascotSVG } from '../app/js/mascot.js';
     const lang = new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'es';
     document.documentElement.lang = lang;
     if (lang === 'en') {
       document.getElementById('tagline').textContent = 'Math with a party';
       document.getElementById('sub').textContent = 'Grades 1–6 · no accounts · works offline';
     }
-    document.getElementById('mascot').innerHTML = dopakichiSVG('pink');
+    document.getElementById('mascot').innerHTML = mascotSVG('capi');
     // Same hand-cut star as main.js.
     const star = (R, r, n, jitter, seed) => {
       let d = ''; let s0 = seed;
