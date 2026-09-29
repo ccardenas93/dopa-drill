@@ -1,0 +1,306 @@
+<template>
+  <style>
+    /* Local fonts only — project-root-relative paths, no network. */
+    @font-face {
+      font-family: "Dela Gothic One";
+      font-style: normal;
+      font-weight: 400;
+      font-display: block;
+      src: url("assets/fonts/dela-gothic-one.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Zen Maru Gothic";
+      font-style: normal;
+      font-weight: 700;
+      font-display: block;
+      src: url("assets/fonts/zen-maru-gothic-bold.woff2") format("woff2");
+    }
+    @font-face {
+      font-family: "Zen Maru Gothic";
+      font-style: normal;
+      font-weight: 900;
+      font-display: block;
+      src: url("assets/fonts/zen-maru-gothic-black.woff2") format("woff2");
+    }
+
+    /* Root styled by #root only (never a class). No background here — the ground lives on a clip layer. */
+    #root {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      container-type: size;
+      color: #1B1D4D;
+      font-family: "Zen Maru Gothic", sans-serif;
+    }
+
+    /* Ids/classes are prefixed with the frame id "04-el-arbol-", which starts with a digit,
+       so they are addressed with attribute selectors (a bare #04… / .04… selector is invalid CSS). */
+
+    /* ---- Track 0: the real skill-tree screen, full-bleed, under a cream wash ---- */
+    [id="04-el-arbol-bg"],
+    [id="04-el-arbol-stage"] {
+      position: absolute;
+      inset: 0;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+    }
+    [id="04-el-arbol-shot"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+    [id="04-el-arbol-wash"] {
+      position: absolute;
+      inset: 0;
+      background: #FFF8EC;
+      opacity: 0.36;
+    }
+
+    /* ---- Operator scraps (ornaments at two corners) ---- */
+    [class~="04-el-arbol-scrap"] {
+      position: absolute;
+      width: 124px;
+      height: 124px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      border: 3px solid #1B1D4D;
+      border-radius: 20px;
+      box-shadow: 4px 4px 0 #1B1D4D;
+      font-family: "Dela Gothic One", sans-serif;
+      font-weight: 400;
+      font-size: 84px;
+      line-height: 1;
+      color: #1B1D4D;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    [id="04-el-arbol-scrap-a"] { left: 44px; top: 64px; }
+    [id="04-el-arbol-scrap-b"] { left: 900px; top: 1410px; }
+
+    /* ---- Count card (hero) — white, 28px radius, 3px outline, 6px hard shadow, 62% width ---- */
+    [id="04-el-arbol-card"] {
+      position: absolute;
+      left: 205px;
+      top: 236px;
+      width: 670px;
+      box-sizing: border-box;
+      padding: 30px 24px 30px;
+      background: #FFFFFF;
+      border: 3px solid #1B1D4D;
+      border-radius: 28px;
+      box-shadow: 6px 6px 0 #1B1D4D;
+      text-align: center;
+      transform-origin: 50% 50%;
+      will-change: transform;
+      z-index: 2;
+    }
+    [id="04-el-arbol-counter-wrap"] {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      width: 100%;            /* fixed width — no layout shift as the digit count changes */
+      height: 252px;
+    }
+    [id="04-el-arbol-counter"] {
+      display: inline-block;
+      width: 100%;
+      font-family: "Dela Gothic One", sans-serif;
+      font-weight: 400;
+      font-size: 214px;       /* final size is static; GSAP animates scale, not font-size */
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      color: #1B1D4D;
+      font-variant-numeric: tabular-nums;
+      transform-origin: center center;
+      will-change: transform;
+    }
+    [id="04-el-arbol-label"] {
+      font-family: "Zen Maru Gothic", sans-serif;
+      font-weight: 900;
+      font-size: 60px;
+      line-height: 1.2;
+      color: #1B1D4D;
+      margin-top: 16px;
+    }
+
+    /* ---- Skill chips — centered column below the card ---- */
+    [id="04-el-arbol-stack"] {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 50px;
+      z-index: 2;
+    }
+    [class~="04-el-arbol-chip"] {
+      box-sizing: border-box;
+      padding: 28px 64px;
+      border: 3px solid #1B1D4D;
+      border-radius: 50px;
+      box-shadow: 4px 4px 0 #1B1D4D;
+      font-family: "Zen Maru Gothic", sans-serif;
+      font-weight: 900;
+      font-size: 56px;
+      line-height: 1.2;
+      color: #1B1D4D;
+      white-space: nowrap;
+      transform-origin: 50% 50%;
+      will-change: transform;
+    }
+    [id="04-el-arbol-chip-1"] { background: #FFD0E4; }  /* soft-pink */
+    [id="04-el-arbol-chip-2"] { background: #FFD23F; }  /* butter    */
+    [id="04-el-arbol-chip-3"] { background: #D9FBEF; }  /* mint      */
+    [id="04-el-arbol-chip-4"] { background: #D9E4FF; }  /* sky       */
+
+    /* ---- Coral badge-pill beside the last chip ---- */
+    [id="04-el-arbol-badge"] {
+      position: absolute;
+      right: 40px;
+      top: 1206px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-sizing: border-box;
+      padding: 16px 30px 16px 32px;
+      background: #FF7AB6;
+      border: 3px solid #1B1D4D;
+      border-radius: 50px;
+      box-shadow: 4px 4px 0 #1B1D4D;
+      font-family: "Dela Gothic One", sans-serif;
+      font-weight: 400;
+      font-size: 32px;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+      color: #1B1D4D;
+      white-space: nowrap;
+      transform-origin: 0% 60%;  /* emerges from the chip side */
+      will-change: transform;
+      z-index: 3;
+    }
+    [id="04-el-arbol-check"] {
+      width: 34px;
+      height: 34px;
+      overflow: visible;
+      flex: none;
+    }
+  </style>
+
+  <div id="root" data-composition-id="04-el-arbol" data-width="1080" data-height="1920" data-duration="6.4">
+    <!-- Track 0 — full-bleed ground: the real tree screen + cream wash -->
+    <div id="04-el-arbol-bg" class="clip" data-start="0" data-duration="6.4" data-track-index="0">
+      <img id="04-el-arbol-shot" src="assets/shot-es-3-tree.png" alt="">
+      <div id="04-el-arbol-wash"></div>
+    </div>
+
+    <!-- Track 1 — the assembled stack -->
+    <div id="04-el-arbol-stage" class="clip" data-start="0" data-duration="6.4" data-track-index="1">
+      <div id="04-el-arbol-scrap-a" class="04-el-arbol-scrap">×</div>
+      <div id="04-el-arbol-scrap-b" class="04-el-arbol-scrap">÷</div>
+
+      <div id="04-el-arbol-card">
+        <div id="04-el-arbol-counter-wrap"><span id="04-el-arbol-counter">0</span></div>
+        <div id="04-el-arbol-label">habilidades</div>
+      </div>
+
+      <div id="04-el-arbol-stack">
+        <div id="04-el-arbol-chip-1" class="04-el-arbol-chip">Sumas y restas</div>
+        <div id="04-el-arbol-chip-2" class="04-el-arbol-chip">Tablas</div>
+        <div id="04-el-arbol-chip-3" class="04-el-arbol-chip">Fracciones</div>
+        <div id="04-el-arbol-chip-4" class="04-el-arbol-chip">Porcentajes</div>
+      </div>
+
+      <div id="04-el-arbol-badge">
+        <span>a tu ritmo</span>
+        <svg id="04-el-arbol-check" viewBox="0 0 32 32" aria-hidden="true">
+          <polyline points="5,17 13,25 27,8" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="5.5"
+                    stroke-linecap="round" stroke-linejoin="round" transform="translate(3 3)"/>
+          <polyline points="5,17 13,25 27,8" fill="none" stroke="#FFFFFF" stroke-width="5.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    (function () {
+      var byId = function (id) { return document.getElementById(id); };
+
+      var scrapA  = byId("04-el-arbol-scrap-a");
+      var scrapB  = byId("04-el-arbol-scrap-b");
+      var card    = byId("04-el-arbol-card");
+      var counter = byId("04-el-arbol-counter");
+      var label   = byId("04-el-arbol-label");
+      var chips   = [1, 2, 3, 4].map(function (n) { return byId("04-el-arbol-chip-" + n); });
+      var badge   = byId("04-el-arbol-badge");
+
+      var tl = gsap.timeline({ paused: true });
+
+      /* ---- Scene 1 (0.0–1.3s): tree ground + scraps; card pops on "Cincuenta y ocho" ---- */
+      tl.fromTo(scrapA,
+        { scale: 0, opacity: 0, rotation: -26 },
+        { scale: 1, opacity: 1, rotation: -12, duration: 0.5, ease: "power3.out" }, 0.04);
+      tl.fromTo(scrapB,
+        { scale: 0, opacity: 0, rotation: 22 },
+        { scale: 1, opacity: 1, rotation: 9, duration: 0.5, ease: "power3.out" }, 0.10);
+
+      // spring-pop-entrance (firm settle, no overshoot) — hero visible well before 0.5s
+      tl.fromTo(card,
+        { scale: 0, opacity: 0, y: 24 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.08);
+
+      // counting-dynamic-scale: two synchronized tweens at the SAME position with the SAME ease —
+      // (1) a proxy value rendered as text in onUpdate (text only, O(1), Math.round),
+      // (2) the counter's transform scale START_SCALE → 1 (START_SCALE = START_SIZE / END_SIZE ≈ 50%).
+      // Grow in place, never bounce; font-size stays static CSS.
+      var COUNT_AT = 0.12, COUNT_DUR = 1.2, COUNT_EASE = "power3.out", START_SCALE = 0.5;
+      var count = { value: 0 };
+      tl.to(count, {
+        value: 58,
+        duration: COUNT_DUR,
+        ease: COUNT_EASE,
+        onUpdate: function () { counter.textContent = String(Math.round(count.value)); }
+      }, COUNT_AT);
+      tl.fromTo(counter,
+        { scale: START_SCALE },
+        { scale: 1, duration: COUNT_DUR, ease: COUNT_EASE }, COUNT_AT);
+
+      // label arrives before the count peaks, as the VO says "habilidades"
+      tl.fromTo(label,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.75);
+
+      /* ---- Scene 2 (1.3–3.6s): "de sumas a porcentajes" — chips stack one at a time ---- */
+      var CHIP_AT = [1.45, 1.85, 2.25, 2.65];
+      chips.forEach(function (el, i) {
+        tl.fromTo(el,
+          { scale: 0, opacity: 0, y: 24 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, CHIP_AT[i]);
+      });
+
+      /* ---- Scene 3 (3.6–5.9s): "a tu ritmo" badge pops beside the last chip at ~4.3s, then hold ---- */
+      tl.fromTo(badge,
+        { scale: 0, opacity: 0, rotation: -14 },
+        { scale: 1, opacity: 1, rotation: -6, duration: 0.55, ease: "back.out(1.5)" }, 4.3);
+
+      // pin the timeline to the frame's fixed 5.9s — everything holds still after the voice ends
+      tl.to({}, { duration: 0.01 }, 5.89);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["04-el-arbol"] = tl;
+    })();
+  </script>
+</template>

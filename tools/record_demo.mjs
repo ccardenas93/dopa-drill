@@ -2,7 +2,7 @@
 // partida automática") with the music and effects the game synthesizes.
 // Output: <out>/gameplay-demo.mp4 (1080×1920, h264 + aac) and
 // <out>/gameplay-demo-audio.m4a. Needs the app served locally, Chrome and ffmpeg.
-//   node tools/record_demo.mjs http://127.0.0.1:8766/app/?lang=es videos/dopa-drill-promo/assets 26
+//   node tools/record_demo.mjs http://127.0.0.1:8766/app/?lang=es videos/capifiesta-promo/assets 26
 import puppeteer from 'puppeteer-core';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';

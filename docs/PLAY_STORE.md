@@ -112,7 +112,7 @@ en `store/play/`):
 
 ### 4.3b Vídeo promocional
 
-`videos/dopa-drill-promo/` es un proyecto HyperFrames (guion `SCRIPT.md`,
+`videos/capifiesta-promo/` es un proyecto HyperFrames (guion `SCRIPT.md`,
 plan `STORYBOARD.md`, frames en `compositions/frames/`). Renderiza con
 `npm run render` dentro de esa carpeta → `renders/video.mp4` (1080×1920, ~36 s,
 narración en español con voz local Kokoro, música y efectos reales del juego,

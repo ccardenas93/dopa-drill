@@ -1,0 +1,304 @@
+<template id="vm05-template" data-composition-id="05-volver-manana" data-width="1080" data-height="1920" data-duration="5.1">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+<style>
+  /* Frame 5 — Volver mañana · 1080×1920 · 4.7s
+     Real trophies screen under a cream wash; three white cards cascade in on
+     their spoken cues (grid-card-assemble, adapted to a vertical stack) and a
+     butter badge-pill pops under the stack. Caption keep-out: y < 1594. */
+
+  @font-face {
+    font-family: "Dela Gothic One";
+    src: url("assets/fonts/dela-gothic-one.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Zen Maru Gothic";
+    src: url("assets/fonts/zen-maru-gothic-bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: block;
+  }
+  @font-face {
+    font-family: "Zen Maru Gothic";
+    src: url("assets/fonts/zen-maru-gothic-black.woff2") format("woff2");
+    font-weight: 900;
+    font-style: normal;
+    font-display: block;
+  }
+
+  /* root — styled by #root only (subcomposition_root_styled_by_class) */
+  #root {
+    position: absolute;
+    inset: 0;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    container-type: size;
+    color: #1B1D4D;
+  }
+
+  /* every timed layer is a full-frame box (does not rely on the host .clip rule) */
+  .vm05-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── track 0: the real trophies screen, full-bleed, dimmed by a cream wash ── */
+  #vm05-bg { z-index: 1; }
+  #vm05-shot {
+    position: absolute;
+    inset: 0;
+    width: 1080px;
+    height: 1920px;
+    object-fit: cover;
+    display: block;
+    transform-origin: 50% 50%;
+  }
+  #vm05-wash {
+    position: absolute;
+    inset: 0;
+    background: #FFF8EC;
+    opacity: 0.4;
+  }
+
+  /* ── track 1: operator scraps (ornament layer, behind content) ── */
+  #vm05-scraps { z-index: 2; }
+  .vm05-scrap {
+    position: absolute;
+    display: block;
+    transform-origin: 50% 50%;
+  }
+  #vm05-scrap-plus { right: -46px; top: 330px; width: 180px; height: 180px; }
+  #vm05-scrap-times { left: -42px; top: 1330px; width: 168px; height: 168px; }
+
+  /* ── tracks 2–4: the three white cards ── */
+  .vm05-cardlayer { z-index: 3; }
+  .vm05-card {
+    position: absolute;
+    left: 119px;               /* (1080 - 842) / 2 → centered, ~78% frame width */
+    width: 842px;
+    height: 220px;
+    background: #FFFFFF;
+    border: 3px solid #1B1D4D;
+    border-radius: 20px;
+    box-shadow: 6px 6px 0 #1B1D4D;
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 0 40px;
+    box-sizing: border-box;
+  }
+  #vm05-card1 { top: 560px; }
+  #vm05-card2 { top: 820px; }
+  #vm05-card3 { top: 1080px; }
+
+  .vm05-marker {
+    flex: 0 0 auto;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    border: 3px solid #1B1D4D;
+    box-shadow: 4px 4px 0 #1B1D4D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: 50% 50%;
+  }
+  .vm05-marker svg {
+    width: 62px;
+    height: 62px;
+    display: block;
+    overflow: visible;
+  }
+  .vm05-marker--butter { background: #FFD23F; }
+  .vm05-marker--coral  { background: #FF7AB6; }
+  .vm05-marker--sky    { background: #D9E4FF; }
+
+  .vm05-label {
+    font-family: "Zen Maru Gothic", sans-serif;
+    font-weight: 900;
+    font-size: 66px;
+    line-height: 1;
+    letter-spacing: 0.005em;
+    color: #1B1D4D;
+    white-space: nowrap;
+  }
+  /* counter: fixed-width, right-aligned → the right edge stays locked to "trofeos" */
+  #vm05-count {
+    display: inline-block;
+    width: 1.6em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* check draws in as card 1 lands (svg-path-draw) */
+  #vm05-check {
+    stroke-dasharray: 54;
+    stroke-dashoffset: 54;
+  }
+
+  /* ── track 5: the badge-pill under the stack ── */
+  #vm05-pillwrap {
+    z-index: 4;
+    /* a static flex wrapper centers the pill so the pill itself carries no CSS transform */
+  }
+  #vm05-pillrow {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1380px;
+    display: flex;
+    justify-content: center;
+  }
+  #vm05-pill {
+    font-family: "Dela Gothic One", sans-serif;
+    font-weight: 400;
+    font-size: 48px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #1B1D4D;
+    background: #FFD23F;
+    border: 3px solid #1B1D4D;
+    border-radius: 50px;
+    box-shadow: 4px 4px 0 #1B1D4D;
+    padding: 24px 48px 26px;
+    white-space: nowrap;
+    transform-origin: 50% 50%;
+  }
+</style>
+
+<div id="root" data-composition-id="05-volver-manana" data-start="0" data-duration="5.1" data-width="1080" data-height="1920">
+
+  <!-- track 0 · full-bleed ground: the real trophies screen + cream wash -->
+  <div id="vm05-bg" class="clip vm05-layer" data-start="0" data-duration="5.1" data-track-index="0">
+    <img id="vm05-shot" src="assets/shot-es-4-trophies.png" alt="" />
+    <div id="vm05-wash"></div>
+  </div>
+
+  <!-- track 1 · operator scraps at the edges (ornaments, cropping past the frame) -->
+  <div id="vm05-scraps" class="clip vm05-layer" data-start="0" data-duration="5.1" data-track-index="1" aria-hidden="true">
+    <svg id="vm05-scrap-plus" class="vm05-scrap" viewBox="0 0 100 100">
+      <path d="M36 6 H64 V36 H94 V64 H64 V94 H36 V64 H6 V36 H36 Z" transform="translate(5 5)" fill="#1B1D4D" stroke="#1B1D4D" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M36 6 H64 V36 H94 V64 H64 V94 H36 V64 H6 V36 H36 Z" fill="#FFD23F" stroke="#1B1D4D" stroke-width="6" stroke-linejoin="round"/>
+    </svg>
+    <svg id="vm05-scrap-times" class="vm05-scrap" viewBox="0 0 100 100">
+      <path d="M36 6 H64 V36 H94 V64 H64 V94 H36 V64 H6 V36 H36 Z" transform="translate(5 5)" fill="#1B1D4D" stroke="#1B1D4D" stroke-width="6" stroke-linejoin="round"/>
+      <path d="M36 6 H64 V36 H94 V64 H64 V94 H36 V64 H6 V36 H36 Z" fill="#FFD0E4" stroke="#1B1D4D" stroke-width="6" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- track 2 · card 1 — "Misiones diarias" (slides in from the left on the first words) -->
+  <div class="clip vm05-layer vm05-cardlayer" data-start="0" data-duration="5.1" data-track-index="2">
+    <div id="vm05-card1" class="vm05-card">
+      <div id="vm05-marker1" class="vm05-marker vm05-marker--butter">
+        <svg viewBox="0 0 64 64">
+          <path id="vm05-check" d="M15 33 L27 45 L49 20" fill="none" stroke="#1B1D4D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="vm05-label">Misiones diarias</div>
+    </div>
+  </div>
+
+  <!-- track 3 · card 2 — "306 trofeos" (lands from the right on "trofeos", number counts 0 → 306) -->
+  <div class="clip vm05-layer vm05-cardlayer" data-start="1.2" data-duration="3.9" data-track-index="3">
+    <div id="vm05-card2" class="vm05-card">
+      <div id="vm05-marker2" class="vm05-marker vm05-marker--coral">
+        <svg viewBox="0 0 64 64">
+          <path d="M17 15 H9.5 C9.5 25 13 31 19.5 32.5" fill="none" stroke="#1B1D4D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M47 15 H54.5 C54.5 25 51 31 44.5 32.5" fill="none" stroke="#1B1D4D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 9 H47 V27 C47 36.5 40.5 42 32 42 C23.5 42 17 36.5 17 27 Z" fill="#FFFFFF" stroke="#1B1D4D" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M28 42 H36 V48 H28 Z" fill="#FFFFFF" stroke="#1B1D4D" stroke-width="3" stroke-linejoin="round"/>
+          <rect x="21" y="48" width="22" height="7" rx="2.5" fill="#FFFFFF" stroke="#1B1D4D" stroke-width="3"/>
+          <path d="M32 15.5 l2.7 5.6 6.1 .8 -4.4 4.2 1.1 6.1 -5.5 -2.9 -5.5 2.9 1.1 -6.1 -4.4 -4.2 6.1 -.8 z" fill="#FFD23F" stroke="#1B1D4D" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="vm05-label"><span id="vm05-count">0</span> trofeos</div>
+    </div>
+  </div>
+
+  <!-- track 4 · card 3 — "Racha de días" (lands from the left on "racha") -->
+  <div class="clip vm05-layer vm05-cardlayer" data-start="2.4" data-duration="2.7" data-track-index="4">
+    <div id="vm05-card3" class="vm05-card">
+      <div id="vm05-marker3" class="vm05-marker vm05-marker--sky">
+        <svg viewBox="0 0 64 64">
+          <path d="M32 5 C36 13 47 21 47 34 C47 44.5 40.5 53 32 53 C23.5 53 17 44.5 17 34 C17 27.5 20.5 22.5 24 19 C23 26 27 30 28.5 29 C30.5 24 29 13 32 5 Z" fill="#FFD23F" stroke="#1B1D4D" stroke-width="3.5" stroke-linejoin="round"/>
+          <path d="M32 29 C35 33.5 39 36 39 41.5 C39 46.5 35.8 49.5 32 49.5 C28.2 49.5 25 46.5 25 41.5 C25 36 29 33.5 32 29 Z" fill="#FFFFFF" stroke="#1B1D4D" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="vm05-label">Racha de días</div>
+    </div>
+  </div>
+
+  <!-- track 5 · badge-pill — pops under the stack on "volver mañana" -->
+  <div id="vm05-pillwrap" class="clip vm05-layer" data-start="3.4" data-duration="1.7" data-track-index="5">
+    <div id="vm05-pillrow">
+      <div id="vm05-pill">¡Hasta mañana!</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    var root = document.querySelector('[data-composition-id="05-volver-manana"]') || document;
+    var $ = function (id) { return root.querySelector("#" + id); };
+
+    var shot     = $("vm05-shot");
+    var scrapP   = $("vm05-scrap-plus");
+    var scrapX   = $("vm05-scrap-times");
+    var card1    = $("vm05-card1");
+    var card2    = $("vm05-card2");
+    var card3    = $("vm05-card3");
+    var marker1  = $("vm05-marker1");
+    var marker2  = $("vm05-marker2");
+    var marker3  = $("vm05-marker3");
+    var check    = $("vm05-check");
+    var countEl  = $("vm05-count");
+    var pill     = $("vm05-pill");
+
+    var DURATION = 4.7;          // fixed upstream — the timeline spans exactly this
+    var OFF = 1010;              // card fully off-frame: 119 + 842 - 1010 < 0
+
+    var tl = gsap.timeline({ paused: true });
+
+    /* ── macro move underneath: a slow camera push-in on the real screen (whole shot) ── */
+    tl.fromTo(shot, { scale: 1 }, { scale: 1.04, duration: DURATION, ease: "power1.out" }, 0);
+
+    /* ── Scene 1 (0.0–1.2s): scraps pop at the edges, card 1 slides in from the LEFT on "Misiones diarias" ── */
+    tl.fromTo(scrapP, { scale: 0, rotation: -34 }, { scale: 1, rotation: -12, duration: 0.5, ease: "back.out(2)" }, 0.12);
+    tl.fromTo(scrapX, { scale: 0, rotation: 92 },  { scale: 1, rotation: 59,  duration: 0.5, ease: "back.out(2)" }, 0.28);
+
+    tl.fromTo(card1, { x: -OFF }, { x: 0, duration: 0.6, ease: "power3.out" }, 0.05);
+    tl.fromTo(marker1, { scale: 0.5 }, { scale: 1, duration: 0.5, ease: "back.out(2.2)" }, 0.3);
+    tl.fromTo(check, { strokeDashoffset: 54 }, { strokeDashoffset: 0, duration: 0.35, ease: "power2.out" }, 0.5);
+
+    /* ── Scene 2 (1.2–2.6s): card 2 lands from the RIGHT on "trofeos"; 0 → 306 count-up (no scale growth) ── */
+    tl.fromTo(card2, { x: OFF }, { x: 0, duration: 0.6, ease: "power3.out" }, 1.2);
+    tl.fromTo(marker2, { scale: 0.5 }, { scale: 1, duration: 0.5, ease: "back.out(2.2)" }, 1.45);
+
+    var count = { value: 0 };
+    tl.to(count, {
+      value: 306,
+      duration: 1.2,
+      ease: "power3.out",
+      onUpdate: function () { countEl.textContent = String(Math.round(count.value)); }
+    }, 1.3);
+
+    /* ── Scene 3 (2.6–4.7s): card 3 lands from the LEFT on "racha"; pill pops on "volver mañana"; hold ── */
+    tl.fromTo(card3, { x: -OFF }, { x: 0, duration: 0.6, ease: "power3.out" }, 2.4);
+    tl.fromTo(marker3, { scale: 0.5 }, { scale: 1, duration: 0.5, ease: "back.out(2.2)" }, 2.65);
+
+    tl.fromTo(pill, { scale: 0.4, opacity: 0, y: 26 }, { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.8)" }, 3.4);
+
+    /* voice ends at 3.97s — everything holds still to 4.7s (the push-in has settled) */
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines["05-volver-manana"] = tl;
+  })();
+</script>
+</template>

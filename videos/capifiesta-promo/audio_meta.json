@@ -1,0 +1,492 @@
+{
+  "bgm": {
+    "path": "assets/gameplay-demo-audio.m4a",
+    "volume": 0.38,
+    "query": null,
+    "duration_s": 40
+  },
+  "bgm_pending": false,
+  "voices": [
+    {
+      "frame": 1,
+      "path": "assets/voice/01.wav",
+      "duration_s": 2.368,
+      "words": [
+        {
+          "id": 0,
+          "text": "¿Y",
+          "start": 0.03,
+          "end": 0.197
+        },
+        {
+          "id": 1,
+          "text": "si",
+          "start": 0.197,
+          "end": 0.364
+        },
+        {
+          "id": 2,
+          "text": "las",
+          "start": 0.364,
+          "end": 0.53
+        },
+        {
+          "id": 3,
+          "text": "matemáticas",
+          "start": 0.53,
+          "end": 1.192
+        },
+        {
+          "id": 4,
+          "text": "fueran…",
+          "start": 1.192,
+          "end": 1.606
+        },
+        {
+          "id": 5,
+          "text": "una",
+          "start": 1.606,
+          "end": 1.896
+        },
+        {
+          "id": 6,
+          "text": "fiesta?",
+          "start": 1.896,
+          "end": 2.31
+        }
+      ]
+    },
+    {
+      "frame": 2,
+      "path": "assets/voice/02.wav",
+      "duration_s": 3.477,
+      "words": [
+        {
+          "id": 0,
+          "text": "CapiFiesta:",
+          "start": 0.03,
+          "end": 0.749
+        },
+        {
+          "id": 1,
+          "text": "cálculo",
+          "start": 0.749,
+          "end": 1.199
+        },
+        {
+          "id": 2,
+          "text": "mental",
+          "start": 1.199,
+          "end": 1.515
+        },
+        {
+          "id": 3,
+          "text": "de",
+          "start": 1.515,
+          "end": 1.696
+        },
+        {
+          "id": 4,
+          "text": "primero",
+          "start": 1.696,
+          "end": 2.147
+        },
+        {
+          "id": 5,
+          "text": "a",
+          "start": 2.147,
+          "end": 2.328
+        },
+        {
+          "id": 6,
+          "text": "sexto",
+          "start": 2.328,
+          "end": 2.644
+        },
+        {
+          "id": 7,
+          "text": "de",
+          "start": 2.644,
+          "end": 2.825
+        },
+        {
+          "id": 8,
+          "text": "primaria.",
+          "start": 2.825,
+          "end": 3.41
+        }
+      ]
+    },
+    {
+      "frame": 3,
+      "path": "assets/voice/03.wav",
+      "duration_s": 7.104,
+      "words": [
+        {
+          "id": 0,
+          "text": "Cada",
+          "start": 0.05,
+          "end": 0.339
+        },
+        {
+          "id": 1,
+          "text": "acierto",
+          "start": 0.339,
+          "end": 0.874
+        },
+        {
+          "id": 2,
+          "text": "sube",
+          "start": 0.874,
+          "end": 1.162
+        },
+        {
+          "id": 3,
+          "text": "la",
+          "start": 1.162,
+          "end": 1.328
+        },
+        {
+          "id": 4,
+          "text": "música,",
+          "start": 1.328,
+          "end": 1.74
+        },
+        {
+          "id": 5,
+          "text": "llena",
+          "start": 1.74,
+          "end": 2.029
+        },
+        {
+          "id": 6,
+          "text": "la",
+          "start": 2.029,
+          "end": 2.195
+        },
+        {
+          "id": 7,
+          "text": "pantalla",
+          "start": 2.195,
+          "end": 2.607
+        },
+        {
+          "id": 8,
+          "text": "de",
+          "start": 2.607,
+          "end": 2.773
+        },
+        {
+          "id": 9,
+          "text": "confeti",
+          "start": 2.773,
+          "end": 3.185
+        },
+        {
+          "id": 10,
+          "text": "y",
+          "start": 3.185,
+          "end": 3.351
+        },
+        {
+          "id": 11,
+          "text": "hace",
+          "start": 3.351,
+          "end": 3.639
+        },
+        {
+          "id": 12,
+          "text": "bailar",
+          "start": 3.639,
+          "end": 4.051
+        },
+        {
+          "id": 13,
+          "text": "a",
+          "start": 4.051,
+          "end": 4.217
+        },
+        {
+          "id": 14,
+          "text": "Capi.",
+          "start": 4.217,
+          "end": 4.506
+        },
+        {
+          "id": 15,
+          "text": "¿Te",
+          "start": 4.506,
+          "end": 4.672
+        },
+        {
+          "id": 16,
+          "text": "equivocas?",
+          "start": 4.672,
+          "end": 5.33
+        },
+        {
+          "id": 17,
+          "text": "No",
+          "start": 5.33,
+          "end": 5.496
+        },
+        {
+          "id": 18,
+          "text": "pasa",
+          "start": 5.496,
+          "end": 5.784
+        },
+        {
+          "id": 19,
+          "text": "nada:",
+          "start": 5.784,
+          "end": 6.073
+        },
+        {
+          "id": 20,
+          "text": "el",
+          "start": 6.073,
+          "end": 6.239
+        },
+        {
+          "id": 21,
+          "text": "ritmo",
+          "start": 6.239,
+          "end": 6.528
+        },
+        {
+          "id": 22,
+          "text": "sigue.",
+          "start": 6.528,
+          "end": 6.94
+        }
+      ]
+    },
+    {
+      "frame": 4,
+      "path": "assets/voice/04.wav",
+      "duration_s": 5.077,
+      "words": [
+        {
+          "id": 0,
+          "text": "Cincuenta",
+          "start": 0.05,
+          "end": 0.603
+        },
+        {
+          "id": 1,
+          "text": "y",
+          "start": 0.603,
+          "end": 0.774
+        },
+        {
+          "id": 2,
+          "text": "ocho",
+          "start": 0.774,
+          "end": 1.073
+        },
+        {
+          "id": 3,
+          "text": "habilidades,",
+          "start": 1.073,
+          "end": 1.753
+        },
+        {
+          "id": 4,
+          "text": "de",
+          "start": 1.753,
+          "end": 1.925
+        },
+        {
+          "id": 5,
+          "text": "sumas",
+          "start": 1.925,
+          "end": 2.223
+        },
+        {
+          "id": 6,
+          "text": "a",
+          "start": 2.223,
+          "end": 2.395
+        },
+        {
+          "id": 7,
+          "text": "porcentajes,",
+          "start": 2.395,
+          "end": 2.948
+        },
+        {
+          "id": 8,
+          "text": "en",
+          "start": 2.948,
+          "end": 3.119
+        },
+        {
+          "id": 9,
+          "text": "un",
+          "start": 3.119,
+          "end": 3.291
+        },
+        {
+          "id": 10,
+          "text": "árbol",
+          "start": 3.291,
+          "end": 3.589
+        },
+        {
+          "id": 11,
+          "text": "que",
+          "start": 3.589,
+          "end": 3.888
+        },
+        {
+          "id": 12,
+          "text": "se",
+          "start": 3.888,
+          "end": 4.06
+        },
+        {
+          "id": 13,
+          "text": "abre",
+          "start": 4.06,
+          "end": 4.358
+        },
+        {
+          "id": 14,
+          "text": "a",
+          "start": 4.358,
+          "end": 4.53
+        },
+        {
+          "id": 15,
+          "text": "tu",
+          "start": 4.53,
+          "end": 4.701
+        },
+        {
+          "id": 16,
+          "text": "ritmo.",
+          "start": 4.701,
+          "end": 5
+        }
+      ]
+    },
+    {
+      "frame": 5,
+      "path": "assets/voice/05.wav",
+      "duration_s": 3.968,
+      "words": [
+        {
+          "id": 0,
+          "text": "Misiones",
+          "start": 0.03,
+          "end": 0.57
+        },
+        {
+          "id": 1,
+          "text": "diarias,",
+          "start": 0.57,
+          "end": 1.109
+        },
+        {
+          "id": 2,
+          "text": "trofeos",
+          "start": 1.109,
+          "end": 1.525
+        },
+        {
+          "id": 3,
+          "text": "y",
+          "start": 1.525,
+          "end": 1.692
+        },
+        {
+          "id": 4,
+          "text": "una",
+          "start": 1.692,
+          "end": 1.984
+        },
+        {
+          "id": 5,
+          "text": "racha",
+          "start": 1.984,
+          "end": 2.275
+        },
+        {
+          "id": 6,
+          "text": "que",
+          "start": 2.275,
+          "end": 2.567
+        },
+        {
+          "id": 7,
+          "text": "da",
+          "start": 2.567,
+          "end": 2.734
+        },
+        {
+          "id": 8,
+          "text": "ganas",
+          "start": 2.734,
+          "end": 3.026
+        },
+        {
+          "id": 9,
+          "text": "de",
+          "start": 3.026,
+          "end": 3.193
+        },
+        {
+          "id": 10,
+          "text": "volver",
+          "start": 3.193,
+          "end": 3.484
+        },
+        {
+          "id": 11,
+          "text": "mañana.",
+          "start": 3.484,
+          "end": 3.9
+        }
+      ]
+    },
+    {
+      "frame": 6,
+      "path": "assets/voice/06.wav",
+      "duration_s": 2.176,
+      "words": [
+        {
+          "id": 0,
+          "text": "CapiFiesta.",
+          "start": 0.03,
+          "end": 0.859
+        },
+        {
+          "id": 1,
+          "text": "Gratis",
+          "start": 0.859,
+          "end": 1.223
+        },
+        {
+          "id": 2,
+          "text": "en",
+          "start": 1.223,
+          "end": 1.432
+        },
+        {
+          "id": 3,
+          "text": "Google",
+          "start": 1.432,
+          "end": 1.951
+        },
+        {
+          "id": 4,
+          "text": "Play.",
+          "start": 1.951,
+          "end": 2.16
+        }
+      ]
+    }
+  ],
+  "sfx": []
+}

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="es">
+<head>
+
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+
+  <div id="paper" aria-hidden="true"></div>
+  <div id="rays-fallback" aria-hidden="true" style="background: repeating-conic-gradient(rgb(59, 107, 255) 0deg, rgb(59, 107, 255) 9deg, rgb(255, 122, 182) 9deg, rgb(255, 122, 182) 18deg);"></div>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <canvas id="fx-back" aria-hidden="true" width="1920" height="1080"></canvas>
+
+  <main id="app" inert="">
+    <!-- Title -->
+    <section id="screen-title" class="screen is-active" aria-labelledby="logo">
+      <button type="button" class="icon-btn settings-btn" id="open-settings" aria-label="Ajustes" data-i18n-aria="title.settings" aria-haspopup="dialog">
+        <svg viewBox="-16 -16 32 32" aria-hidden="true"><circle r="10.6" fill="none" stroke="#1b1d4d" stroke-width="9" stroke-dasharray="4.2 4.12" /><circle r="10.6" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2.4" /><circle r="4.4" fill="#fff" stroke="#1b1d4d" stroke-width="2.4" /></svg>
+      </button>
+      <button type="button" class="icon-btn settings-btn help-btn" id="open-guide" aria-label="Cómo jugar" data-i18n-aria="title.guide" aria-haspopup="dialog">
+        <svg viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-6 -4 C-6 -7 -3 -9 0 -9 C3 -9 6 -7 6 -4 C6 -1 0 0 0 3 M0 9v.01" fill="none" stroke="#1b1d4d" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <!-- The letters are rebuilt by main.js (renderLogo) from app.logoTop / app.logoBottom in the current language. -->
+      <h1 id="logo" class="logo latin" aria-label="Dopa Drill" data-i18n-aria="app.title">
+        <svg class="logo-burst" viewBox="-100 -100 200 200" aria-hidden="true" style="--spin: 142.3955;"><path id="logo-burst-path" fill="#ffd23f" stroke="#1b1d4d" stroke-width="5" stroke-linejoin="round" d="M0.0 -95.9L14.8 -64.9L39.4 -81.8L39.7 -49.8L74.5 -59.4L59.5 -28.7L88.1 -20.1L69.5 0.0L94.8 21.6L58.7 28.3L72.8 58.0L42.8 53.6L42.6 88.4L13.8 60.5L0.0 96.0L-14.1 62.0L-42.7 88.6L-39.2 49.1L-75.7 60.4L-59.4 28.6L-89.4 20.4L-61.8 0.0L-99.3 -22.7L-63.4 -30.5L-71.1 -56.7L-40.8 -51.2L-44.3 -92.0L-14.0 -61.5Z" /><path id="logo-burst-inner" fill="#ff7ab6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round" d="M0.0 -68.8L11.2 -49.3L31.7 -65.8L32.0 -40.2L55.6 -44.3L45.7 -22.0L71.4 -16.3L51.6 0.0L67.4 15.4L46.8 22.5L57.2 45.6L33.1 41.5L30.0 62.2L11.7 51.4L0.0 71.4L-11.0 48.2L-31.6 65.6L-33.2 41.6L-56.7 45.2L-45.3 21.8L-66.4 15.2L-51.1 0.0L-70.6 -16.1L-47.4 -22.8L-56.4 -45.0L-31.9 -40.0L-29.8 -61.9L-11.8 -51.8Z" /></svg>
+        <span class="logo-top" aria-hidden="true"><i data-c="D">D</i><i data-c="O">O</i><i data-c="P">P</i><i data-c="A">A</i></span>
+        <span class="logo-ribbon" aria-hidden="true"><svg class="ribbon-bg" viewBox="0 0 300 70" preserveAspectRatio="none"><path d="M4 22 L34 16 L28 36 L40 58 L6 62 L18 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round" /><path d="M296 22 L266 16 L272 36 L260 58 L294 62 L282 42Z" fill="#2a4fd6" stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round" /><path d="M30 10 Q150 -4 270 10 L270 56 Q150 42 30 56Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="4.5" stroke-linejoin="round" /><path d="M42 18 Q150 6 258 18" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="7 6" stroke-linecap="round" opacity=".7" /></svg><i>D</i><i>R</i><i>I</i><i>L</i><i>L</i></span>
+        <span class="logo-bits" aria-hidden="true"><b style="--x:-46%;--y:4%;--r:-18deg;--c:#3fdcb0">＋</b><b style="--x:44%;--y:-2%;--r:14deg;--c:#a77bff">×</b><b style="--x:-34%;--y:104%;--r:10deg;--c:#ff4f6d">÷</b><b style="--x:36%;--y:102%;--r:-12deg;--c:#ffd23f">−</b></span>
+      </h1>
+      <div class="title-stage" id="title-stage" aria-hidden="true"></div>
+      <div class="modes" id="modes">
+        <button type="button" id="start" class="big-btn level-btn"><span data-i18n="title.start">Mi nivel</span><small id="level-sub" data-i18n="title.startSub">Empieza con la prueba de nivel</small></button>
+        <button type="button" id="start-review" class="sub-btn review-btn review-main" hidden><span data-i18n="title.review">Repaso</span> <b id="review-count">0</b></button>
+        <div class="grades" role="group" aria-label="Por grado" data-i18n-aria="title.gradesAria">
+          <button type="button" data-grade="1"><span>1</span><small data-i18n="title.gradeOrd.1">º</small></button><button type="button" data-grade="2"><span>2</span><small data-i18n="title.gradeOrd.2">º</small></button><button type="button" data-grade="3"><span>3</span><small data-i18n="title.gradeOrd.3">º</small></button>
+          <button type="button" data-grade="4"><span>4</span><small data-i18n="title.gradeOrd.4">º</small></button><button type="button" data-grade="5"><span>5</span><small data-i18n="title.gradeOrd.5">º</small></button><button type="button" data-grade="6"><span>6</span><small data-i18n="title.gradeOrd.6">º</small></button>
+        </div>
+        <div class="mode-row">
+          <button type="button" id="open-tree" class="sub-btn"><span data-i18n="title.tree">Árbol de habilidades</span> <b id="tree-badge">0/58</b></button>
+          <button type="button" id="open-trophy" class="sub-btn"><span data-i18n="title.trophy">Trofeos</span> <b id="trophy-badge">0/306</b></button>
+          <button type="button" id="open-collect" class="sub-btn"><span data-i18n="title.collect">Colección</span> <b id="collect-badge">8/47</b></button>
+        </div>
+      </div>
+      <section class="quest-card" id="quests" aria-labelledby="quest-title">
+        <div class="quest-head"><h2 id="quest-title" data-i18n="title.quests">Misiones de hoy</h2><span class="quest-reward" id="quest-reward">En total <i class="qham"><svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#1b1d4d" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M44.5 40 L55.5 40 L57 97 L43 97Z" fill="#3b6bff" /><path d="M44 60 L56 57 M44 74 L56 71 M44 88 L56 85" fill="none" stroke-width="2.6" /><rect x="13" y="12" width="74" height="30" rx="13" fill="#ff7ab6" /><rect x="5" y="8" width="15" height="38" rx="6" fill="#ffd23f" /><rect x="80" y="8" width="15" height="38" rx="6" fill="#ffd23f" /><path d="M28 20 Q50 15 72 20" fill="none" stroke="#fff" stroke-width="3" opacity=".85" /></g></svg></i>+1</span></div>
+        <ol class="quest-list" id="quest-list"><li><i class="qchk"></i><span class="qt">5 aciertos a la primera</span><span class="qp">0/5</span><i class="qbar" style="--p:0.000"></i></li><li><i class="qchk"></i><span class="qt">1 problema de una habilidad NUEVA</span><span class="qp">0/1</span><i class="qbar" style="--p:0.000"></i></li><li><i class="qchk"></i><span class="qt">Juega 1 partida por grado</span><span class="qp">0/1</span><i class="qbar" style="--p:0.000"></i></li></ol>
+      </section>
+      <section class="cal-card" id="calendar" aria-labelledby="cal-title">
+        <div class="cal-head">
+          <button type="button" class="cal-nav" id="cal-prev" aria-label="Mes anterior" data-i18n-aria="title.prevMonth">‹</button>
+          <h2 id="cal-title" data-i18n="title.calendar">septiembre de 2026</h2>
+          <button type="button" class="cal-nav" id="cal-next" aria-label="Mes siguiente" data-i18n-aria="title.nextMonth" disabled>›</button>
+        </div>
+        <div class="cal-badges" id="cal-badges"><span class="cal-badge">Tu racha empieza hoy</span><span class="cal-badge hmr" aria-label="Martillos «no cuenta»: 1"><i><svg viewBox="0 0 100 100" aria-hidden="true"><g stroke="#1b1d4d" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"><path d="M44.5 40 L55.5 40 L57 97 L43 97Z" fill="#3b6bff" /><path d="M44 60 L56 57 M44 74 L56 71 M44 88 L56 85" fill="none" stroke-width="2.6" /><rect x="13" y="12" width="74" height="30" rx="13" fill="#ff7ab6" /><rect x="5" y="8" width="15" height="38" rx="6" fill="#ffd23f" /><rect x="80" y="8" width="15" height="38" rx="6" fill="#ffd23f" /><path d="M28 20 Q50 15 72 20" fill="none" stroke="#fff" stroke-width="3" opacity=".85" /></g></svg></i><b>1</b></span></div>
+        <div class="cal-week" aria-hidden="true"><span data-i18n="weekday.0">D</span><span data-i18n="weekday.1">L</span><span data-i18n="weekday.2">M</span><span data-i18n="weekday.3">X</span><span data-i18n="weekday.4">J</span><span data-i18n="weekday.5">V</span><span data-i18n="weekday.6">S</span></div>
+        <div class="cal-grid" id="cal-grid" role="grid"><span class="cal-day blank"></span><span class="cal-day blank"></span><span class="cal-day" data-key="2026-09-01" aria-label="1/9"><span class="n">1</span></span><span class="cal-day" data-key="2026-09-02" aria-label="2/9"><span class="n">2</span></span><span class="cal-day" data-key="2026-09-03" aria-label="3/9"><span class="n">3</span></span><span class="cal-day" data-key="2026-09-04" aria-label="4/9"><span class="n">4</span></span><span class="cal-day" data-key="2026-09-05" aria-label="5/9"><span class="n">5</span></span><span class="cal-day" data-key="2026-09-06" aria-label="6/9"><span class="n">6</span></span><span class="cal-day" data-key="2026-09-07" aria-label="7/9"><span class="n">7</span></span><span class="cal-day" data-key="2026-09-08" aria-label="8/9"><span class="n">8</span></span><span class="cal-day" data-key="2026-09-09" aria-label="9/9"><span class="n">9</span></span><span class="cal-day" data-key="2026-09-10" aria-label="10/9"><span class="n">10</span></span><span class="cal-day" data-key="2026-09-11" aria-label="11/9"><span class="n">11</span></span><span class="cal-day" data-key="2026-09-12" aria-label="12/9"><span class="n">12</span></span><span class="cal-day" data-key="2026-09-13" aria-label="13/9"><span class="n">13</span></span><span class="cal-day" data-key="2026-09-14" aria-label="14/9"><span class="n">14</span></span><span class="cal-day" data-key="2026-09-15" aria-label="15/9"><span class="n">15</span></span><span class="cal-day" data-key="2026-09-16" aria-label="16/9"><span class="n">16</span></span><span class="cal-day" data-key="2026-09-17" aria-label="17/9"><span class="n">17</span></span><span class="cal-day" data-key="2026-09-18" aria-label="18/9"><span class="n">18</span></span><span class="cal-day" data-key="2026-09-19" aria-label="19/9"><span class="n">19</span></span><span class="cal-day" data-key="2026-09-20" aria-label="20/9"><span class="n">20</span></span><span class="cal-day" data-key="2026-09-21" aria-label="21/9"><span class="n">21</span></span><span class="cal-day" data-key="2026-09-22" aria-label="22/9"><span class="n">22</span></span><span class="cal-day" data-key="2026-09-23" aria-label="23/9"><span class="n">23</span></span><span class="cal-day" data-key="2026-09-24" aria-label="24/9"><span class="n">24</span></span><span class="cal-day" data-key="2026-09-25" aria-label="25/9"><span class="n">25</span></span><span class="cal-day" data-key="2026-09-26" aria-label="26/9"><span class="n">26</span></span><span class="cal-day" data-key="2026-09-27" aria-label="27/9"><span class="n">27</span></span><span class="cal-day" data-key="2026-09-28" aria-label="28/9"><span class="n">28</span></span><span class="cal-day today" data-key="2026-09-29" aria-label="29/9"><span class="n">29</span></span><span class="cal-day" data-key="2026-09-30" aria-label="30/9"><span class="n">30</span></span></div>
+      </section>
+      <p class="hint" data-i18n="title.hint">También puedes usar el teclado numérico y Retroceso</p>
+    </section>
+
+    <!-- Skill tree -->
+    <section id="screen-tree" class="screen" aria-labelledby="tree-title">
+      <header class="tree-head">
+        <button type="button" class="icon-btn" id="tree-back" aria-label="Volver" data-i18n-aria="common.back">‹</button>
+        <h2 id="tree-title" data-i18n="title.tree">Árbol de habilidades</h2>
+        <span class="tree-count" id="tree-count"></span>
+      </header>
+      <p class="tree-stars" id="tree-stars"></p>
+      <p class="tree-note" data-i18n="tree.note">Toca para practicar (para dominar, cumple las condiciones de las ☆). Mantén pulsado para borrar</p>
+      <div class="tree-scroll" id="tree-scroll"><div class="tree-lanes" id="tree-lanes" aria-hidden="true"></div><div class="tree" id="tree"><svg class="tree-links" id="tree-links" aria-hidden="true" /></div></div>
+      <p class="toast" id="toast" role="status" hidden></p>
+    </section>
+
+    <!-- Trophies (id036) -->
+    <section id="screen-trophy" class="screen" aria-labelledby="trophy-title">
+      <header class="tree-head">
+        <button type="button" class="icon-btn" id="trophy-back" aria-label="Volver" data-i18n-aria="common.back">‹</button>
+        <h2 id="trophy-title" data-i18n="title.trophy">Trofeos</h2>
+        <span class="tree-count" id="trophy-count"></span>
+      </header>
+      <div class="tr-filter" role="group" aria-label="Filtrar" data-i18n-aria="trophy.filterAria">
+        <button type="button" data-f="all" aria-pressed="true" data-i18n="trophy.filterAll">Todo</button><button type="button" data-f="got" aria-pressed="false" data-i18n="trophy.filterGot">Conseguidos</button><button type="button" data-f="next" aria-pressed="false" data-i18n="trophy.filterNext">Pendientes</button><button type="button" data-f="soon" aria-pressed="false" data-i18n="trophy.filterSoon">Cerca</button>
+      </div>
+      <div class="tr-scroll" id="tr-scroll"><div class="tr-list" id="tr-list"></div></div>
+    </section>
+
+    <!-- Collection (id041) -->
+    <section id="screen-collect" class="screen" aria-labelledby="collect-title">
+      <header class="tree-head">
+        <button type="button" class="icon-btn" id="collect-back" aria-label="Volver" data-i18n-aria="common.back">‹</button>
+        <h2 id="collect-title" data-i18n="title.collect">Colección</h2>
+        <span class="tree-count" id="collect-count"></span>
+      </header>
+      <div class="co-preview" id="co-preview" aria-hidden="true"><div class="stamp co-mark" id="co-mark"></div><p class="co-now" id="co-now"></p></div>
+      <div class="co-tabs" id="co-tabs" role="group" aria-label="Categorías" data-i18n-aria="co.tabsAria"></div>
+      <div class="co-scroll" id="co-scroll"><p class="co-note" id="co-note"></p><div class="co-grid" id="co-grid"></div></div>
+    </section>
+
+    <!-- Play -->
+    <section id="screen-play" class="screen" aria-label="Pantalla de juego" data-i18n-aria="play.screenAria">
+      <header class="hud">
+        <div class="pips" id="pips" aria-hidden="true"></div>
+        <div class="clock" aria-live="off"><span id="clock-label">目標 2:40</span><b id="clock">0:00</b></div>
+        <span class="demo-tag" aria-hidden="true">DEMO</span>
+        <button type="button" class="icon-btn" id="mute" aria-label="Silenciar" data-i18n-aria="play.muteOff" aria-pressed="false">♪</button>
+      </header>
+      <div class="hud2">
+        <div class="tally"><span><span data-i18n="play.ok">Correctas</span> <b id="ok">0</b><small id="ok-total">/10</small></span><span class="ng"><span data-i18n="play.ng">Casi</span> <b id="ng">0</b></span></div>
+        <div class="combo" id="combo-box" aria-hidden="true"><b id="combo">0</b><small data-i18n="play.combo">Combo</small><span class="combo-mult" id="combo-mult"></span><i class="combo-track"><i id="combo-bar"></i></i></div>
+        <div class="dopa" id="dopa-box"><small data-i18n="play.dopa">Dopa</small><b id="dopa">0</b></div>
+      </div>
+      <div class="stage" id="stage" aria-hidden="true">
+        <svg class="bunting" viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 4 Q200 34 400 4" fill="none" stroke="#1b1d4d" stroke-width="2.5" /><g id="flags"><path d="M2 4.446816146281372 L22 5.446816146281372 L12 20.44681614628137Z" fill="#ff7ab6" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M31.5 10.325191202310107 L51.5 11.325191202310107 L41.5 26.32519120231011Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M61 15.758654025328955 L81 16.758654025328955 L71 31.758654025328955Z" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M90.5 20.456831215037546 L110.5 21.456831215037546 L100.5 36.456831215037546Z" fill="#3fdcb0" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M120 24.168644273206397 L140 25.168644273206397 L130 40.1686442732064Z" fill="#a77bff" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M149.5 26.69572766130386 L169.5 27.69572766130386 L159.5 42.69572766130386Z" fill="#ff7ab6" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M179 27.903029788816472 L199 28.903029788816472 L189 43.90302978881647Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M208.5 27.72603039760048 L228.5 28.72603039760048 L218.5 43.72603039760048Z" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M238 26.174188633094534 L258 27.174188633094534 L248 42.17418863309453Z" fill="#3fdcb0" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M267.5 23.330437531663357 L287.5 24.330437531663357 L277.5 39.33043753166336Z" fill="#a77bff" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M297 19.3467519395196 L317 20.3467519395196 L307 35.3467519395196Z" fill="#ff7ab6" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M326.5 14.436026721098088 L346.5 15.436026721098088 L336.5 30.436026721098088Z" fill="#3b6bff" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /><path d="M356 8.860699299099693 L376 9.860699299099693 L366 24.860699299099693Z" fill="#ffd23f" stroke="#1b1d4d" stroke-width="2" stroke-linejoin="round" /></g></svg>
+        <div class="spot spot-l"></div><div class="spot spot-r"></div>
+        <svg class="ground" viewBox="0 0 400 20" preserveAspectRatio="none"><path d="M4 12 Q60 6 120 11 T240 10 T396 12" fill="none" stroke="#1b1d4d" stroke-width="3" stroke-linecap="round" /></svg>
+      </div>
+      <section class="card" id="card" aria-labelledby="qtitle" style="--kick: 0.00;">
+        <div class="marquee" aria-hidden="true"></div>
+        <div class="card-top"><span class="chip" id="qtitle">たしざん</span><span class="qno" id="qno">第1問</span></div>
+        <div class="sheet-wrap"><div class="sheet" id="sheet" role="group" aria-label="Cálculo" data-i18n-aria="play.cardAria"></div></div>
+        <p class="step-label" id="step-label" aria-live="polite">一の位</p>
+        <div class="stamp" id="stamp" aria-hidden="true"></div>
+        <div class="reach-tag" id="reach-tag" aria-hidden="true" data-i18n="play.reach">¡Falta 1!</div>
+      </section>
+      <div class="pad" id="pad" role="group" aria-label="Teclado numérico" data-i18n-aria="play.padAria" style="--kick: 0.00;">
+        <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+        <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+        <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+        <button type="button" data-key="Backspace" class="del" aria-label="Borrar un dígito" data-i18n-aria="play.delAria">⌫</button><button type="button" data-key="0" class="zero">0</button>
+      </div>
+    </section>
+
+    <!-- Basic result -->
+    <section id="screen-result" class="screen" aria-labelledby="result-title">
+      <div class="result-card">
+        <p class="chip" id="result-title" data-i18n="result.basic">¡Básico superado!</p>
+        <p class="score"><b id="r-score">100</b><span data-i18n="result.pts">pts</span></p>
+        <dl class="stats">
+          <div><dt data-i18n="result.ok">Correctas</dt><dd id="r-ok">10問</dd></div>
+          <div><dt data-i18n="result.ng">Casi</dt><dd id="r-ng">0回</dd></div>
+          <div><dt data-i18n="result.rate">Aciertos a la primera</dt><dd id="r-rate">100%</dd></div>
+          <div><dt data-i18n="result.time">Tiempo</dt><dd id="r-time">1:23</dd></div>
+        </dl>
+        <p class="dopa-final"><small data-i18n="result.dopa">Dopa</small><b id="r-dopa">0</b></p>
+        <div class="growth-box" id="r-growth"></div>
+        <p class="unlock" id="r-unlock"></p>
+        <div class="skill-news" id="r-skills"></div>
+        <div class="quest-mini" id="r-quests"></div>
+        <div class="actions">
+          <button type="button" id="go-extra" class="big-btn"><span data-i18n="result.goExtra">Ir al Extra</span> <small>90秒</small></button>
+          <button type="button" id="go-review" class="sub-btn review-btn" hidden data-i18n="result.reviewBtn">Repetir los fallados</button>
+          <button type="button" id="go-tree" class="sub-btn" hidden data-i18n="result.seeTree">Ver el árbol de habilidades</button>
+          <button type="button" id="go-again" class="sub-btn" hidden data-i18n="common.retry">Otra vez</button>
+          <button type="button" id="go-title" class="sub-btn" data-i18n="common.end">Terminar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final result -->
+    <section id="screen-final" class="screen" aria-labelledby="final-title">
+      <div class="result-card">
+        <p class="chip" id="final-title" data-i18n="result.final">Fin del Extra</p>
+        <p class="score"><b id="f-score">100</b><span data-i18n="result.pts">pts</span></p>
+        <p class="breakdown" id="f-break">基本 100 ＋ エクストラ 0</p>
+        <dl class="stats">
+          <div><dt data-i18n="result.extraOk">Aciertos en el Extra</dt><dd id="f-ok">0問</dd></div>
+          <div><dt data-i18n="result.extraNg">Casi en el Extra</dt><dd id="f-ng">0回</dd></div>
+          <div><dt data-i18n="result.basicNg">Casi en el Básico</dt><dd id="f-bng">0回</dd></div>
+          <div><dt data-i18n="result.basicTime">Tiempo del básico</dt><dd id="f-time">0:00</dd></div>
+        </dl>
+        <p class="dopa-final"><small data-i18n="result.dopa">Dopa</small><b id="f-dopa">0</b></p>
+        <div class="skill-news" id="f-skills"></div>
+        <div class="quest-mini" id="f-quests"></div>
+        <div class="actions">
+          <button type="button" id="f-review" class="sub-btn review-btn" hidden data-i18n="result.reviewBtn">Repetir los fallados</button>
+          <button type="button" id="f-tree" class="sub-btn" hidden data-i18n="result.seeTree">Ver el árbol de habilidades</button>
+          <button type="button" id="again" class="big-btn" data-i18n="common.end">Terminar</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings (above #app, below particles and actors) -->
+  <div class="modal" id="settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="modal-card">
+      <h2 id="settings-title" class="chip" data-i18n="title.settings">Ajustes</h2>
+      <div class="set-row">
+        <span class="set-label" id="lang-label" data-i18n="settings.language">Idioma</span>
+        <div class="lang-pick" role="radiogroup" aria-labelledby="lang-label">
+          <button type="button" role="radio" data-lang="es" lang="es" aria-checked="true">Español</button>
+          <button type="button" role="radio" data-lang="en" lang="en" aria-checked="false">English</button>
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" data-i18n="settings.count">Número de problemas</span>
+        <div class="pick" role="radiogroup" aria-label="Problemas" data-i18n-aria="settings.countAria">
+          <button type="button" role="radio" data-count="6" aria-checked="false">6<small data-i18n="settings.countUnit">probl.</small></button>
+          <button type="button" role="radio" data-count="10" aria-checked="true">10<small data-i18n="settings.countUnit">probl.</small></button>
+          <button type="button" role="radio" data-count="14" aria-checked="false">14<small data-i18n="settings.countUnit">probl.</small></button>
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label" data-i18n="settings.sound">Sonido</span>
+        <div class="set-inline">
+          <button type="button" class="toggle" data-toggle="sound" aria-pressed="true"><i aria-hidden="true">♪</i><b>Sí</b></button>
+          <input type="range" class="slider" id="volume" min="0" max="100" step="1" value="80" aria-label="Volumen" data-i18n-aria="settings.volume" style="--v: 0.8;">
+        </div>
+      </div>
+      <div class="set-row">
+        <span class="set-label"><span data-i18n="settings.motion">Intensidad del movimiento</span> <b id="motion-val">100%</b></span>
+        <input type="range" class="slider motion" id="motion" min="0" max="100" step="1" value="100" aria-label="Intensidad del movimiento" data-i18n-aria="settings.motion" aria-describedby="motion-note" style="--v: 1;">
+        <p class="set-note" id="motion-note" data-i18n="settings.motionNote">Con 0% se detienen las sacudidas, las luces, el confeti y los movimientos</p>
+      </div>
+      <div class="set-row">
+        <span class="set-label" data-i18n="settings.demo">Demostración</span>
+        <button type="button" class="sub-btn demo-btn" id="demo-play" data-i18n="settings.demoBtn">▶ Ver una partida automática</button>
+        <p class="set-note" data-i18n="settings.demoNote">Termina al tocar la pantalla o pulsar una tecla (no se guarda en el registro)</p>
+      </div>
+      <div class="set-row">
+        <span class="set-label" data-i18n="settings.data">Datos</span>
+        <button type="button" class="sub-btn danger reset-btn" id="reset-data" aria-describedby="reset-note" data-i18n="settings.reset">Restablecer todo</button>
+        <p class="set-note" id="reset-note" data-i18n="settings.resetNote">Borra todos los datos y vuelve al estado inicial</p>
+      </div>
+      <div class="set-row">
+        <span class="set-label" data-i18n="settings.about">Sobre la app</span>
+        <button type="button" class="sub-btn about-btn" id="open-privacy" data-i18n="settings.privacyBtn">Política de privacidad</button>
+        <p class="set-note" data-i18n="settings.privacyNote">Tus datos se guardan solo en este dispositivo. Los anuncios los muestra Google AdMob</p>
+        <p class="set-note" id="app-version">Versión 1.0.0</p>
+      </div>
+      <button type="button" class="big-btn" id="close-settings" data-i18n="settings.close">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Privacy summary (the full policy is docs/privacy.html, published on the web) -->
+  <div class="modal" id="privacy" role="dialog" aria-modal="true" aria-labelledby="privacy-title" hidden>
+    <div class="modal-card privacy-card">
+      <h2 id="privacy-title" class="chip" data-i18n="privacy.title">Política de privacidad</h2>
+      <p class="privacy-p" data-i18n="privacy.p1">Esta app no pide nombre, correo ni ningún dato personal. Tus registros de juego se guardan únicamente en este dispositivo y nunca se envían a un servidor.</p>
+      <p class="privacy-p" data-i18n="privacy.p2">Los anuncios los muestra Google AdMob en modo para niños: sin anuncios personalizados y sin usar el identificador de publicidad.</p>
+      <p class="privacy-p" data-i18n="privacy.p3">Puedes borrar todos los datos con «Restablecer todo» en Ajustes.</p>
+      <a class="sub-btn privacy-link" id="privacy-link" href="https://ccardenas93.github.io/dopa-drill/privacy.html" target="_blank" rel="noopener" data-i18n="privacy.link">Leer la política completa</a>
+      <button type="button" class="big-btn" id="privacy-close" data-i18n="common.close">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="modal" id="bonus" role="dialog" aria-modal="true" aria-labelledby="bonus-title" hidden>
+    <div class="modal-card bonus-card">
+      <h2 id="bonus-title" class="chip" data-i18n="bonus.title">Bono diario</h2>
+      <p class="bonus-run" id="bonus-run"></p>
+      <div class="bonus-card-grid" id="bonus-grid"></div>
+      <p class="bonus-note" id="bonus-note"></p>
+      <button type="button" class="big-btn" id="bonus-ok" data-i18n="common.take">Recoger</button>
+    </div>
+  </div>
+
+  <div class="modal" id="skill-info" role="dialog" aria-modal="true" aria-labelledby="si-title" hidden>
+    <div class="modal-card si-card">
+      <p class="si-grade" id="si-grade"></p>
+      <h2 class="si-title" id="si-title"></h2>
+      <p class="si-stars" id="si-stars"></p>
+      <div class="si-next" id="si-next"></div>
+      <p class="si-note" id="si-note"></p>
+      <div class="confirm-actions">
+        <button type="button" class="sub-btn" id="si-close" data-i18n="common.close">Cerrar</button>
+        <button type="button" class="sub-btn" id="si-example" data-i18n="si.example">Ver ejemplo</button>
+        <button type="button" class="sub-btn si-go" id="si-go" data-i18n="si.practice">Practicar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="trophy-got" role="dialog" aria-modal="true" aria-labelledby="tg-title" hidden>
+    <div class="modal-card trophy-card">
+      <h2 id="tg-title" class="chip" data-i18n="trophy.gotTitle">¡Trofeo conseguido!</h2>
+      <p class="tg-sub" id="tg-sub"></p>
+      <ul class="tg-list" id="tg-list"></ul>
+      <button type="button" class="big-btn" id="tg-ok" data-i18n="common.ok">¡Genial!</button>
+    </div>
+  </div>
+
+  <div class="modal" id="hammer" role="dialog" aria-modal="true" aria-labelledby="hammer-title" aria-describedby="hammer-msg" hidden>
+    <div class="modal-card hammer-card">
+      <h2 id="hammer-title" class="chip" data-i18n="hammer.title">Martillo «no cuenta»</h2>
+      <div class="hammer-art" id="hammer-art" aria-hidden="true"></div>
+      <p class="hammer-msg" id="hammer-msg"></p>
+      <p class="hammer-have" id="hammer-have"></p>
+      <div class="confirm-actions">
+        <button type="button" class="sub-btn" id="hammer-no" data-i18n="common.never">No usar</button>
+        <button type="button" class="sub-btn hammer-yes" id="hammer-yes" data-i18n="common.use">Usar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-msg" hidden>
+    <div class="modal-card confirm-card">
+      <h2 id="confirm-title" class="chip">スキルを けす</h2>
+      <p class="confirm-msg" id="confirm-msg"></p>
+      <ul class="confirm-list" id="confirm-list"></ul>
+      <div class="confirm-actions">
+        <button type="button" class="sub-btn" id="confirm-no" data-i18n="common.cancel">Cancelar</button>
+        <button type="button" class="sub-btn danger" id="confirm-yes" data-i18n="common.delete">Borrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="day-log" role="dialog" aria-modal="true" aria-labelledby="day-title" hidden>
+    <div class="modal-card">
+      <h2 id="day-title" class="chip">きろく</h2>
+      <ul class="day-list" id="day-list"></ul>
+      <button type="button" class="big-btn" id="close-day" data-i18n="common.close">Cerrar</button>
+    </div>
+  </div>
+
+  <canvas id="fx" aria-hidden="true" width="1920" height="1080"></canvas>
+  <svg id="actors" aria-hidden="true"><g id="actors-back" /><g id="actors-front" /><style id="dk-style">.dk-l,.dk-f,.dk-t{stroke:#000;stroke-linecap:round;stroke-linejoin:round}.dk-l{stroke-width:var(--dkw)}.dk-f{stroke-width:calc(var(--dkw) * 1.5)}.dk-t{stroke-width:calc(var(--dkw) * 0.55)}</style><defs><lineargradient id="dk-rainbow" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ff97bf" /><stop offset=".33" stop-color="#ffd452" /><stop offset=".66" stop-color="#5eddb8" /><stop offset="1" stop-color="#8fb4ff" /></lineargradient></defs></svg>
+  <div id="cutins" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true" style="opacity: 0;"></div>
+  <noscript>Este juego necesita JavaScript para funcionar.</noscript>
+
+
+<div id="guide" role="dialog" aria-modal="true" aria-labelledby="guide-heading" aria-describedby="guide-text" data-page="1" data-total="5" data-ready="true" data-help="" data-target="" data-placement="above" data-collision="0">
+    <svg class="guide-shade" aria-hidden="true"><defs><mask id="guide-mask" maskUnits="userSpaceOnUse"><rect class="guide-mask-base" fill="white" width="100%" height="100%" /><rect id="guide-hole" fill="black" rx="20" style="display: none;" /><rect id="guide-help-hole" fill="black" rx="16" style="display: none;" /></mask></defs><rect width="100%" height="100%" fill="#101637" fill-opacity=".76" mask="url(#guide-mask)" /><rect id="guide-ring" rx="20" fill="none" stroke="#ffd23f" stroke-width="3" style="display: none;" /><rect id="guide-help-ring" rx="16" fill="none" stroke="#ffd23f" stroke-width="2" style="display: none;" /></svg>
+    <svg id="guide-actor" aria-hidden="true"><g id="guide-body"><g class="dk" opacity="1" style="--dkw: 2.361111111111111;"><ellipse rx="40" ry="7" fill="#000" opacity="0.14" transform="translate(960 451.59375) scale(0.6751582985816119 0.68)" /><g transform="translate(960 408.79375) rotate(0) translate(0 40.800000000000004) scale(0.6751582985816119 0.6897878143888967)"><g /><g transform="translate(0 0) rotate(0 -18.5 -15.8)"><path class="dk-l" d="M-19.3 -18.5 C-24.8 -18.5 -28.1 -16 -32.8 -11.3 C-36.7 -7.4 -38.9 -4.9 -35.8 -2.3 C-31.5 1.4 -24.1 1.1 -18.2 -2 C-12.1 -4.9 -8.5 -9.2 -12.1 -14.8 C-13.9 -17.6 -16.2 -18.5 -19.3 -18.5Z" fill="#2f79f7" /></g><g transform="translate(0 0) rotate(0 18.5 -15.8)"><path class="dk-l" d="M-19.3 -18.5 C-24.8 -18.5 -28.1 -16 -32.8 -11.3 C-36.7 -7.4 -38.9 -4.9 -35.8 -2.3 C-31.5 1.4 -24.1 1.1 -18.2 -2 C-12.1 -4.9 -8.5 -9.2 -12.1 -14.8 C-13.9 -17.6 -16.2 -18.5 -19.3 -18.5Z" fill="#2f79f7" transform="scale(-1 1)" /></g><g><path d="M-37.4 -65.7 C-29.7 -61 -25.2 -54.2 -25.2 -46.8 C-25.2 -40.5 -28.8 -35.3 -28.8 -28.4 C-28.8 -18.4 -20.7 -13.5 -10.8 -13.5 L10.8 -13.5 C20.7 -13.5 28.8 -18.4 28.8 -28.4 C28.8 -35.3 25.2 -40.5 25.2 -46.8 C25.2 -54.2 29.7 -61 37.4 -65.7 L37.4 -75.2 L-37.4 -75.2Z" fill="#ff97bf" /><path class="dk-l" d="M-37.4 -65.7 C-29.7 -61 -25.2 -54.2 -25.2 -46.8 C-25.2 -40.5 -28.8 -35.3 -28.8 -28.4 C-28.8 -18.4 -20.7 -13.5 -10.8 -13.5 L10.8 -13.5 C20.7 -13.5 28.8 -18.4 28.8 -28.4 C28.8 -35.3 25.2 -40.5 25.2 -46.8 C25.2 -54.2 29.7 -61 37.4 -65.7" fill="none" /><ellipse class="dk-l" cy="-32" rx="17.8" ry="13.5" fill="#fff3e4" /></g><g transform="rotate(0 0 -65.7)"><g transform="rotate(0 -52.6 -105.3)"><ellipse class="dk-l" cx="-74.2" cy="-105.3" rx="31" ry="31.3" fill="#ff97bf" /><ellipse class="dk-l" cx="-74.2" cy="-105.3" rx="21.1" ry="22" fill="#ffe6f0" /></g><g transform="rotate(0 52.6 -105.3)"><ellipse class="dk-l" cx="74.2" cy="-105.3" rx="31" ry="31.3" fill="#ff97bf" /><ellipse class="dk-l" cx="74.2" cy="-105.3" rx="21.1" ry="22" fill="#ffe6f0" /></g><g><path d="M-37.4 -65.7 C-49.7 -73.1 -56.3 -82.1 -56.3 -98.5 C-56.3 -129.6 -32.9 -149.2 0 -149.2 C32.9 -149.2 56.3 -129.6 56.3 -98.5 C56.3 -82.1 49.7 -73.1 37.4 -65.7 L0 -70.2Z" fill="#ff97bf" /><path class="dk-l" d="M-37.4 -65.7 C-49.7 -73.1 -56.3 -82.1 -56.3 -98.5 C-56.3 -129.6 -32.9 -149.2 0 -149.2 C32.9 -149.2 56.3 -129.6 56.3 -98.5 C56.3 -82.1 49.7 -73.1 37.4 -65.7" fill="none" /><path class="dk-l" d="M0 -133 C29.7 -133 48.2 -121.7 48.2 -96.5 C48.2 -71.3 25.7 -61.2 0 -61.2 C-25.7 -61.2 -48.2 -71.3 -48.2 -96.5 C-48.2 -121.7 -29.7 -133 0 -133Z" fill="#fff3e4" /></g><g><ellipse cx="-30.001297860053235" cy="-78.5" rx="4.3" ry="2.7" fill="#ffe6f0" /><ellipse cx="31.198702139946768" cy="-78.5" rx="4.3" ry="2.7" fill="#ffe6f0" /><ellipse class="dk-l" rx="3.1" ry="1.8" fill="#ff97bf" transform="translate(-12.003244650133086 -115.69476079620601) rotate(0)" /><ellipse class="dk-l" rx="3.1" ry="1.8" fill="#ff97bf" transform="translate(14.996755349866914 -115.69476079620601) rotate(0)" /><g transform="translate(-21.903244650133082 -94.294760796206) scale(1 1)"><g transform="scale(1 1)"><path d="M-9 3 Q0 -10 9 3" fill="none" class="dk-f" /></g></g><g transform="translate(24.896755349866915 -94.294760796206) scale(1 1)"><g transform="scale(1 1)"><path d="M-9 3 Q0 -10 9 3" fill="none" class="dk-f" /></g></g><g transform="translate(0.8980532099201486 -79.247380398103)"><path d="M-8.1 -1.3 C-4.9 3 4.9 3 8.1 -1.3" fill="none" class="dk-l" /></g><path d="M0 -12 Q6 -2 0 2 Q-6 -2 0 -12Z" fill="#8fd3ff" class="dk-l" opacity="0" /></g><g /><g /></g></g></g></g><g id="guide-arms"><g class="dk-arms" opacity="1"><path fill="none" stroke="#000" stroke-linecap="round" d="M942.524 416.95375 Q938.8064939499728 425.573491361247 935.0889878999457 425.99775" stroke-width="6.339111111111111" /><path fill="none" stroke="#ff97bf" stroke-linecap="round" d="M942.524 416.95375 Q938.8064939499728 425.573491361247 935.0889878999457 425.99775" stroke-width="3.128" /><circle fill="#ff97bf" stroke="#000" cx="935.0889878999457" cy="425.99775" r="6.596" stroke-width="1.6055555555555556" /><text text-anchor="middle" dominant-baseline="central" class="dk-digit" style="display: none;" /><path fill="none" stroke="#000" stroke-linecap="round" d="M977.476 416.95375 Q996.95688 402.9023544317184 996.9 372.54975" stroke-width="6.211111111111111" /><path fill="none" stroke="#ff97bf" stroke-linecap="round" d="M977.476 416.95375 Q996.95688 402.9023544317184 996.9 372.54975" stroke-width="3" /><circle fill="#ff97bf" stroke="#000" cx="996.9" cy="372.54975" r="6.596" stroke-width="1.6055555555555556" /><text text-anchor="middle" dominant-baseline="central" class="dk-digit" style="display: none;" /></g></g></svg>
+    <span id="guide-recommend" hidden>Recomendado</span>
+    <button type="button" id="guide-skip" class="sub-btn">Saltar</button>
+    <section id="guide-card" aria-live="polite" aria-atomic="true" style="top: 539.6px;">
+      <h2 id="guide-heading">Cómo jugar</h2><p id="guide-text">Hay 3 formas
+de elegir los problemas</p>
+      <div id="guide-dots" role="img" aria-label="Página 1 de 5"><i class="current" aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i></div>
+      <div class="guide-actions"><button type="button" class="sub-btn" id="guide-back" disabled>Volver</button><button type="button" class="big-btn" id="guide-next">Siguiente</button></div>
+    </section></div>
+</body>
+</html>

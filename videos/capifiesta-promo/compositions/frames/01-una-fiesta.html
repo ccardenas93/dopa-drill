@@ -1,0 +1,331 @@
+<template id="01-una-fiesta-template" data-composition-id="01-una-fiesta" data-width="1080" data-height="1920" data-duration="3.8">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+
+<style>
+  /* ---- fonts: local only (project-root-relative), never a network font ---- */
+  @font-face { font-family: "Dela Gothic One"; src: url("assets/fonts/dela-gothic-one.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: block; }
+  @font-face { font-family: "Zen Maru Gothic"; src: url("assets/fonts/zen-maru-gothic-bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: block; }
+  @font-face { font-family: "Zen Maru Gothic"; src: url("assets/fonts/zen-maru-gothic-black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: block; }
+
+  /* ---- frame root (contract selector) ---- */
+  #root {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    container-type: size;
+    font-family: "Dela Gothic One", sans-serif;
+    font-weight: 400;
+  }
+  .clip {
+    position: absolute;
+    inset: 0;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+  }
+
+  /* Class names drop the frame id's leading digits ("01-") because a CSS
+     identifier cannot start with a digit; "una-fiesta-" is still unique
+     across sibling frames. Ids keep the verbatim "01-una-fiesta-" prefix. */
+
+  /* ---- track 0: full-bleed brand-blue ground + low-contrast paper grid ---- */
+  .una-fiesta-ground {
+    background-color: #3B6BFF;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.11) 2px, transparent 2px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.11) 2px, transparent 2px);
+    background-size: 64px 64px;
+    background-position: -1px -1px;
+  }
+
+  /* ---- track 1: ornament layer — four operator scraps, static, cropping past the edges ---- */
+  .una-fiesta-ornaments {
+    z-index: 1;
+    pointer-events: none;
+  }
+  .una-fiesta-scrap {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border-radius: 28px;
+    border: 3px solid #1B1D4D;
+    box-shadow: 6px 6px 0 #1B1D4D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 170px;
+    line-height: 1;
+    color: #1B1D4D;
+  }
+  /* static CSS rotation only — these are never GSAP-animated */
+  .una-fiesta-scrap-plus  { left: -70px;  top: -60px;   transform: rotate(-12deg); background: #FFD0E4; }
+  .una-fiesta-scrap-times { right: -80px; top: 110px;   transform: rotate(10deg);  background: #D9FBEF; }
+  .una-fiesta-scrap-div   { left: -90px;  top: 1290px;  transform: rotate(8deg);   background: #EFE6FF; }
+  .una-fiesta-scrap-minus { right: -70px; top: 1300px;  transform: rotate(-9deg);  background: #FFE6DC; }
+
+  /* ---- track 2: kinetic type ---- */
+  .una-fiesta-type {
+    z-index: 2;
+  }
+
+  /* the question — three chunks, stacked, upper-middle; block is GSAP-moved (y), so no CSS transform here */
+  .una-fiesta-q {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+  .una-fiesta-q-line {
+    display: flex;
+    justify-content: center;
+    gap: 0.26em;
+    font-size: 100px;
+    line-height: 1.32;
+    letter-spacing: 0.02em;
+    color: #FFFFFF;
+    text-shadow: 3px 3px 0 #1B1D4D;
+    white-space: nowrap;
+  }
+  .una-fiesta-q-word {
+    display: inline-block;
+    transform-origin: 50% 100%;
+    will-change: transform, opacity;
+  }
+
+  /* the payoff — UNA / FIESTA, dead-center, ~1.6x the question size, butter + ink shadow */
+  .una-fiesta-pop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 776px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+  .una-fiesta-pop-word {
+    font-size: 156px;
+    line-height: 1.22;
+    letter-spacing: 0.02em;
+    color: #FFD23F;
+    text-shadow: 4px 4px 0 #1B1D4D;
+    white-space: nowrap;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity;
+  }
+
+  /* confetti pool — launch origin behind the payoff, z-ordered under the words */
+  .una-fiesta-confetti {
+    position: absolute;
+    left: 540px;
+    top: 940px;
+    width: 0;
+    height: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .una-fiesta-chip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-sizing: border-box;
+    border-radius: 3px;
+    border: 2px solid #1B1D4D;
+    opacity: 0; /* invisible until the burst fires; the driver guard keeps it so on seeks */
+    will-change: transform, opacity;
+  }
+</style>
+
+<div
+  id="root"
+  data-composition-id="01-una-fiesta"
+  data-duration="3.4"
+  data-width="1080"
+  data-height="1920"
+>
+  <!-- track 0: ground -->
+  <div class="clip una-fiesta-ground" id="01-una-fiesta-ground" data-start="0" data-duration="3.8" data-track-index="0"></div>
+
+  <!-- track 1: ornament scraps (static, present from t=0) -->
+  <div class="clip una-fiesta-ornaments" id="01-una-fiesta-ornaments" data-start="0" data-duration="3.8" data-track-index="1" aria-hidden="true">
+    <div class="una-fiesta-scrap una-fiesta-scrap-plus">+</div>
+    <div class="una-fiesta-scrap una-fiesta-scrap-times">&#215;</div>
+    <div class="una-fiesta-scrap una-fiesta-scrap-div">&#247;</div>
+    <div class="una-fiesta-scrap una-fiesta-scrap-minus">&#8722;</div>
+  </div>
+
+  <!-- track 2: kinetic type -->
+  <div class="clip una-fiesta-type" id="01-una-fiesta-type" data-start="0" data-duration="3.8" data-track-index="2">
+    <div class="una-fiesta-confetti" id="01-una-fiesta-confetti" aria-hidden="true"></div>
+
+    <div class="una-fiesta-q" id="01-una-fiesta-q">
+      <div class="una-fiesta-q-line" data-at="0.05">
+        <span class="una-fiesta-q-word">¿Y</span>
+        <span class="una-fiesta-q-word">si</span>
+        <span class="una-fiesta-q-word">las</span>
+      </div>
+      <div class="una-fiesta-q-line" data-at="0.55">
+        <span class="una-fiesta-q-word">matemáticas</span>
+      </div>
+      <div class="una-fiesta-q-line" data-at="1.1">
+        <span class="una-fiesta-q-word">fueran…</span>
+      </div>
+    </div>
+
+    <div class="una-fiesta-pop" id="01-una-fiesta-pop">
+      <div class="una-fiesta-pop-word" id="01-una-fiesta-pop-una">UNA</div>
+      <div class="una-fiesta-pop-word" id="01-una-fiesta-pop-fiesta">FIESTA</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var DURATION = 3.4;
+
+    window.__timelines = window.__timelines || {};
+    var tl = gsap.timeline({ paused: true });
+
+    /* =========================================================
+       Scene 1 (0.0–1.5s) — dynamic-content-sequencing, stacked variant.
+       The content array is the DOM (one .una-fiesta-q-line per spoken chunk,
+       data-at = its voiceover cue); it is reduced ONCE at build into a flat
+       TIMELINE of { el, start, end } — one entry per word, offset inside its
+       chunk by a per-word stagger capped so the chunk lands as one beat.
+       Entries accumulate on screen (stacked question) rather than swapping,
+       so no lastTitle guard is needed — nothing is written per frame.
+       ========================================================= */
+    var WORD_DUR = 0.62;   // smooth long-tail settle per word
+    var WORD_RISE = 46;    // px rise folded into the fromTo (no CSS transform)
+    var qRoot = document.getElementById("01-una-fiesta-q");
+    var lines = qRoot.querySelectorAll(".una-fiesta-q-line");
+    var TIMELINE = [];
+    for (var li = 0; li < lines.length; li++) {
+      var line = lines[li];
+      var at = parseFloat(line.getAttribute("data-at"));
+      var words = line.querySelectorAll(".una-fiesta-q-word");
+      var stagger = Math.min(0.08, 0.5 / words.length);
+      for (var wi = 0; wi < words.length; wi++) {
+        var start = at + wi * stagger;
+        TIMELINE.push({ el: words[wi], start: start, end: start + WORD_DUR });
+      }
+    }
+    for (var ti = 0; ti < TIMELINE.length; ti++) {
+      var entry = TIMELINE[ti];
+      tl.fromTo(
+        entry.el,
+        { opacity: 0, y: WORD_RISE, scale: 0.86 },
+        { opacity: 1, y: 0, scale: 1, duration: entry.end - entry.start, ease: "power3.out" },
+        entry.start
+      );
+    }
+
+    /* =========================================================
+       Scene 2 (1.5–2.6s) — the three lines settle up to make room, then
+       spring-pop-entrance (explicitly-playful variant: back.out ≤ 2 with a
+       small rotation settle) lands UNA on "una" and FIESTA on "fiesta".
+       ========================================================= */
+    tl.fromTo(qRoot, { y: 0 }, { y: -130, duration: 0.55, ease: "power3.inOut" }, 1.5);
+
+    var POPS = [
+      { id: "01-una-fiesta-pop-una",    at: 1.6, rot: -6 },
+      { id: "01-una-fiesta-pop-fiesta", at: 1.9, rot: 6 }
+    ];
+    var POP_DUR = 0.6;
+    var OVERSHOOT = 1.7;
+    for (var pi = 0; pi < POPS.length; pi++) {
+      var pop = POPS[pi];
+      tl.fromTo(
+        document.getElementById(pop.id),
+        { scale: 0, opacity: 0, rotation: pop.rot },
+        { scale: 1, opacity: 1, rotation: 0, duration: POP_DUR, ease: "back.out(" + OVERSHOOT + ")" },
+        pop.at
+      );
+    }
+
+    /* =========================================================
+       particle-burst — confetti pop fired on the payoff word's landing.
+       Fixed pool of 40 index-seeded chips built once; every frame is a pure
+       ballistic function of the driver value (ease "none"), so any seek
+       renders the exact mid-flight state. Two-stage variation: 70% on the
+       main driver, 30% stragglers a beat later at lower speed. Opacity
+       tail over the last FADE_FRAC of flight; chips start AND end at 0.
+       ========================================================= */
+    var prand = function (n) {
+      var x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+      return x - Math.floor(x);
+    };
+    var field = document.getElementById("01-una-fiesta-confetti");
+    var PALETTE = ["#FF7AB6", "#FFD23F", "#D9FBEF", "#FFFFFF"]; // pink / yellow / mint / white
+    var COUNT = 40;
+    var SIZE_MIN = 12, SIZE_MAX = 22;
+    var CONE = 0.8;        // rad, upward cone half-angle
+    var SPIN_MAX = 540;    // deg/s
+    var G = 1250;          // px/s²
+    var mainParts = [];
+    var stragglers = [];
+    for (var i = 0; i < COUNT; i++) {
+      var isStraggler = (i % 10) < 3;
+      var el = document.createElement("div");
+      el.className = "una-fiesta-chip";
+      var size = SIZE_MIN + prand(i * 3 + 1) * (SIZE_MAX - SIZE_MIN);
+      el.style.width = size.toFixed(2) + "px";
+      el.style.height = (size * 0.7).toFixed(2) + "px";
+      el.style.background = PALETTE[i % PALETTE.length];
+      field.appendChild(el);
+      var angle = -Math.PI / 2 + (prand(i * 5 + 2) * 2 - 1) * CONE;
+      var speedMin = isStraggler ? 280 : 420;
+      var speedMax = isStraggler ? 480 : 760;
+      var speed = speedMin + prand(i * 7 + 3) * (speedMax - speedMin);
+      var part = {
+        el: el,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed, // negative = up
+        spin: (prand(i * 11 + 4) * 2 - 1) * SPIN_MAX
+      };
+      (isStraggler ? stragglers : mainParts).push(part);
+    }
+
+    function burst(parts, burstAt, flightDur, fadeFrac) {
+      var drive = { T: 0 };
+      tl.fromTo(
+        drive,
+        { T: 0 },
+        {
+          T: 1,
+          duration: flightDur,
+          ease: "none", // physics lives in the formula, not the ease
+          onUpdate: function () {
+            var t = drive.T * flightDur;
+            var fade = Math.min(1, (1 - drive.T) / fadeFrac);
+            var op = drive.T === 0 ? 0 : fade; // T===0 guard covers seeks before the event
+            for (var k = 0; k < parts.length; k++) {
+              var p = parts[k];
+              var x = p.vx * t;
+              var y = p.vy * t + 0.5 * G * t * t;
+              p.el.style.transform = "translate(" + x.toFixed(2) + "px, " + y.toFixed(2) + "px) rotate(" + (p.spin * t).toFixed(2) + "deg)";
+              p.el.style.opacity = String(op);
+            }
+          }
+        },
+        burstAt
+      );
+    }
+    // FIESTA lands at 1.9 → the pop's impact frame is the cause; ends by 3.22 (all chips at opacity 0)
+    burst(mainParts, 2.02, 1.2, 0.3);
+    burst(stragglers, 2.14, 1.0, 0.3);
+
+    /* Scene 3 (2.6–3.4s) — held read: confetti finishes falling, all else still. */
+
+    // full-span anchor so the timeline spans the whole frame duration
+    tl.to({}, { duration: DURATION }, 0);
+
+    window.__timelines["01-una-fiesta"] = tl;
+  })();
+</script>
+</template>

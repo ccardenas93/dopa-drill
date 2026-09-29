@@ -1,0 +1,113 @@
+[span] Mi nivel
+[small] Empieza con la prueba de nivel
+[span] Repaso
+[span] Árbol de habilidades
+[b] 0/58
+[span] Trofeos
+[b] 0/306
+[span] Colección
+[b] 8/47
+[h2] Misiones de hoy
+[span] En total
+[span] 5 aciertos a la primera
+[span] 0/5
+[span] 1 problema de una habilidad NUEVA
+[span] 0/1
+[span] Juega 1 partida por grado
+[span] 0/1
+[h2] septiembre de 2026
+[span] Tu racha empieza hoy
+[p] También puedes usar el teclado numérico y Retroceso
+[h2] Árbol de habilidades
+[p] Toca para practicar (para dominar, cumple las condiciones de las ☆). Mantén pulsado para borrar
+[h2] Trofeos
+[button] Todo
+[button] Conseguidos
+[button] Pendientes
+[button] Cerca
+[h2] Colección
+[span] 目標 2:40
+[b] 0:00
+[span] Correctas
+[small] /10
+[span] Casi
+[small] Dopa
+[span] たしざん
+[span] 第1問
+[p] 一の位
+[div] ¡Falta 1!
+[p] ¡Básico superado!
+[b] 100
+[span] pts
+[dt] Correctas
+[dd] 10問
+[dt] Casi
+[dt] Aciertos a la primera
+[dd] 100%
+[dt] Tiempo
+[dd] 1:23
+[small] Dopa
+[span] Ir al Extra
+[small] 90秒
+[button] Terminar
+[p] Fin del Extra
+[b] 100
+[span] pts
+[p] 基本 100 ＋ エクストラ 0
+[dt] Aciertos en el Extra
+[dt] Casi en el Extra
+[dt] Casi en el Básico
+[dt] Tiempo del básico
+[dd] 0:00
+[small] Dopa
+[button] Terminar
+[h2] Ajustes
+[span] Idioma
+[button] Español
+[button] English
+[span] Número de problemas
+[small] probl.
+[small] probl.
+[small] probl.
+[span] Sonido
+[span] Intensidad del movimiento
+[b] 100%
+[p] Con 0% se detienen las sacudidas, las luces, el confeti y los movimientos
+[span] Demostración
+[button] ▶ Ver una partida automática
+[p] Termina al tocar la pantalla o pulsar una tecla (no se guarda en el registro)
+[span] Datos
+[button] Restablecer todo
+[p] Borra todos los datos y vuelve al estado inicial
+[span] Sobre la app
+[button] Política de privacidad
+[p] Tus datos se guardan solo en este dispositivo. Los anuncios los muestra Google AdMob
+[p] Versión 1.0.0
+[button] Cerrar
+[h2] Política de privacidad
+[p] Esta app no pide nombre, correo ni ningún dato personal. Tus registros de juego se guardan únicamente en este dispositivo y nunca se envían a un servidor.
+[p] Los anuncios los muestra Google AdMob en modo para niños: sin anuncios personalizados y sin usar el identificador de publicidad.
+[p] Puedes borrar todos los datos con «Restablecer todo» en Ajustes.
+[a] Leer la política completa
+[button] Cerrar
+[h2] Bono diario
+[button] Recoger
+[button] Cerrar
+[button] Ver ejemplo
+[button] Practicar
+[h2] ¡Trofeo conseguido!
+[button] ¡Genial!
+[h2] Martillo «no cuenta»
+[button] No usar
+[button] Usar
+[h2] スキルを けす
+[button] Cancelar
+[button] Borrar
+[h2] きろく
+[button] Cerrar
+[button] Saltar
+[h2] Cómo jugar
+[p] Hay 3 formas
+de elegir los problemas
+[button] Volver
+[button] Siguiente

@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "webAnimations": 0,
+    "cssDeclarations": 14,
+    "scrollTargets": 0,
+    "cdpAnimations": 13,
+    "canvases": 3
+  },
+  "namedAnimations": [
+    "demo-blink",
+    "spot-l",
+    "spot-r",
+    "marquee",
+    "guide-help-pulse"
+  ],
+  "scrollTriggeredElements": 0,
+  "representativeAnimations": []
+}

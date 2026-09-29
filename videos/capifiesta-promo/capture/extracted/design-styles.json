@@ -1,0 +1,232 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Dela Gothic One",
+      "fontSize": "32px",
+      "fontWeight": "400",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "color": "#1B1D4D",
+      "sampleText": "DOPA DRILL ＋×÷−"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Dela Gothic One",
+      "fontSize": "20px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#1B1D4D",
+      "sampleText": "septiembre de 2026"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "Dela Gothic One",
+      "fontSize": "18px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#1B1D4D",
+      "sampleText": "Misiones de hoy"
+    },
+    {
+      "role": "label",
+      "fontFamily": "Zen Maru Gothic",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#1B1D4D",
+      "sampleText": ""
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "Zen Maru Gothic",
+      "fontSize": "13px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "Empieza con la prueba de nivel"
+    },
+    {
+      "role": "body",
+      "fontFamily": "Zen Maru Gothic",
+      "fontSize": "12px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#1B1D4D",
+      "sampleText": "También puedes usar el teclado numérico y Retroceso"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      12,
+      14,
+      28
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "16px",
+    "18px",
+    "22px",
+    "50%",
+    "999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "count": 8
+    },
+    {
+      "value": "rgb(27, 29, 77) 0px 5px 0px 0px",
+      "count": 5
+    },
+    {
+      "value": "rgb(27, 29, 77) 0px 6px 0px 0px",
+      "count": 3
+    },
+    {
+      "value": "rgb(27, 29, 77) 0px 7px 0px 0px",
+      "count": 2
+    }
+  ],
+  "buttons": [
+    {
+      "label": "button",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "4px",
+      "borderRadius": "50%",
+      "border": "2px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "fontSize": "18px",
+      "fontWeight": "700",
+      "height": "40px"
+    },
+    {
+      "label": "Mi nivelEmpieza con la prueba de nivel",
+      "background": "#FF7AB6",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "0px 28px",
+      "borderRadius": "22px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 7px 0px 0px",
+      "fontSize": "28px",
+      "fontWeight": "700",
+      "height": "78px"
+    },
+    {
+      "label": "1º",
+      "background": "#FFE3EF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "1px 6px",
+      "borderRadius": "16px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "height": "52px"
+    },
+    {
+      "label": "2º",
+      "background": "#E3EBFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "1px 6px",
+      "borderRadius": "16px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "height": "52px"
+    },
+    {
+      "label": "3º",
+      "background": "#FFF4C4",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "1px 6px",
+      "borderRadius": "16px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "height": "52px"
+    },
+    {
+      "label": "4º",
+      "background": "#D9FBEF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "1px 6px",
+      "borderRadius": "16px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 4px 0px 0px",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "height": "52px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1B1D4D",
+      "padding": "10px 12px 12px",
+      "borderRadius": "22px",
+      "border": "3px solid rgb(27, 29, 77)",
+      "boxShadow": "rgb(27, 29, 77) 0px 6px 0px 0px",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "height": "199px"
+    }
+  ],
+  "nav": null,
+  "chips": [
+    {
+      "label": "Tu racha empieza hoy",
+      "background": "#FFFFFF",
+      "color": "#1B1D4D",
+      "padding": "3px 12px",
+      "borderRadius": "999px",
+      "border": "2px solid rgb(27, 29, 77)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "900",
+      "height": "39px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "radial-gradient(circle at 12% 18%, rgba(255, 122, 182, 0.16) 0px, rgba(255, 122, 182, 0.16) 120px, rgba(0, 0, 0, 0) 121px), radial-gradient(circle at 88% 78%, rgba(59, 107, 255, 0.12) 0px, rgba(59, 107, 255, 0.12) 160px, rgba(0, 0, 0, 0) 161px), linear-gradient(rgba(59, 107, 255, 0.11) 1.5px, rgba(0, 0, 0, 0) 1.5px), linear-gradient(90deg, rgba(59, 107, 255, 0.11) 1.5px, rgba(0, 0, 0, 0) 1.5px), none",
+      "area": 2073600
+    }
+  ],
+  "glass": []
+}

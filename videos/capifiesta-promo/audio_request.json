@@ -1,0 +1,34 @@
+{
+  "provider": "kokoro",
+  "speed": 1,
+  "lines": [
+    {
+      "id": "01",
+      "text": "¿Y si las matemáticas fueran… una fiesta?"
+    },
+    {
+      "id": "02",
+      "text": "Capi Fiesta: cálculo mental de primero a sexto de primaria."
+    },
+    {
+      "id": "03",
+      "text": "Cada acierto sube la música, llena la pantalla de confeti y hace bailar a Capi. ¿Te equivocas? No pasa nada: el ritmo sigue."
+    },
+    {
+      "id": "04",
+      "text": "Cincuenta y ocho habilidades, de sumas a porcentajes, en un árbol que se abre a tu ritmo."
+    },
+    {
+      "id": "05",
+      "text": "Misiones diarias, trofeos y una racha que da ganas de volver mañana."
+    },
+    {
+      "id": "06",
+      "text": "Capi Fiesta. Gratis en Gúgol Plei."
+    }
+  ],
+  "bgm": {
+    "mode": "none"
+  },
+  "voice": "ef_dora"
+}
