@@ -1,7 +1,7 @@
 // Canvas 2D particle layer: paper confetti, stars, sparks, coins, fireworks,
-// streamers, mini Dopakichi sprites and floating score text.
+// streamers, mini Capi sprites and floating score text.
 import { rand, pick, clamp, view } from './core.js';
-import { dopakichiSprite } from './dopakichi.js';
+import { mascotSprite } from './mascot.js';
 
 export const COLORS = ['#ff7ab6', '#3b6bff', '#ffd23f', '#3fdcb0', '#a77bff', '#ff5a4f', '#ffffff'];
 const PAPER = ['#ff7ab6', '#3b6bff', '#ffd23f', '#ffffff', '#3fdcb0'];
@@ -24,7 +24,7 @@ export class FX {
     this.motion = 1;
     // Unlockable particle theme (id041, id042): replaces part of the confetti.
     this.theme = null;
-    this.sprites = ['pink', 'blue', 'yellow', 'mint', 'violet'].map((p) => dopakichiSprite(p, 96));
+    this.sprites = ['pink', 'blue', 'yellow', 'mint', 'violet'].map((p) => mascotSprite(p, 96));
   }
   resize() {
     const dpr = Math.min(this.maxDpr, window.devicePixelRatio || 1);

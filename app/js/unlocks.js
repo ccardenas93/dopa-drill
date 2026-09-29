@@ -1,5 +1,5 @@
 // Unlockable show (id041): backgrounds, correct marks, particles, music,
-// Dopakichi's costume and colour, the crowd and the finale. Each item is the
+// Capi's costume and colour, the crowd and the finale. Each item is the
 // reward of one trophy (never random), so what is unlocked follows from the
 // trophies earned; only the player's choice per category is saved.
 import { TROPHY } from './trophies.js';
@@ -18,7 +18,7 @@ export const CATS = [
 // One translation key per item, keyed by item id.
 const NAME_KEYS = {
   'bg:classic': 'co.item.classicBg', 'mark:hanamaru': 'co.item.hanamaru', 'particle:classic': 'co.item.confetti',
-  'music:classic': 'co.item.marimba', 'costume:none': 'co.item.none', 'color:pink': 'co.item.pink',
+  'music:classic': 'co.item.marimba', 'costume:none': 'co.item.none', 'color:capi': 'co.item.capi', 'color:pink': 'co.item.pink',
   'crowd:classic': 'co.item.multiColor', 'finale:classic': 'co.item.giant', 'costume:cap': 'co.item.cap',
   'particle:note': 'co.item.notes', 'mark:stamp': 'co.item.correctStamp', 'bg:night': 'co.item.nightSky',
   'color:blue': 'co.item.blue', 'finale:fireworks': 'co.item.fireworksShow', 'music:chip': 'co.item.bit8',
@@ -55,9 +55,10 @@ addItems([
   { id: 'particle:classic', cat: 'particle', name: 'かみふぶき', base: true },
   { id: 'music:classic', cat: 'music', name: 'マリンバ マーチ', base: true },
   { id: 'costume:none', cat: 'costume', name: 'なし', base: true },
-  { id: 'color:pink', cat: 'color', name: 'ピンク', base: true },
+  { id: 'color:capi', cat: 'color', name: 'キャラメル', base: true },
+  { id: 'color:pink', cat: 'color', name: 'ピンク', trophy: 'problems-10' },
   { id: 'crowd:classic', cat: 'crowd', name: 'いろちがい', base: true },
-  { id: 'finale:classic', cat: 'finale', name: 'きょだい ドパキチ', base: true },
+  { id: 'finale:classic', cat: 'finale', name: 'きょだい カピ', base: true },
 ]);
 // id041: one sample per category, to prove the pipeline end to end.
 // Rewards follow effort and coming back (plays, days, streaks, stars earned by

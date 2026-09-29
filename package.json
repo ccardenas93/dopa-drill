@@ -16,6 +16,7 @@
     "apk:release": "cd android && ./gradlew -Dorg.gradle.java.home=\"${JDK21:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" assembleRelease",
     "aab": "cd android && ./gradlew -Dorg.gradle.java.home=\"${JDK21:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home}\" bundleRelease",
     "store": "node tools/store_assets.mjs",
+    "icons": "node tools/app_icons.mjs",
     "ios:build": "xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build",
     "ipa": "cd ios/App && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath build/App.xcarchive archive"
   },

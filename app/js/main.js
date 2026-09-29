@@ -4,7 +4,7 @@ import { startClock, onFrame, wait, tween, clamp, lerp, rand, pick, chance, cent
   easeOutBack, easeOutCubic, easeInCubic, easeInOutCubic, easeOutQuint } from './core.js';
 import { makeRng, generate, makeProblem, signature, BASIC_SETS, EXTRA_TIERS } from './problems.js';
 import { AudioEngine } from './audio.js';
-import { Dopakichi, COSTUMES, dopakichiSVG } from './dopakichi.js';
+import { Mascot, COSTUMES, mascotSVG } from './mascot.js';
 import { FX } from './fx.js';
 import { Backdrop } from './bg.js';
 import * as store from './store.js';
@@ -46,7 +46,7 @@ gov.onChange((q, tier) => {
 });
 const backLayer = $('#actors-back');
 const frontLayer = $('#actors-front');
-const hero = new Dopakichi(backLayer, { scale: 0.72, front: frontLayer });
+const hero = new Mascot(backLayer, { scale: 0.72, front: frontLayer });
 const actors = [hero];
 const crowd = [];
 const body = document.body;
@@ -377,7 +377,7 @@ function showMethod(st, point = true) {
 }
 
 // ---------------------------------------------------------------- lessons
-// The first time a skill shows up, Dopakichi solves one example step by step
+// The first time a skill shows up, Capi solves one example step by step
 // (any key speeds it up), then the next tries are guided. At most two
 // examples per set so a grade set full of new skills stays playable.
 const LESSONS_PER_SET = 2;
@@ -702,7 +702,7 @@ function onWrong(cell, st) {
 }
 
 // Repeated slips on the same digit: 2nd highlights the digits to look at
-// and Dopakichi points there; 3rd also spells out the sub-calculation.
+// and Capi points there; 3rd also spells out the sub-calculation.
 function giveHelp(st) {
   if (!st || S.problem.steps[S.step] !== st) return;
   // Say what probably went wrong when the digit fits a known slip.
@@ -940,12 +940,16 @@ const playLook = () => ul.pickLook(equipState(), gotTrophies(), S.rng);
 
 // Crowd styles: palette and costume for member i.
 const CROWD_PALS = ['blue', 'yellow', 'mint', 'violet', 'pink'];
+// The crowd is a cast of distinct capybaras: same caramel fur, different
+// accessories (backpack, flower hat, glasses...). Colours are a collection
+// unlock ("costume" style mixes both; "rainbow" is the shiny crowd).
 function crowdLook(i) {
   const style = ul.variant(S.look && S.look.crowd);
-  if (style === 'costume') { const keys = Object.keys(COSTUMES); return { pal: CROWD_PALS[i % 5], costume: keys[(i * 3 + 1) % keys.length] }; }
+  const keys = Object.keys(COSTUMES);
+  if (style === 'costume') return { pal: CROWD_PALS[i % 5], costume: keys[(i * 3 + 1) % keys.length] };
   if (style === 'rainbow') return { pal: ['rainbow', 'gold', 'snow', 'rainbow', 'blue'][i % 5], costume: null };
   if (style === 'twins') return { pal: ul.variant(S.look.color), costume: hero.costume };
-  return { pal: CROWD_PALS[i % 5], costume: null };
+  return { pal: 'capi', costume: keys[(i * 3 + 1) % keys.length] };
 }
 
 function cutin(text, E) {
@@ -1094,7 +1098,7 @@ async function parade(E, big) {
   const dir = chance(0.5) ? 1 : -1;
   for (let i = 0; i < n; i++) {
     const cl = crowdLook(i);
-    const m = new Dopakichi(backLayer, { scale: 0.32 + rand(0, 0.12), palette: cl.pal, front: frontLayer });
+    const m = new Mascot(backLayer, { scale: 0.32 + rand(0, 0.12), palette: cl.pal, front: frontLayer });
     if (cl.costume) m.setCostume(cl.costume);
     const y = r.top + rand(r.height * 0.25, r.height * 0.55);
     const x0 = dir > 0 ? -60 - i * 70 : innerWidth + 60 + i * 70;
@@ -1126,7 +1130,7 @@ function ensureCrowd(E) {
   for (let i = crowd.length; i < want.length; i++) {
     const w = want[i];
     const cl = crowdLook(w.i);
-    const m = new Dopakichi(backLayer, { scale: w.s, palette: cl.pal, front: frontLayer });
+    const m = new Mascot(backLayer, { scale: w.s, palette: cl.pal, front: frontLayer });
     if (cl.costume) m.setCostume(cl.costume);
     m.side = w.side; m.bob = 1;
     crowd.push(m); actors.push(m);
@@ -1161,11 +1165,11 @@ async function finale() {
 }
 
 // Finale variants (id041, id044): each ends with the 100点 stamp.
-const heroLike = (scale) => { const m = new Dopakichi(backLayer, { scale, palette: ul.variant(S.look && S.look.color) || 'pink', front: frontLayer }); m.setCostume(hero.costume); actors.push(m); return m; };
+const heroLike = (scale) => { const m = new Mascot(backLayer, { scale, palette: ul.variant(S.look && S.look.color) || 'capi', front: frontLayer }); m.setCostume(hero.costume); actors.push(m); return m; };
 const dropActor = (m) => { m.destroy(); actors.splice(actors.indexOf(m), 1); };
 const ROCKET_SVG = '<svg viewBox="-60 -40 120 80"><g stroke="#1b1d4d" stroke-width="4" stroke-linejoin="round"><path d="M-40 -14 L-58 -30 L-50 0 L-58 30 L-40 14Z" fill="#ff4f6d"/><path d="M-44 -16 Q10 -30 50 0 Q10 30 -44 16Z" fill="#fff"/><path d="M30 -10 Q46 -4 50 0 Q46 4 30 10Z" fill="#ff7ab6"/><circle cx="10" cy="0" r="9" fill="#8fd3ff"/><path d="M-20 16 L-34 34 L-6 18Z" fill="#3b6bff"/></g></svg>';
 const FINALES = {
-  // The original: a giant Dopakichi rises from the bottom.
+  // The original: a giant Capi rises from the bottom.
   async classic(W, H) {
     S.flash = 1;
     fxBack.fireworks(W, H, 10, 0.06, 0.45);
@@ -1188,7 +1192,7 @@ const FINALES = {
     await tween(500, (k) => { giant.y = lerp(y1, y0, k); giant.ground = giant.y; }, easeInCubic);
     giant.destroy(); actors.splice(actors.indexOf(giant), 1);
   },
-  // A burst of fireworks all over the sky, then a ring of mini Dopakichi.
+  // A burst of fireworks all over the sky, then a ring of mini Capi.
   async fireworks(W, H) {
     S.flash = 0.8;
     for (let i = 0; i < 5; i++) { fxBack.fireworks(W, H, 5 + i, 0.05, 0.5); if (i % 2 === 0) fx.fireworks(W, H, 2, 0.08, 0.35); audio.play('crash', audio.now(), { v: 0.18 }); S.shake = Math.max(S.shake, 6); await wait(260); }
@@ -1201,7 +1205,7 @@ const FINALES = {
     fxBack.fireworks(W, H, 8, 0.05, 0.4);
     await wait(700);
   },
-  // Dopakichi rides a paper rocket across the screen, leaving a trail of stars.
+  // Capi rides a paper rocket across the screen, leaving a trail of stars.
   async rocket(W, H) {
     S.flash = 0.7;
     const rk = document.createElement('div');
@@ -1230,8 +1234,8 @@ const FINALES = {
     const y = H * 0.62;
     const n = 9;
     for (let i = 0; i < n; i++) {
-      const cl = i === 4 ? { pal: ul.variant(S.look && S.look.color) || 'pink', costume: hero.costume } : crowdLook(i);
-      const m = new Dopakichi(backLayer, { scale: i === 4 ? 0.8 : 0.45, palette: cl.pal, front: frontLayer });
+      const cl = i === 4 ? { pal: ul.variant(S.look && S.look.color) || 'capi', costume: hero.costume } : crowdLook(i);
+      const m = new Mascot(backLayer, { scale: i === 4 ? 0.8 : 0.45, palette: cl.pal, front: frontLayer });
       if (cl.costume) m.setCostume(cl.costume);
       m.place(-80 - i * 70, y); m.hands.forEach((h) => { h.raise = 1; }); m.setFace('happy', 'grin', true);
       actors.push(m); band.push(m);
@@ -2352,9 +2356,9 @@ function itemThumb(it) {
   if (it.cat === 'mark') return v === 'hanamaru' ? '<svg viewBox="-70 -70 140 140"><path d="M-2 -52 C38 -56 56 -20 50 14 C44 46 4 60 -28 46 C-56 32 -56 -14 -28 -38 C-10 -52 18 -48 32 -34" fill="none" stroke="#ff4f6d" stroke-width="9" stroke-linecap="round"/></svg>' : `<svg viewBox="-72 -72 144 144" overflow="visible">${MARKS[v]('#ff4f6d')}</svg>`;
   if (it.cat === 'particle') return `<svg viewBox="-20 -20 40 40">${PT_THUMB[v] || PT_THUMB.classic}</svg>`;
   if (it.cat === 'music') return `<span class="th-music"><svg viewBox="-20 -20 40 40"><path d="M-6 10 V-14 L12 -18 V6" fill="none" stroke="#1b1d4d" stroke-width="3" stroke-linejoin="round"/><ellipse cx="-11" cy="11" rx="6.5" ry="5" fill="${{ classic: '#3fdcb0', chip: '#8fb4ff', matsuri: '#ff4f6d', brass: '#ffd23f', electro: '#a77bff' }[v] || '#3fdcb0'}" stroke="#1b1d4d" stroke-width="2.4"/><ellipse cx="7" cy="7" rx="6.5" ry="5" fill="${{ classic: '#3fdcb0', chip: '#8fb4ff', matsuri: '#ff4f6d', brass: '#ffd23f', electro: '#a77bff' }[v] || '#3fdcb0'}" stroke="#1b1d4d" stroke-width="2.4"/></svg></span>`;
-  if (it.cat === 'costume') return dopakichiSVG('pink', v === 'none' ? null : v);
-  if (it.cat === 'color') return dopakichiSVG(v);
-  if (it.cat === 'crowd') { const pals = CROWD_THUMB[v] || CROWD_THUMB.classic; const cs = Object.keys(COSTUMES); return `<span class="th-crowd">${pals.map((pl, i) => dopakichiSVG(pl, v === 'costume' ? cs[(i * 3 + 1) % cs.length] : null)).join('')}</span>`; }
+  if (it.cat === 'costume') return mascotSVG('capi', v === 'none' ? null : v);
+  if (it.cat === 'color') return mascotSVG(v);
+  if (it.cat === 'crowd') { const pals = CROWD_THUMB[v] || CROWD_THUMB.classic; const cs = Object.keys(COSTUMES); return `<span class="th-crowd">${pals.map((pl, i) => mascotSVG(pl, v === 'costume' ? cs[(i * 3 + 1) % cs.length] : null)).join('')}</span>`; }
   if (it.cat === 'finale') return `<svg viewBox="-20 -20 40 40" overflow="visible">${FINALE_THUMB[v] || FINALE_THUMB.classic}</svg>`;
   return '';
 }
@@ -2405,7 +2409,7 @@ function previewItem(id) {
   if (it.cat === 'crowd') {
     for (let i = 0; i < 4; i++) {
       const cl = crowdLook(i);
-      const m = new Dopakichi(backLayer, { scale: 0.34, palette: cl.pal, front: frontLayer });
+      const m = new Mascot(backLayer, { scale: 0.34, palette: cl.pal, front: frontLayer });
       if (cl.costume) m.setCostume(cl.costume);
       m.place(b.left + b.width * (0.12 + 0.25 * i), b.bottom - 10);
       actors.push(m); co.crowd.push(m);
@@ -2466,7 +2470,7 @@ function closeHammer(use) {
   runHammer(offer).then(claimBonus);
 }
 
-// Dopakichi hops down to each missed day and stamps it "no count".
+// Capi hops down to each missed day and stamps it "no count".
 async function runHammer(offer) {
   store.useHammer(offer.days);
   S.scene = true;
@@ -2517,7 +2521,7 @@ async function hammerHit(day) {
   $('#cutins').appendChild(ham);
   const set = (a, s = 1, o = 1) => { ham.style.transform = `rotate(${a}deg) scale(${s})`; ham.style.opacity = o; };
   set(-down * 0.15, 0.2, 0);
-  // Dopakichi lands beside the grip and holds it.
+  // Capi lands beside the grip and holds it.
   const feet = { x: grip.x + (fromLeft ? -44 : 44), y: grip.y + 22 };
   await hero.leapTo(feet, 90, { audio });
   hero.home = { ...feet };
@@ -2613,7 +2617,7 @@ function askReset() {
 }
 
 // Dragging the motion slider previews the effect strength: the thumb
-// throws particles, Dopakichi reacts, and the pitch climbs with the value.
+// throws particles, Capi reacts, and the pitch climbs with the value.
 let lastSliderFx = 0;
 function motionSliderFx(v) {
   const t = now();

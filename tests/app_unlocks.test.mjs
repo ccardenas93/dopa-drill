@@ -28,7 +28,7 @@ test('the look: fixed choices stay, auto picks among unlocked ones only', () => 
   for (let i = 0; i < 40; i++) {
     const look = pickLook(eq, got, rng);
     seenBg.add(look.bg); seenCostume.add(look.costume);
-    assert.equal(look.color, 'color:pink');
+    assert.equal(look.color, 'color:capi'); // the base look is the caramel capybara
     for (const c of CATS) assert.ok(isUnlocked(ITEM[look[c.key]], got));
   }
   assert.deepEqual([...seenBg], ['bg:night']);

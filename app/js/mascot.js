@@ -1,12 +1,15 @@
-// Dopakichi: a rubber-hose mascot drawn as layered SVG in screen space.
-// Shapes follow docs/dopakichi.svg, converted to unit space (feet at y=0).
+// Capi the capybara: a rubber-hose mascot drawn as layered SVG in screen space.
+// Shapes follow docs/mascot/capi.svg (unit space, feet at y=0); the original
+// Capi drawing was removed from this fork for licensing reasons.
 // Body parts are springs; actions are cancellable async routines.
 import { Spring, tween, wait, lerp, clamp, rand, pick, quadPoint, easeOutQuad, easeInQuad, easeOutBack, easeInOutCubic, easeOutCubic, onFrame } from './core.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-export const INK = '#000';
+export const INK = '#1b1d4d';
 const CREAM = '#fff3e4';
 export const PALETTES = {
+  // The base look: caramel capybara (docs/mascot/capi.svg).
+  capi: { body: '#d89a5b', inner: '#ffd6b8', leg: '#2f79f7', cheek: '#ffb7c5' },
   pink: { body: '#ff97bf', inner: '#ffe6f0', leg: '#2f79f7', cheek: '#ffe6f0' },
   blue: { body: '#6fa0ff', inner: '#dde8ff', leg: '#ff97bf', cheek: '#ffd6e6' },
   yellow: { body: '#ffd452', inner: '#fff3c4', leg: '#2f79f7', cheek: '#ffd9c2' },
@@ -18,8 +21,10 @@ export const PALETTES = {
   rainbow: { body: 'url(#dk-rainbow)', inner: '#fff4f9', leg: '#2f79f7', cheek: '#ffe6f0', flat: '#ff97bf' },
 };
 
-// Costumes drawn over the original shape (docs/dopakichi.svg is never changed).
+// Costumes drawn over the base shape (docs/mascot/capi.svg is never changed).
 // head: moves with the head; back: behind the body (capes).
+// Hats were drawn for a taller round head; the capybara's flat top sits a bit lower.
+const HAT_LIFT = -11;
 export const COSTUMES = {
   cap: { head: `<path class="dk-l" d="M-44 -133 C-44 -166 44 -166 44 -133 Z" fill="#3b6bff"/><path class="dk-l" d="M-6 -133 C10 -140 52 -142 60 -132 C52 -126 20 -126 -6 -133Z" fill="#2a4fd6"/><circle class="dk-l" cx="0" cy="-160" r="5" fill="#ffd23f"/><path d="M-30 -147 Q0 -158 30 -147" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/>` },
   hachimaki: { head: `<path class="dk-l" d="M-55 -128 Q0 -142 55 -128 L55 -116 Q0 -130 -55 -116Z" fill="#fff"/><circle cx="0" cy="-129" r="6" fill="#ff4f6d"/><path class="dk-l" d="M50 -124 Q70 -132 82 -122 Q70 -118 56 -120Z M52 -120 Q66 -110 74 -98 Q62 -104 52 -114Z" fill="#fff"/>` },
@@ -45,8 +50,8 @@ const F = 'class="dk-f"';
 // Eye rings use a thinner line so the white ring stays visible, as in the drawing.
 const T = 'class="dk-t"';
 const EYE = {
-  open: (p) => `<circle r="11.2" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="8.6" fill="${p.body}"/>`,
-  wide: (p) => `<circle r="12.4" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="5" fill="${p.body}"/>`,
+  open: (p) => `<circle r="11.2" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="8.6" fill="${p.body}"/><ellipse rx="3.7" ry="4.9" fill="${INK}"/><circle cx="-2" cy="-3" r="1.9" fill="#fff"/>`,
+  wide: (p) => `<circle r="12.4" fill="#fff" ${T}/><circle class="dk-t dk-iris" r="5" fill="${p.body}"/><ellipse rx="2.4" ry="3.2" fill="${INK}"/><circle cx="-1.4" cy="-2" r="1.3" fill="#fff"/>`,
   happy: () => `<path d="M-9 3 Q0 -10 9 3" fill="none" ${F}/>`,
   closed: () => `<path d="M-9 -1 Q0 7 9 -1" fill="none" ${F}/>`,
   x: () => `<path d="M-7 -7 L7 7 M7 -7 L-7 7" fill="none" ${F}/>`,
@@ -68,38 +73,41 @@ const MOUTH = {
   puff: `<path d="M-3 0 L3 0" fill="none" ${L}/>`,
 };
 
-// Shape constants (unit space, feet at y=0), from docs/dopakichi.svg scaled by 0.18.
 export const G = {
-  foot: 'M-19.3 -18.5 C-24.8 -18.5 -28.1 -16 -32.8 -11.3 C-36.7 -7.4 -38.9 -4.9 -35.8 -2.3 C-31.5 1.4 -24.1 1.1 -18.2 -2 C-12.1 -4.9 -8.5 -9.2 -12.1 -14.8 C-13.9 -17.6 -16.2 -18.5 -19.3 -18.5Z',
-  footPivot: { x: 18.5, y: -15.8 },
+  // Left foot (the right one is mirrored): a flat rounded sneaker resting on y=0.
+  foot: 'M-30 -16 Q-22 -20 -13 -16 L-9 -9 Q-5 -1.5 -14 -1.5 L-31 -1.5 Q-39 -1.5 -35 -8Z',
+  footPivot: { x: 20, y: -12 },
   // Body fill reaches up under the head; the neck has no drawn seam.
-  bodyFill: 'M-37.4 -65.7 C-29.7 -61 -25.2 -54.2 -25.2 -46.8 C-25.2 -40.5 -28.8 -35.3 -28.8 -28.4 C-28.8 -18.4 -20.7 -13.5 -10.8 -13.5 L10.8 -13.5 C20.7 -13.5 28.8 -18.4 28.8 -28.4 C28.8 -35.3 25.2 -40.5 25.2 -46.8 C25.2 -54.2 29.7 -61 37.4 -65.7 L37.4 -75.2 L-37.4 -75.2Z',
-  bodyLine: 'M-37.4 -65.7 C-29.7 -61 -25.2 -54.2 -25.2 -46.8 C-25.2 -40.5 -28.8 -35.3 -28.8 -28.4 C-28.8 -18.4 -20.7 -13.5 -10.8 -13.5 L10.8 -13.5 C20.7 -13.5 28.8 -18.4 28.8 -28.4 C28.8 -35.3 25.2 -40.5 25.2 -46.8 C25.2 -54.2 29.7 -61 37.4 -65.7',
-  belly: { cy: -32, rx: 17.8, ry: 13.5 },
-  headFill: 'M-37.4 -65.7 C-49.7 -73.1 -56.3 -82.1 -56.3 -98.5 C-56.3 -129.6 -32.9 -149.2 0 -149.2 C32.9 -149.2 56.3 -129.6 56.3 -98.5 C56.3 -82.1 49.7 -73.1 37.4 -65.7 L0 -70.2Z',
-  headLine: 'M-37.4 -65.7 C-49.7 -73.1 -56.3 -82.1 -56.3 -98.5 C-56.3 -129.6 -32.9 -149.2 0 -149.2 C32.9 -149.2 56.3 -129.6 56.3 -98.5 C56.3 -82.1 49.7 -73.1 37.4 -65.7',
-  face: 'M0 -133 C29.7 -133 48.2 -121.7 48.2 -96.5 C48.2 -71.3 25.7 -61.2 0 -61.2 C-25.7 -61.2 -48.2 -71.3 -48.2 -96.5 C-48.2 -121.7 -29.7 -133 0 -133Z',
-  head: { cy: -100, r: 56 },
-  neckY: -65.7,
-  ear: { x: 74.2, cy: -105.3, rx: 31, ry: 31.3, irx: 21.1, iry: 22, pivot: 52.6 },
-  eye: { x: 23.4, y: -93.8 },
-  brow: { x: 13.5, y: -111.2, rx: 3.1, ry: 1.8 },
-  mouthY: -79,
-  cheek: { x: 30.6, y: -78.5, rx: 4.3, ry: 2.7 },
-  shoulder: { x: 25.7, y: -48 },
-  rest: { x: 37.8, y: -34.7 },
+  bodyFill: 'M-18 -73 C-24 -61 -27 -50 -30 -32 C-34 -12 -22 -9 0 -9 C22 -9 34 -12 30 -32 C27 -50 24 -61 18 -73Z',
+  bodyLine: 'M-18 -73 C-24 -61 -27 -50 -30 -32 C-34 -12 -22 -9 0 -9 C22 -9 34 -12 30 -32 C27 -50 24 -61 18 -73',
+  belly: { cy: -32, rx: 18, ry: 13.5 },
+  // Boxy capybara head with a wide cream muzzle and a small nose.
+  headFill: 'M-17 -63 C-41 -61 -56 -69 -56 -91 L-56 -116 Q-56 -144 -30 -144 L30 -144 Q56 -144 56 -116 L56 -91 C56 -69 41 -61 17 -63Z',
+  headLine: 'M-17 -63 C-41 -61 -56 -69 -56 -91 L-56 -116 Q-56 -144 -30 -144 L30 -144 Q56 -144 56 -116 L56 -91 C56 -69 41 -61 17 -63',
+  face: 'M-41 -81 C-40 -91 -22 -89 0 -89 C22 -89 40 -91 41 -81 C45 -69 27 -65 0 -65 C-27 -65 -45 -69 -41 -81Z',
+  nose: 'M-5 -87 Q0 -89 5 -87 Q7 -84 2 -82 Q0 -81 -2 -82 Q-7 -84 -5 -87Z',
+  head: { cy: -103, r: 56 },
+  neckY: -63,
+  // Small ears on top of the head; they wiggle around their own centre.
+  ear: { x: 40, cy: -148, rx: 9, ry: 11, irx: 4.5, iry: 6, pivot: 40 },
+  eye: { x: 23, y: -94 },
+  brow: { x: 13, y: -111, rx: 3.8, ry: 1.8 },
+  mouthY: -74,
+  cheek: { x: 31, y: -79, rx: 6.5, ry: 3.7 },
+  shoulder: { x: 26, y: -48 },
+  rest: { x: 38, y: -35 },
   arm: 4.6,
-  hand: 9.7,
+  hand: 10,
 };
 
 // Outline width in unit space: thin like the drawing, with a pixel floor.
 const lineFor = (S) => clamp(1.7 / S, 1.4, 3.2);
 
 // Static parts shared by the live actor and the sprite image.
-const earSVG = (p, s) => `<ellipse ${L} cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.rx}" ry="${G.ear.ry}" fill="${p.body}"/><ellipse ${L} cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.irx}" ry="${G.ear.iry}" fill="${p.inner}"/>`;
+const earSVG = (p, s) => `<ellipse ${L} cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.rx}" ry="${G.ear.ry}" fill="${p.body}"/><ellipse cx="${s * G.ear.x}" cy="${G.ear.cy}" rx="${G.ear.irx}" ry="${G.ear.iry}" fill="${p.inner}"/>`;
 const footSVG = (p, s) => `<path ${L} d="${G.foot}" fill="${p.leg}"${s > 0 ? ' transform="scale(-1 1)"' : ''}/>`;
 const bodySVG = (p) => `<path d="${G.bodyFill}" fill="${p.body}"/><path ${L} d="${G.bodyLine}" fill="none"/><ellipse ${L} cy="${G.belly.cy}" rx="${G.belly.rx}" ry="${G.belly.ry}" fill="${CREAM}"/>`;
-const headSVG = (p) => `<path d="${G.headFill}" fill="${p.body}"/><path ${L} d="${G.headLine}" fill="none"/><path ${L} d="${G.face}" fill="${CREAM}"/>`;
+const headSVG = (p) => `<path d="${G.headFill}" fill="${p.body}"/><path ${L} d="${G.headLine}" fill="none"/><path d="${G.face}" fill="${CREAM}"/><path d="${G.nose}" fill="${INK}"/>`;
 const STYLE = `.dk-l,.dk-f,.dk-t{stroke:${INK};stroke-linecap:round;stroke-linejoin:round}.dk-l{stroke-width:var(--dkw)}.dk-f{stroke-width:calc(var(--dkw) * 1.5)}.dk-t{stroke-width:calc(var(--dkw) * 0.55)}`;
 
 let uid = 0;
@@ -113,8 +121,8 @@ function setA(el, name, v) {
   el.setAttribute(name, v);
 }
 
-export class Dopakichi {
-  constructor(layer, { scale = 0.7, palette = 'pink', front } = {}) {
+export class Mascot {
+  constructor(layer, { scale = 0.7, palette = 'capi', front } = {}) {
     this.layer = layer;
     this.S = scale;
     this.lw = lineFor(scale);
@@ -165,7 +173,7 @@ export class Dopakichi {
     el('g', {}, this.headG).innerHTML = headSVG(p);
     this.face = el('g', {}, this.headG);
     this.cheeks = [-1, 1].map((s) => el('ellipse', { cx: s * G.cheek.x, cy: G.cheek.y, rx: G.cheek.rx, ry: G.cheek.ry, fill: p.cheek }, this.face));
-    this.brows = [-1, 1].map(() => el('ellipse', { class: 'dk-l', rx: G.brow.rx, ry: G.brow.ry, fill: p.body }, this.face));
+    this.brows = [-1, 1].map(() => el('ellipse', { rx: G.brow.rx, ry: G.brow.ry, fill: INK }, this.face));
     this.eyeGs = [-1, 1].map(() => el('g', {}, this.face));
     this.irises = [];
     this.mouthG = el('g', { transform: `translate(0 ${G.mouthY})` }, this.face);
@@ -194,7 +202,7 @@ export class Dopakichi {
 
   // Unlockable look (id041, id044): recolour by rebuilding; costumes are layered.
   setPalette(name) {
-    const pal = PALETTES[name] || PALETTES.pink;
+    const pal = PALETTES[name] || PALETTES.capi;
     if (pal === this.pal) return;
     this.pal = pal;
     const vis = this.visible;
@@ -205,7 +213,7 @@ export class Dopakichi {
   setCostume(id) {
     this.costume = id && COSTUMES[id] ? id : null;
     const c = this.costume ? COSTUMES[this.costume] : {};
-    this.headWear.innerHTML = c.head || '';
+    this.headWear.innerHTML = c.head ? `<g transform="translate(0 ${HAT_LIFT})">${c.head}</g>` : '';
     this.faceWear.innerHTML = c.face || '';
     this.backG.innerHTML = c.back || '';
   }
@@ -605,16 +613,16 @@ export class Dopakichi {
   destroy() { this.root.remove(); this.armsFront.remove(); }
 }
 
-// Standalone sprite image of Dopakichi for canvas particles (cheering pose).
-export function dopakichiSprite(palette = 'pink', size = 128) {
-  const p = PALETTES[palette];
+// Standalone sprite image of Capi for canvas particles (cheering pose).
+export function mascotSprite(palette = 'capi', size = 128) {
+  const p = PALETTES[palette] || PALETTES.capi;
   const { eye, cheek, shoulder, brow } = G;
   const tip = (s) => ({ x: s * 66, y: -150 });
   const arm = (s) => `M${s * shoulder.x} ${shoulder.y} Q${s * 62} ${shoulder.y - 20} ${tip(s).x} ${tip(s).y}`;
   const svg = `<svg xmlns="${NS}" viewBox="-110 -170 220 176" width="${size}" height="${size * 176 / 220}">
   <style>svg{--dkw:3.4}${STYLE}</style>
   ${footSVG(p, -1)}${footSVG(p, 1)}${bodySVG(p)}${earSVG(p, -1)}${earSVG(p, 1)}${headSVG(p)}
-  ${[-1, 1].map((s) => `<ellipse cx="${s * cheek.x}" cy="${cheek.y}" rx="${cheek.rx}" ry="${cheek.ry}" fill="${p.cheek}"/><ellipse class="dk-l" cx="${s * brow.x}" cy="${brow.y - 4}" rx="${brow.rx}" ry="${brow.ry}" fill="${p.body}"/><g transform="translate(${s * eye.x} ${eye.y})">${EYE.happy()}</g>`).join('')}
+  ${[-1, 1].map((s) => `<ellipse cx="${s * cheek.x}" cy="${cheek.y}" rx="${cheek.rx}" ry="${cheek.ry}" fill="${p.cheek}"/><ellipse cx="${s * brow.x}" cy="${brow.y - 4}" rx="${brow.rx}" ry="${brow.ry}" fill="${INK}"/><g transform="translate(${s * eye.x} ${eye.y})">${EYE.happy()}</g>`).join('')}
   <g transform="translate(0 ${G.mouthY})">${MOUTH.grin}</g>
   ${[-1, 1].map((s) => `<path d="${arm(s)}" fill="none" stroke="${INK}" stroke-width="${G.arm + 6.8}" stroke-linecap="round"/><path d="${arm(s)}" fill="none" stroke="${p.body}" stroke-width="${G.arm}" stroke-linecap="round"/><circle class="dk-l" cx="${tip(s).x}" cy="${tip(s).y}" r="${G.hand}" fill="${p.body}"/>`).join('')}
   </svg>`;
@@ -623,19 +631,19 @@ export function dopakichiSprite(palette = 'pink', size = 128) {
   return img;
 }
 
-// Static SVG markup of Dopakichi with a colour and costume (collection thumbnails).
-export function dopakichiSVG(palette = 'pink', costume = null) {
-  const p = PALETTES[palette] || PALETTES.pink;
+// Static SVG markup of Capi with a colour and costume (collection thumbnails).
+export function mascotSVG(palette = 'capi', costume = null) {
+  const p = PALETTES[palette] || PALETTES.capi;
   const c = (costume && COSTUMES[costume]) || {};
   const { eye, cheek, brow } = G;
   const armCol = p.flat || p.body;
   const rb = p.body.startsWith('url(') ? '<defs><linearGradient id="dk-rainbow" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ff97bf"/><stop offset=".33" stop-color="#ffd452"/><stop offset=".66" stop-color="#5eddb8"/><stop offset="1" stop-color="#8fb4ff"/></linearGradient></defs>' : '';
   return `<svg xmlns="${NS}" viewBox="-112 -232 224 240" aria-hidden="true">${rb}<style>svg{--dkw:3.4}${STYLE}</style>
   ${c.back || ''}${footSVG(p, -1)}${footSVG(p, 1)}${bodySVG(p)}${earSVG(p, -1)}${earSVG(p, 1)}${headSVG(p)}
-  ${[-1, 1].map((s) => `<ellipse cx="${s * cheek.x}" cy="${cheek.y}" rx="${cheek.rx}" ry="${cheek.ry}" fill="${p.cheek}"/><ellipse class="dk-l" cx="${s * brow.x}" cy="${brow.y}" rx="${brow.rx}" ry="${brow.ry}" fill="${armCol}"/><g transform="translate(${s * eye.x} ${eye.y})">${EYE.open(p.body.startsWith('url(') ? { body: armCol } : p)}</g>`).join('')}
+  ${[-1, 1].map((s) => `<ellipse cx="${s * cheek.x}" cy="${cheek.y}" rx="${cheek.rx}" ry="${cheek.ry}" fill="${p.cheek}"/><ellipse cx="${s * brow.x}" cy="${brow.y}" rx="${brow.rx}" ry="${brow.ry}" fill="${INK}"/><g transform="translate(${s * eye.x} ${eye.y})">${EYE.open(p.body.startsWith('url(') ? { body: armCol } : p)}</g>`).join('')}
   <g transform="translate(0 ${G.mouthY})">${MOUTH.smile}</g>
   ${[-1, 1].map((s) => `<circle class="dk-l" cx="${s * G.rest.x}" cy="${G.rest.y}" r="${G.hand}" fill="${armCol}"/>`).join('')}
-  ${c.face || ''}${c.head || ''}</svg>`;
+  ${c.face || ''}${c.head ? `<g transform="translate(0 ${HAT_LIFT})">${c.head}</g>` : ''}</svg>`;
 }
 
 export function startActors(list, getCtx) {
