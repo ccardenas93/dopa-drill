@@ -836,10 +836,10 @@ body.perf-low .pip.now { animation: none; }
 }
 .result-card .actions .big-btn { display: inline-flex; align-items: baseline; justify-content: center; gap: 8px; padding: 0 16px; white-space: nowrap; }
 @media (max-width: 380px) { .result-card .actions .big-btn { font-size: 24px; } }
-.node .g { font-size: 10px; }
+.node .g { font-size: 10px; line-height: 1; }
 .node .rust { font-size: 10px; }
 .node { gap: 1px; padding: 3px 3px 3px; }
-.node > span:not(.g) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 10px; line-height: 1.1; }
+.node > span:not(.g) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 10px; line-height: 1.1; padding-bottom: 2px; }
 .co-item small { font-size: 10.5px; }
 .co-tabs button { padding: 6px 12px; }
 .co-tabs button small { font-size: 11px; }
