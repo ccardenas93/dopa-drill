@@ -14,14 +14,17 @@
 //   cada AD_GAP_MS, y nunca antes de AD_WARMUP_MS desde el arranque.
 // - Todo se cierra y el juego continúa aunque el anuncio falle.
 //
-// IDs: los de abajo son los IDs DE PRUEBA oficiales de Google. Antes de
-// publicar, sustituirlos por los de la cuenta AdMob y poner TESTING = false.
+// IDs: Android usa las unidades reales de la cuenta AdMob (CapiFiesta);
+// «rewarded» sigue con el ID de prueba de Google porque aún no se muestra.
+// iOS conserva los IDs de prueba hasta que exista la app iOS en AdMob.
+// Mientras TESTING sea true se sirven anuncios de prueba (isTesting en cada
+// llamada); ponerlo en false solo en la compilación de producción.
 // El ID de aplicación (ca-app-pub-…~…) va en android/app/src/main/res/values/strings.xml.
 export const TESTING = true;
 const IDS = {
   android: {
-    banner: 'ca-app-pub-3940256099942544/9214589741',       // adaptive banner (test)
-    interstitial: 'ca-app-pub-3940256099942544/1033173712', // interstitial (test)
+    banner: 'ca-app-pub-2487397476479781/5509357799',       // CapiFiesta · Banner (real)
+    interstitial: 'ca-app-pub-2487397476479781/1793388346', // CapiFiesta · Interstitial (real)
     rewarded: 'ca-app-pub-3940256099942544/5224354917',     // rewarded (test)
   },
   ios: {
