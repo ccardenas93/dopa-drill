@@ -4,17 +4,17 @@
 
 ## 1. 対象と構成
 
-数字を入力して答える計算を、1〜6年生に配当した58スキルで扱います。四則計算と筆算、小数・分数、概数、約数・倍数、計算順序、百分率、等しい比、文字の値が対象です。図形、長さ・かさ・時刻などの測定、グラフ、文章題、漢数字や位取り表への入力は含みません。
+数字を入力して答える計算を、1〜6年生に配当した60スキルで扱います。四則計算と筆算、小数・分数、概数、約数・倍数、計算順序、百分率、等しい比、文字の値が対象です。図形、長さ・かさ・時刻などの測定、グラフ、文章題、漢数字や位取り表への入力は含みません。
 
 学年は本アプリの配当を示し、教科書の全単元を網羅するものではありません。スキルの名前だけで出題を推測せず、一覧の条件と生成器の説明を合わせて参照してください。
 
 | 学年 | スキル数 | 主な内容 |
 | --- | --- | --- |
 | 1 | 8 | 10の分解、くり上がり・くり下がり、3つの数、簡単な2桁の加減 |
-| 2 | 13 | 2桁と簡単な3桁の加減筆算、九九、何十×1桁、もとの数の1/2・1/4 |
-| 3 | 14 | 3・4桁の加減、整数乗法の筆算、除法と余り、小数第1位の加減、同分母分数 |
-| 4 | 10 | 整数除法の筆算、計算順序、四捨五入、小数第2位の加減、小数と整数の乗除、帯分数 |
-| 5 | 8 | 小数同士の乗除、最大公約数・最小公倍数、約分、異分母分数、分数と整数、百分率 |
+| 2 | 9 | 2桁と簡単な3桁の加減筆算、九九（2・5・10、3・4のだん）、もとの数の1/2・1/4 |
+| 3 | 20 | 3・4桁の加減、九九（6〜9のだん）、何十×1桁、10倍・100倍、整数乗法の筆算、除法と余り、2・3桁÷1桁の筆算、小数第1位の加減、同分母分数 |
+| 4 | 9 | 3桁×2桁、2桁で割る筆算、計算順序、四捨五入、小数第2位の加減、小数と整数の乗除、1をこえる分数 |
+| 5 | 9 | 小数同士の乗除、倍数と約数、最大公約数・最小公倍数、約分、異分母分数、分数と整数、百分率 |
 | 6 | 5 | 分数同士の乗除、小数と分数の乗法、等しい比、xの値 |
 
 系統は「たし・ひき」「かけ・わり」「小数・分数」「そのほか」です。画面では各系統を2列に分けます。縦に隣り合うスキルが必ずしも前提になるわけではありません。
@@ -29,89 +29,91 @@
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g1-compose10` | 10のまとまり | たし・ひき | なし | `compose` `{"total":10}` |
-| `g1-add-nc` | 1けたのたしざん | たし・ひき | なし | `hadd` `{"a":[1,9],"b":[1,9],"carry":"none"}` |
-| `g1-sub-nb` | 10までのひきざん | たし・ひき | `g1-add-nc` | `hsub` `{"a":[2,10],"b":[1,9],"borrow":"none"}` |
-| `g1-add-c` | くりあがりのたしざん | たし・ひき | `g1-compose10`、`g1-add-nc` | `hadd` `{"a":[2,9],"b":[2,9],"carry":"yes"}` |
-| `g1-sub-b` | くりさがりのひきざん | たし・ひき | `g1-add-c`、`g1-sub-nb` | `hsub` `{"a":[11,18],"b":[2,9],"borrow":"yes"}` |
-| `g1-add3` | 3つのかずのけいさん | たし・ひき | `g1-sub-b` | `add3` `{}` |
-| `g1-add-2d1` | 2けた＋1けた | たし・ひき | `g1-add-c` | `hadd` `{"a":[11,89],"b":[1,9],"carry":"none","tensToo":true}` |
-| `g1-sub-2d1` | 2けた−1けた | たし・ひき | `g1-sub-b`、`g1-add-2d1` | `hsub` `{"a":[11,99],"b":[1,9],"borrow":"none","tensToo":true}` |
+| `g1-compose10` | Parejas que suman 10 | たし・ひき | なし | `compose` `{"total":10}` |
+| `g1-add-nc` | Suma de una cifra | たし・ひき | なし | `hadd` `{"a":[1,9],"b":[1,9],"carry":"none"}` |
+| `g1-sub-nb` | Resta hasta 10 | たし・ひき | `g1-add-nc` | `hsub` `{"a":[2,10],"b":[1,9],"borrow":"none"}` |
+| `g1-add-c` | Suma con llevadas | たし・ひき | `g1-compose10`、`g1-add-nc` | `hadd` `{"a":[2,9],"b":[2,9],"carry":"yes"}` |
+| `g1-sub-b` | Resta con préstamo | たし・ひき | `g1-add-c`、`g1-sub-nb` | `hsub` `{"a":[11,18],"b":[2,9],"borrow":"yes"}` |
+| `g1-add3` | Cálculo con tres números | たし・ひき | `g1-sub-b` | `add3` `{}` |
+| `g1-add-2d1` | Dos cifras + una cifra | たし・ひき | `g1-add-c` | `hadd` `{"a":[11,89],"b":[1,9],"carry":"none","tensToo":true}` |
+| `g1-sub-2d1` | Dos cifras − una cifra | たし・ひき | `g1-sub-b`、`g1-add-2d1` | `hsub` `{"a":[11,99],"b":[1,9],"borrow":"none","tensToo":true}` |
 
 ### 2年生
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g2-vadd2-nc` | 2けたのたしざん ひっさん | たし・ひき | `g1-add-2d1` | `vadd` `{"da":2,"db":2,"carry":"none","maxDigits":2}` |
-| `g2-vadd2-c` | くりあがりのひっさん | たし・ひき | `g2-vadd2-nc`、`g1-add-c` | `vadd` `{"da":2,"db":[1,2],"carry":"some","maxDigits":2}` |
-| `g2-vsub2-nb` | 2けたのひきざん ひっさん | たし・ひき | `g1-sub-2d1` | `vsub` `{"da":2,"db":2,"borrow":"none"}` |
-| `g2-vsub2-b` | くりさがりのひっさん | たし・ひき | `g2-vsub2-nb`、`g1-sub-b` | `vsub` `{"da":2,"db":[1,2],"borrow":"some"}` |
-| `g2-vadd3s` | 百をこえるたしざん | たし・ひき | `g2-vadd2-c` | `vadd` `{"da":2,"db":2,"carry":"many","maxDigits":3}` |
-| `g2-vsub3s` | 百からのひきざん | たし・ひき | `g2-vsub2-b`、`g2-vadd3s` | `vsub` `{"da":3,"db":2,"borrow":"some","aMax":199}` |
-| `g2-kuku25` | 九九 5と2のだん | かけ・わり | `g1-add-c` | `kuku` `{"dans":[5,2]}` |
-| `g2-kuku34` | 九九 3と4のだん | かけ・わり | `g2-kuku25` | `kuku` `{"dans":[3,4]}` |
-| `g2-kuku67` | 九九 6と7のだん | かけ・わり | `g2-kuku34` | `kuku` `{"dans":[6,7]}` |
-| `g2-kuku891` | 九九 8・9・1のだん | かけ・わり | `g2-kuku67` | `kuku` `{"dans":[8,9,1]}` |
-| `g2-kuku-mix` | 九九 まぜこぜ | かけ・わり | `g2-kuku891` | `kuku` `{"dans":[1,2,3,4,5,6,7,8,9]}` |
-| `g2-mul-tens` | 何十×1けた | かけ・わり | `g2-kuku-mix` | `mulTens` `{}` |
-| `g2-frac-of` | 1/2と1/4 | 小数・分数 | `g2-kuku25` | `fracOf` `{"dens":[2,4]}` |
+| `g2-vadd2-nc` | Suma en columna | たし・ひき | `g1-add-2d1` | `vadd` `{"da":2,"db":2,"carry":"none","maxDigits":2}` |
+| `g2-vadd2-c` | Columnas con llevadas | たし・ひき | `g2-vadd2-nc`、`g1-add-c` | `vadd` `{"da":2,"db":[1,2],"carry":"some","maxDigits":2}` |
+| `g2-vsub2-nb` | Resta en columna | たし・ひき | `g1-sub-2d1` | `vsub` `{"da":2,"db":2,"borrow":"none"}` |
+| `g2-vsub2-b` | Columnas con préstamo | たし・ひき | `g2-vsub2-nb`、`g1-sub-b` | `vsub` `{"da":2,"db":[1,2],"borrow":"some"}` |
+| `g2-vadd3s` | Sumas que pasan de cien | たし・ひき | `g2-vadd2-c` | `vadd` `{"da":2,"db":2,"carry":"many","maxDigits":3}` |
+| `g2-vsub3s` | Restas a partir de cien | たし・ひき | `g2-vsub2-b`、`g2-vadd3s` | `vsub` `{"da":3,"db":2,"borrow":"some","aMax":199}` |
+| `g2-kuku25` | Tablas del 2, 5 y 10 | かけ・わり | `g1-add-c` | `kuku` `{"dans":[2,5,10]}` |
+| `g2-kuku34` | Tablas del 3 y del 4 | かけ・わり | `g2-kuku25` | `kuku` `{"dans":[3,4]}` |
+| `g2-frac-of` | 1/2 y 1/4 | 小数・分数 | `g2-kuku25`、`g2-kuku34` | `fracOf` `{"dens":[2,4]}` |
 
 ### 3年生
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g3-vadd3` | 3けたのたしざん | たし・ひき | `g2-vadd3s` | `vadd` `{"da":3,"db":3,"carry":"some","maxDigits":3}` |
-| `g3-vsub3` | 3けたのひきざん | たし・ひき | `g2-vsub3s` | `vsub` `{"da":3,"db":[2,3],"borrow":"some"}` |
-| `g3-vadd4` | 4けたのたしざん | たし・ひき | `g3-vadd3` | `vadd` `{"da":4,"db":[3,4],"carry":"many","maxDigits":4}` |
-| `g3-vsub4` | 4けたのひきざん | たし・ひき | `g3-vsub3` | `vsub` `{"da":4,"db":[3,4],"borrow":"zero"}` |
-| `g3-div-basic` | わりざん | かけ・わり | `g2-kuku-mix` | `div` `{"exact":true}` |
-| `g3-div-rem` | あまりのあるわりざん | かけ・わり | `g3-div-basic` | `divRem` `{}` |
-| `g3-div-tens` | 何十÷1けた | かけ・わり | `g3-div-basic` | `divTens` `{}` |
-| `g3-vmul-2x1` | 2けた×1けた ひっさん | かけ・わり | `g2-mul-tens` | `vmul` `{"da":2,"db":1}` |
-| `g3-vmul-3x1` | 3けた×1けた | かけ・わり | `g3-vmul-2x1` | `vmul` `{"da":3,"db":1}` |
-| `g3-vmul-2x2` | 2けた×2けた | かけ・わり | `g3-vmul-2x1` | `vmul` `{"da":2,"db":2}` |
-| `g3-vmul-3x2` | 3けた×2けた | かけ・わり | `g3-vmul-2x2`、`g3-vmul-3x1` | `vmul` `{"da":3,"db":2}` |
-| `g3-dec-add1` | 小数のたしざん | 小数・分数 | `g2-vadd2-c` | `vdec` `{"op":"add","places":1}` |
-| `g3-dec-sub1` | 小数のひきざん | 小数・分数 | `g3-dec-add1`、`g2-vsub2-b` | `vdec` `{"op":"sub","places":1}` |
-| `g3-frac-same` | 分数のたしひき | 小数・分数 | `g2-frac-of` | `frac` `{"op":"addsub","same":true,"maxOne":true}` |
+| `g2-kuku67` | Tablas del 6 y del 7 | かけ・わり | `g2-kuku34` | `kuku` `{"dans":[6,7]}` |
+| `g2-kuku891` | Tablas del 8, 9 y 1 | かけ・わり | `g2-kuku67` | `kuku` `{"dans":[8,9,1]}` |
+| `g2-kuku-mix` | Tablas mezcladas | かけ・わり | `g2-kuku891` | `kuku` `{"dans":[1,2,3,4,5,6,7,8,9]}` |
+| `g2-mul-tens` | Decenas × una cifra | かけ・わり | `g2-kuku-mix` | `mulTens` `{}` |
+| `g3-pow10` | Por 10 y por 100 | かけ・わり | `g2-mul-tens` | `pow10` `{}` |
+| `g3-vadd3` | Suma de tres cifras | たし・ひき | `g2-vadd3s` | `vadd` `{"da":3,"db":3,"carry":"some","maxDigits":3}` |
+| `g3-vsub3` | Resta de tres cifras | たし・ひき | `g2-vsub3s` | `vsub` `{"da":3,"db":[2,3],"borrow":"some"}` |
+| `g3-vadd4` | Suma de cuatro cifras | たし・ひき | `g3-vadd3` | `vadd` `{"da":4,"db":[3,4],"carry":"many","maxDigits":4}` |
+| `g3-vsub4` | Resta de cuatro cifras | たし・ひき | `g3-vsub3` | `vsub` `{"da":4,"db":[3,4],"borrow":"zero"}` |
+| `g3-div-basic` | División | かけ・わり | `g2-kuku-mix` | `div` `{"exact":true}` |
+| `g3-div-rem` | División con resto | かけ・わり | `g3-div-basic` | `divRem` `{}` |
+| `g3-div-tens` | División cifra a cifra | かけ・わり | `g3-div-basic` | `divTens` `{}` |
+| `g3-vmul-2x1` | Dos cifras × una cifra | かけ・わり | `g2-mul-tens` | `vmul` `{"da":2,"db":1}` |
+| `g3-vmul-3x1` | Tres cifras × una cifra | かけ・わり | `g3-vmul-2x1` | `vmul` `{"da":3,"db":1}` |
+| `g3-vmul-2x2` | Dos cifras × dos cifras | かけ・わり | `g3-vmul-2x1`、`g2-vadd3s` | `vmul` `{"da":2,"db":2}` |
+| `g3-dec-add1` | Suma con decimales | 小数・分数 | `g2-vadd2-c` | `vdec` `{"op":"add","places":1}` |
+| `g3-dec-sub1` | Resta con decimales | 小数・分数 | `g3-dec-add1`、`g2-vsub2-b` | `vdec` `{"op":"sub","places":1}` |
+| `g3-frac-same` | Suma y resta de fracciones | 小数・分数 | `g2-frac-of` | `frac` `{"op":"addsub","same":true,"maxOne":true}` |
+| `g4-vdiv-2d1` | Dos cifras ÷ una cifra | かけ・わり | `g3-div-rem`、`g3-div-tens`、`g2-vsub2-b` | `vdiv` `{"dd":2,"ds":1}` |
+| `g4-vdiv-3d1` | Tres cifras ÷ una cifra | かけ・わり | `g4-vdiv-2d1` | `vdiv` `{"dd":3,"ds":1}` |
 
 ### 4年生
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g4-vdiv-2d1` | 2けた÷1けた ひっさん | かけ・わり | `g3-div-rem`、`g3-div-tens` | `vdiv` `{"dd":2,"ds":1}` |
-| `g4-vdiv-3d1` | 3けた÷1けた | かけ・わり | `g4-vdiv-2d1` | `vdiv` `{"dd":3,"ds":1}` |
-| `g4-vdiv-2d2` | 2けた÷2けた | かけ・わり | `g4-vdiv-2d1`、`g3-vmul-2x1` | `vdiv` `{"dd":2,"ds":2}` |
-| `g4-vdiv-3d2` | 3けた÷2けた | かけ・わり | `g4-vdiv-2d2`、`g4-vdiv-3d1` | `vdiv` `{"dd":3,"ds":2}` |
-| `g4-order` | けいさんのきまり | そのほか | `g2-kuku-mix`、`g2-vsub2-b` | `order` `{}` |
-| `g4-round` | がい数（四捨五入） | そのほか | `g3-vadd4` | `round` `{}` |
-| `g4-dec-add2` | 小数第2位のたしひき | 小数・分数 | `g3-dec-sub1` | `vdec` `{"op":"addsub","places":2}` |
-| `g4-dec-mul` | 小数×整数 | 小数・分数 | `g4-dec-add2`、`g3-vmul-2x1` | `vmul` `{"da":2,"db":1,"pa":1}` |
-| `g4-dec-div` | 小数÷整数 | 小数・分数 | `g4-dec-mul`、`g4-vdiv-2d1` | `decDivInt` `{}` |
-| `g4-frac-mixed` | 帯分数のたしひき | 小数・分数 | `g3-frac-same` | `frac` `{"op":"addsub","same":true,"mixed":true}` |
+| `g3-vmul-3x2` | Tres cifras × dos cifras | かけ・わり | `g3-vmul-2x2`、`g3-vmul-3x1` | `vmul` `{"da":3,"db":2}` |
+| `g4-vdiv-2d2` | Dos cifras ÷ dos cifras | かけ・わり | `g4-vdiv-2d1`、`g3-vmul-2x1` | `vdiv` `{"dd":2,"ds":2}` |
+| `g4-vdiv-3d2` | Tres cifras ÷ dos cifras | かけ・わり | `g4-vdiv-2d2`、`g4-vdiv-3d1` | `vdiv` `{"dd":3,"ds":2}` |
+| `g4-order` | Orden de las operaciones | そのほか | `g2-kuku-mix`、`g2-vsub2-b` | `order` `{}` |
+| `g4-round` | Redondeo | そのほか | `g3-vadd4` | `round` `{}` |
+| `g4-dec-add2` | Sumas con centésimas | 小数・分数 | `g3-dec-sub1` | `vdec` `{"op":"addsub","places":2}` |
+| `g4-dec-mul` | Decimal × entero | 小数・分数 | `g4-dec-add2`、`g3-vmul-2x1` | `vmul` `{"da":2,"db":1,"pa":1}` |
+| `g4-dec-div` | Decimal ÷ entero | 小数・分数 | `g4-dec-mul`、`g4-vdiv-2d1` | `decDivInt` `{}` |
+| `g4-frac-mixed` | Fracciones mayores que 1 | 小数・分数 | `g3-frac-same` | `frac` `{"op":"addsub","same":true,"mixed":true}` |
 
 ### 5年生
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g5-dec-mul` | 小数×小数 | 小数・分数 | `g4-dec-mul` | `vmul` `{"da":2,"db":2,"pa":1,"pb":1}` |
-| `g5-dec-div` | 小数÷小数 | 小数・分数 | `g4-dec-div`、`g5-dec-mul` | `decDivDec` `{}` |
-| `g5-gcd` | 最大公約数 | そのほか | `g3-div-basic` | `gcdlcm` `{"kind":"gcd"}` |
-| `g5-lcm` | 最小公倍数 | そのほか | `g5-gcd` | `gcdlcm` `{"kind":"lcm"}` |
-| `g5-frac-reduce` | 約分 | 小数・分数 | `g5-gcd`、`g4-frac-mixed` | `frac` `{"op":"reduce"}` |
-| `g5-frac-diff` | 分母がちがう分数 | 小数・分数 | `g5-frac-reduce`、`g5-lcm` | `frac` `{"op":"addsub","same":false}` |
-| `g5-frac-int` | 分数×÷整数 | 小数・分数 | `g5-frac-reduce` | `frac` `{"op":"muldivInt"}` |
-| `g5-percent` | 百分率 | そのほか | `g4-dec-mul` | `percent` `{}` |
+| `g5-dec-mul` | Decimal × decimal | 小数・分数 | `g4-dec-mul` | `vmul` `{"da":2,"db":2,"pa":1,"pb":1}` |
+| `g5-dec-div` | Decimal ÷ decimal | 小数・分数 | `g4-dec-div`、`g5-dec-mul` | `decDivDec` `{}` |
+| `g5-multiples` | Múltiplos y divisores | そのほか | `g3-div-rem` | `multiples` `{}` |
+| `g5-gcd` | Máximo común divisor | そのほか | `g5-multiples` | `gcdlcm` `{"kind":"gcd"}` |
+| `g5-lcm` | Mínimo común múltiplo | そのほか | `g5-gcd` | `gcdlcm` `{"kind":"lcm"}` |
+| `g5-frac-reduce` | Simplificar fracciones | 小数・分数 | `g5-gcd`、`g4-frac-mixed` | `frac` `{"op":"reduce"}` |
+| `g5-frac-diff` | Distinto denominador | 小数・分数 | `g5-frac-reduce`、`g5-lcm` | `frac` `{"op":"addsub","same":false}` |
+| `g5-frac-int` | Fracción × ÷ entero | 小数・分数 | `g5-frac-reduce` | `frac` `{"op":"muldivInt"}` |
+| `g5-percent` | Porcentaje | そのほか | `g4-dec-mul` | `percent` `{}` |
 
 ### 6年生
 
 | ID | 名前 | 系統 | 前提（すべて必要） | 生成器・パラメータ |
 | --- | --- | --- | --- | --- |
-| `g6-frac-mul` | 分数×分数 | 小数・分数 | `g5-frac-int` | `frac` `{"op":"mul"}` |
-| `g6-frac-div` | 分数÷分数 | 小数・分数 | `g6-frac-mul` | `frac` `{"op":"div"}` |
-| `g6-frac-dec` | 小数と分数のけいさん | 小数・分数 | `g6-frac-div`、`g5-dec-div` | `frac` `{"op":"decimal"}` |
-| `g6-ratio` | 等しい比 | そのほか | `g5-lcm` | `ratio` `{}` |
-| `g6-letter` | xをもとめる | そのほか | `g4-order` | `letter` `{}` |
+| `g6-frac-mul` | Fracción × fracción | 小数・分数 | `g5-frac-int` | `frac` `{"op":"mul"}` |
+| `g6-frac-div` | Fracción ÷ fracción | 小数・分数 | `g6-frac-mul` | `frac` `{"op":"div"}` |
+| `g6-frac-dec` | Decimales y fracciones | 小数・分数 | `g6-frac-div`、`g5-dec-div` | `frac` `{"op":"decimal"}` |
+| `g6-ratio` | Razones equivalentes | そのほか | `g5-lcm` | `ratio` `{}` |
+| `g6-letter` | Halla la x | そのほか | `g4-order`、`g3-div-basic` | `letter` `{}` |
 
 ## 3. 問題生成の条件
 

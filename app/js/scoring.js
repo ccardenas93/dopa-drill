@@ -75,8 +75,14 @@ const WESTERN = {
   },
 };
 const western = () => WESTERN[getLocale()];
+// Compact unit names for the narrow HUD box ("5.3K", "2 M"); the result and
+// final screens keep the spelled-out names.
+const SHORT = {
+  es: { 'millón': ' M', 'millones': ' M', 'mil millones': ' mil M', 'billón': ' B', 'billones': ' B' },
+  en: { thousand: 'K', million: 'M', billion: 'B', trillion: 'T' },
+};
 
-export function fmtDopa(L) {
+export function fmtDopa(L, short = false) {
   if (!Number.isFinite(L) || L >= 72) return '∞';
   const w = western();
   if (w) {
@@ -87,7 +93,8 @@ export function fmtDopa(L) {
       ? Number(m.toFixed(1)).toLocaleString(localeTag(), { maximumFractionDigits: 1 })
       : nf(Math.floor(m));
     const name = m >= 2 ? (w.plural[u[1]] || u[1]) : u[1];
-    return `${num} ${name}`;
+    const sh = short ? SHORT[getLocale()]?.[name] : undefined;
+    return sh !== undefined ? `${num}${sh}` : `${num} ${name}`;
   }
   if (L < 4) return nf(Math.round(10 ** L));
   const u = UNITS.find(([e]) => L >= e - 1e-9);

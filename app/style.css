@@ -820,3 +820,29 @@ body.perf-low .spot { display: none; }
 body.perf-low .cell.input.active,
 body.perf-low .cell.hint-glow,
 body.perf-low .pip.now { animation: none; }
+
+/* ------------------------------------------------------------ UI audit fixes (2026-09-29)
+   Tap targets ≥ 44px, HUD pills never wrap or clip, the Extra button keeps its
+   timer on one line, tree labels clamp to 3 lines, smallest fonts ≥ 10px. */
+.icon-btn { width: 44px; height: 44px; }
+.tally span { white-space: nowrap; }
+.dopa { max-width: none; min-width: 0; flex: 0 1 auto; }
+.dopa b { font-size: clamp(15px, 5.2vw, 20px); }
+@media (max-width: 380px) {
+  .tally { font-size: 12px; gap: 4px; }
+  .tally span { padding: 3px 7px; }
+  .tally b { font-size: 15px; }
+  .dopa { padding: 3px 9px 4px; gap: 4px; }
+}
+.result-card .actions .big-btn { display: inline-flex; align-items: baseline; justify-content: center; gap: 8px; padding: 0 16px; white-space: nowrap; }
+@media (max-width: 380px) { .result-card .actions .big-btn { font-size: 24px; } }
+.node .g { font-size: 10px; }
+.node .rust { font-size: 10px; }
+.node { gap: 1px; padding: 3px 3px 3px; }
+.node > span:not(.g) { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: 10px; line-height: 1.1; }
+.co-item small { font-size: 10.5px; }
+.co-tabs button { padding: 6px 12px; }
+.co-tabs button small { font-size: 11px; }
+.combo-mult { font-size: 11px; }
+.tr-filter button { height: 40px; }
+.cal-nav { width: 44px; height: 44px; }

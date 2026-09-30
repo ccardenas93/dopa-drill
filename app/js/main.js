@@ -1672,7 +1672,7 @@ onFrame((dt, ft) => {
   const d = S.dopa;
   if (d.shown < d.L) {
     d.shown = Math.min(d.L, d.shown + Math.max(0.02, (d.L - d.shown) * Math.min(1, dt * 7)));
-    $('#dopa').textContent = fmtDopa(d.shown);
+    $('#dopa').textContent = fmtDopa(d.shown, true);
     const u = unitOf(d.shown);
     if (u !== d.unit) { if (u) unitSlam(u, d.shown); d.unit = u; }
   }
