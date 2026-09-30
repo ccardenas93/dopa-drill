@@ -181,7 +181,7 @@ CapiFiesta convierte el cálculo mental en una fiesta. Cada acierto sube la
 música, llena la pantalla de confeti y hace bailar a Capi, la mascota que
 lleva tus números. Equivocarse no resta ni termina la partida: el ritmo sigue.
 
-• 58 habilidades de 1.º a 6.º de primaria: sumas y restas con llevadas,
+• 60 habilidades de 1.º a 6.º de primaria: sumas y restas con llevadas,
 tablas, división con resto, decimales, fracciones, porcentajes y más.
 • «Mi nivel»: una prueba corta coloca al jugador y el árbol de habilidades va
 desbloqueando lo siguiente cuando domina lo anterior.
@@ -194,8 +194,7 @@ colección de efectos que se van desbloqueando.
 en el dispositivo.
 • Funciona sin conexión.
 
-Pensada para niños de 6 a 12 años y para adultos que quieren mantener la
-mente ágil. Contiene anuncios no personalizados aptos para todos los públicos.
+Pensada para niños de primaria, de 6 a 12 años. Contiene anuncios no personalizados aptos para todos los públicos.
 
 ### English (en-US)
 
@@ -209,7 +208,7 @@ CapiFiesta turns mental math into a party. Every right answer turns the music
 up, fills the screen with confetti and makes Capi, the mascot who carries
 your digits, dance. A wrong answer never ends the round: the beat goes on.
 
-• 58 skills from grade 1 to grade 6: carrying and borrowing, times tables,
+• 60 skills from grade 1 to grade 6: carrying and borrowing, times tables,
 division with remainders, decimals, fractions, percentages and more.
 • "My level": a short placement test, then a skill tree that unlocks the next
 step as each one is mastered.
@@ -220,7 +219,7 @@ to unlock.
 • Spanish and English. No accounts, no sign-up: progress stays on the device.
 • Works offline.
 
-Made for kids aged 6–12 and for grown-ups who like to keep their math sharp.
+Made for primary-school kids aged 6–12.
 Contains non-personalized, family-safe ads.
 
 ## 7. Checklist del día de subida

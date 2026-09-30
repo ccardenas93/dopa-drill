@@ -97,6 +97,8 @@ try {
     await title();
     await snap('1-title');
     await page.click('#start');
+    // First run asks the child's grade before the placement round: answer "3.º".
+    await page.waitForSelector('#grade-ask [data-ga="3"]', { visible: true, timeout: 5000 }).then((b) => b.click()).catch(() => {});
     await page.waitForSelector('#screen-play.is-active', { timeout: 15000 });
     await sleep(2600);
     await snap('2-play');
